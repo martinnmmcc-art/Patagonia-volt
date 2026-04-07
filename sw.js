@@ -1,4 +1,4 @@
-const CACHE_NAME = 'patagonia-volt-v2';
+const CACHE_NAME = 'patagonia-volt-v3';
 
 const ASSETS = [
   './',
