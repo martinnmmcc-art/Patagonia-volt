@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="theme-color" content="#0d0f14"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="PatagoniaVolt"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<title>Patagonia Volt</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap');
+
+:root {
+  --bg:      #0d0f14;
+  --surface: #161921;
+  --s2:      #1e2230;
+  --border:  #2a2f3e;
+  --accent:  #f5c518;
+  --text:    #e8eaf0;
+  --muted:   #7a8099;
+  --danger:  #e05555;
+  --green:   #4caf7d;
+  --r:       12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: 'Barlow', sans-serif; font-size: 15px;
+  min-height: 100vh; padding-bottom: 250px;
+}
+
+/* ── HEADER ── */
+header {
+  background: var(--surface); border-bottom: 2px solid var(--accent);
+  padding: 12px 14px; display: flex; align-items: center; gap: 10px;
+  position: sticky; top: 0; z-index: 100;
+}
+.logo-wrap { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0; }
+.logo-bolt {
+  width: 32px; height: 32px; background: var(--accent); flex-shrink: 0;
+  clip-path: polygon(50% 0%,80% 40%,55% 40%,70% 100%,20% 55%,50% 55%);
+}
+.logo-text .brand { display:block; font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:19px; letter-spacing:1px; color:var(--accent); line-height:1; }
+.logo-text .sub   { display:block; font-size:9px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; }
+.hbtn {
+  background: var(--s2); border: 1px solid var(--border); color: var(--text);
+  padding: 6px 10px; border-radius: 8px; font-size: 12px; cursor: pointer;
+  font-family: 'Barlow', sans-serif; white-space: nowrap; flex-shrink: 0;
+}
+
+/* ── CLIENTE BAR ── */
+.client-bar {
+  background: var(--s2); border-bottom: 1px solid var(--border);
+  padding: 8px 14px; display: flex; align-items: center; gap: 8px;
+}
+.client-bar label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; flex-shrink: 0; }
+.client-bar input {
+  flex: 1; background: transparent; border: none; border-bottom: 1px solid var(--border);
+  color: var(--text); font-family: 'Barlow', sans-serif; font-size: 15px;
+  font-weight: 600; padding: 2px 4px;
+}
+.client-bar input:focus { outline: none; border-bottom-color: var(--accent); }
+.client-bar input::placeholder { color: var(--border); font-weight: 400; }
+
+/* ── TABS ── */
+.tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); }
+.tab {
+  flex: 1; padding: 11px 4px; text-align: center;
+  font-family: 'Barlow Condensed',sans-serif; font-weight: 600; font-size: 13px;
+  letter-spacing: .3px; color: var(--muted); cursor: pointer;
+  border-bottom: 3px solid transparent; transition: all .2s;
+}
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ── PAGES ── */
+.page { display: none; padding: 13px 14px; }
+.page.active { display: block; }
+
+/* ── CARD ── */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 15px; margin-bottom: 13px; }
+.card-title { font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:14px; letter-spacing:.5px; color:var(--accent); margin-bottom:11px; text-transform:uppercase; }
+
+/* ── SEARCH ── */
+.search-wrap { position: relative; margin-bottom: 9px; }
+.search-wrap input {
+  width: 100%; background: var(--s2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 12px 10px 34px; color: var(--text); font-family:'Barlow',sans-serif; font-size:15px;
+}
+.search-wrap input:focus { outline: none; border-color: var(--accent); }
+.search-wrap input::placeholder { color: var(--muted); }
+.si { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:14px; pointer-events:none; }
+
+/* ── CAT FILTERS ── */
+.cat-wrap { display: flex; flex-wrap: wrap; margin-bottom: 9px; }
+.cat-badge {
+  display: inline-block; background: var(--s2); border: 1px solid var(--border);
+  border-radius: 20px; padding: 3px 9px; font-size: 11px; color: var(--muted);
+  cursor: pointer; margin: 2px; transition: all .15s;
+}
+.cat-badge.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
+
+/* ── TASK LIST ── */
+.task-list { display: flex; flex-direction: column; gap: 5px; padding-bottom: 300px; }
+.task-item {
+  background: var(--s2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+}
+.task-item:active { border-color: var(--accent); }
+.task-name { font-size: 14px; font-weight: 500; flex: 1; }
+.task-price { font-family:'Barlow Condensed',sans-serif; font-size:15px; font-weight:700; color:var(--accent); white-space:nowrap; margin-left:8px; }
+.task-cat { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* ── BUDGET ── */
+.budget-item {
+  background: var(--s2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 11px; display: flex; align-items: center; gap: 7px; margin-bottom: 5px;
+}
+.bi-info { flex: 1; min-width: 0; }
+.bi-name { font-size: 14px; font-weight: 500; }
+.bi-price { font-family:'Barlow Condensed',sans-serif; font-size:12px; color:var(--accent); }
+.qty-wrap { display: flex; align-items: center; gap: 4px; }
+.qbtn { width:27px; height:27px; background:var(--surface); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.qval { font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:16px; min-width:22px; text-align:center; }
+.rmbtn { color:var(--danger); font-size:17px; cursor:pointer; padding:3px; flex-shrink:0; }
+
+/* ── MATERIALS ── */
+.mat-row { display: flex; gap: 8px; margin-bottom: 11px; }
+.mat-row input {
+  flex: 1; background: var(--s2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 9px 11px; color: var(--text); font-family:'Barlow',sans-serif; font-size:14px;
+}
+.mat-row input:focus { outline: none; border-color: var(--accent); }
+.btn-add { background:var(--accent); color:#000; border:none; border-radius:8px; padding:9px 14px; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:14px; cursor:pointer; }
+.mat-item { display:flex; align-items:center; gap:9px; padding:9px 11px; background:var(--s2); border:1px solid var(--border); border-radius:8px; margin-bottom:5px; }
+.mat-item input[type=checkbox] { width:17px; height:17px; accent-color:var(--accent); cursor:pointer; flex-shrink:0; }
+.mat-nm { flex:1; font-size:14px; }
+.mat-item.ck .mat-nm { text-decoration:line-through; color:var(--muted); }
+.mat-del { color:var(--danger); font-size:15px; cursor:pointer; }
+
+/* ── HISTORIAL ── */
+.hist-item {
+  background: var(--s2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px 13px; margin-bottom: 8px;
+}
+.hist-header { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:4px; }
+.hist-client { font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:16px; }
+.hist-total  { font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:16px; color:var(--accent); white-space:nowrap; }
+.hist-date   { font-size:11px; color:var(--muted); margin-bottom:7px; }
+.hist-badges { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
+.status-badge {
+  display:inline-block; border-radius:20px; padding:3px 10px;
+  font-size:11px; font-weight:700; font-family:'Barlow Condensed',sans-serif;
+  letter-spacing:.5px; text-transform:uppercase; cursor:pointer; border:none;
+}
+.sb-pend { background:var(--s2); color:var(--muted); border:1px solid var(--border); }
+.sb-ok   { background:#1a3a28; color:var(--green); border:1px solid var(--green); }
+.sb-no   { background:#3a1a1a; color:var(--danger); border:1px solid var(--danger); }
+.hist-actions { display:flex; gap:6px; margin-top:8px; }
+.hist-mini-btn { background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:7px; padding:5px 10px; font-size:12px; cursor:pointer; font-family:'Barlow',sans-serif; }
+
+/* ── SWITCHES ── */
+.sw-row { display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--border); }
+.sw-row:last-child { border-bottom:none; }
+.sw-lbl { font-size:14px; }
+.switch { position:relative; width:44px; height:24px; background:var(--border); border-radius:12px; cursor:pointer; transition:background .2s; flex-shrink:0; }
+.switch.on { background:var(--accent); }
+.switch::after { content:''; position:absolute; width:18px; height:18px; background:#fff; border-radius:50%; top:3px; left:3px; transition:left .2s; }
+.switch.on::after { left:23px; }
+
+/* ── TOTAL BAR ── */
+.total-bar { position:fixed; bottom:0; left:0; right:0; background:var(--surface); border-top:2px solid var(--accent); padding:9px 13px; z-index:200; }
+.total-inner { display:flex; align-items:center; justify-content:space-between; gap:8px; max-width:600px; margin:0 auto; }
+.total-lbl { font-family:'Barlow Condensed',sans-serif; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+.total-val { font-family:'Barlow Condensed',sans-serif; font-size:26px; font-weight:800; color:var(--accent); }
+.t-actions { display:flex; gap:7px; flex-shrink:0; }
+.btn-p { background:var(--accent); color:#000; border:none; border-radius:8px; padding:9px 13px; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:13px; cursor:pointer; white-space:nowrap; }
+.btn-s { background:var(--s2); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:9px 11px; font-family:'Barlow Condensed',sans-serif; font-weight:600; font-size:12px; cursor:pointer; }
+
+/* ── CONFIG ── */
+textarea.imp { width:100%; min-height:150px; background:var(--s2); border:1px solid var(--border); border-radius:8px; padding:11px; color:var(--text); font-family:'Barlow',sans-serif; font-size:13px; resize:vertical; margin-bottom:9px; }
+textarea.imp:focus { outline:none; border-color:var(--accent); }
+input.cfg { width:100%; background:var(--s2); border:1px solid var(--border); border-radius:8px; padding:9px 11px; color:var(--text); font-family:'Barlow',sans-serif; font-size:14px; margin-bottom:8px; }
+input.cfg:focus { outline:none; border-color:var(--accent); }
+.cfg-lbl { font-size:11px; color:var(--muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:1px; }
+.btn-full { width:100%; }
+.btn-danger { background:#3a1a1a; color:var(--danger); border:1px solid var(--danger); border-radius:8px; padding:9px; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:13px; cursor:pointer; }
+
+/* ── SECTION HEADING ── */
+.sh { font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:var(--muted); margin:13px 0 5px; }
+
+/* ── TOAST ── */
+.toast { position:fixed; top:68px; left:50%; transform:translateX(-50%) translateY(-8px); background:var(--green); color:#fff; padding:9px 18px; border-radius:8px; font-weight:600; font-size:13px; z-index:9999; opacity:0; pointer-events:none; transition:opacity .3s,transform .3s; white-space:nowrap; box-shadow:0 4px 18px rgba(0,0,0,.4); }
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* ── MODAL ── */
+.overlay { position:fixed; inset:0; background:rgba(0,0,0,.87); z-index:500; display:flex; align-items:center; justify-content:center; padding:14px; }
+.overlay.hidden { display:none; }
+.modal { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:18px; max-width:480px; width:100%; max-height:88vh; overflow-y:auto; }
+.modal-title { font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:19px; color:var(--accent); margin-bottom:13px; text-transform:uppercase; }
+.modal-img { width:100%; border-radius:8px; margin-bottom:11px; display:block; }
+.modal-actions { display:flex; gap:8px; justify-content:flex-end; }
+
+/* ── EMPTY ── */
+.empty { text-align:center; color:var(--muted); padding:36px 18px; font-size:14px; }
+
+/* ── HIDDEN RENDER ── */
+#wa-src { position:fixed; left:-9999px; top:0; width:700px; font-family:'Barlow Condensed',sans-serif; color:#e8eaf0; pointer-events:none; }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-wrap">
+    <div class="logo-bolt"></div>
+    <div class="logo-text">
+      <span class="brand">PATAGONIA VOLT</span>
+      <span class="sub">Presupuestador Eléctrico</span>
+    </div>
+  </div>
+  <button class="hbtn" onclick="clearBudget()">🗑 Limpiar</button>
+  <button class="hbtn" onclick="saveBudgetToHistory()" style="background:var(--accent);color:#000;border-color:var(--accent);">💾 Guardar</button>
+</header>
+
+<!-- CLIENTE BAR -->
+<div class="client-bar">
+  <label>Cliente:</label>
+  <input type="text" id="client-name" placeholder="Nombre del cliente u obra…" oninput="saveCurrentState()"/>
+</div>
+
+<!-- TABS -->
+<nav class="tabs">
+  <div class="tab active" onclick="switchTab('tareas')">⚡ Tareas</div>
+  <div class="tab" onclick="switchTab('presupuesto')">📋 Presupuesto</div>
+  <div class="tab" onclick="switchTab('materiales')">🔧 Materiales</div>
+  <div class="tab" onclick="switchTab('historial')">🗂 Historial</div>
+  <div class="tab" onclick="switchTab('config')">⚙️ Config</div>
+</nav>
+
+<!-- PAGE: TAREAS -->
+<div class="page active" id="page-tareas">
+  <div class="search-wrap">
+    <span class="si">🔍</span>
+    <input type="text" id="search-input" placeholder="Buscar tarea…" oninput="filterTasks()"/>
+  </div>
+  <div class="cat-wrap" id="cat-filters"></div>
+  <div class="task-list" id="task-list"></div>
+</div>
+
+<!-- PAGE: PRESUPUESTO -->
+<div class="page" id="page-presupuesto">
+  <div class="card">
+    <div class="card-title">Opciones de vista</div>
+    <div class="sw-row">
+      <span class="sw-lbl">Ocultar precios unitarios</span>
+      <div class="switch" id="sw-hide" onclick="toggleSw('sw-hide','hideUnit')"></div>
+    </div>
+    <div class="sw-row">
+      <span class="sw-lbl">Mostrar materiales en presupuesto</span>
+      <div class="switch on" id="sw-mats" onclick="toggleSw('sw-mats','showMats')"></div>
+    </div>
+  </div>
+
+  <!-- DESCUENTO -->
+  <div class="card" style="display:flex;align-items:center;gap:14px;">
+    <div style="flex:1;">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;">Descuento manual</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input
+          type="number" id="discount-input" min="0" max="100" step="1"
+          placeholder="0"
+          oninput="applyDiscount()"
+          style="width:72px;background:var(--s2);border:1px solid var(--border);border-radius:8px;
+                 padding:8px 10px;color:var(--accent);font-family:'Barlow Condensed',sans-serif;
+                 font-size:22px;font-weight:800;text-align:center;"
+        />
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);">%</span>
+        <button onclick="document.getElementById('discount-input').value='';applyDiscount();"
+          style="background:var(--s2);border:1px solid var(--border);border-radius:7px;color:var(--muted);
+                 font-size:12px;padding:5px 9px;cursor:pointer;">✕ Quitar</button>
+      </div>
+    </div>
+    <div style="text-align:right;min-width:90px;">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Ahorro</div>
+      <div id="discount-saving" style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--green);">$ 0</div>
+    </div>
+  </div>
+
+  <div id="budget-list"></div>
+</div>
+
+<!-- PAGE: MATERIALES -->
+<div class="page" id="page-materiales">
+  <div class="mat-row">
+    <input type="text" id="mat-input" placeholder="Agregar material…" onkeydown="if(event.key==='Enter')addMat()"/>
+    <button class="btn-add" onclick="addMat()">+ Agregar</button>
+  </div>
+  <div id="mat-list"></div>
+</div>
+
+<!-- PAGE: HISTORIAL -->
+<div class="page" id="page-historial">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <span style="font-size:13px;color:var(--muted);" id="hist-count"></span>
+    <button class="hbtn" onclick="clearHistory()" style="color:var(--danger);">🗑 Borrar todo</button>
+  </div>
+  <div id="hist-list"></div>
+</div>
+
+<!-- PAGE: CONFIG -->
+<div class="page" id="page-config">
+  <div class="card">
+    <div class="card-title">Mis Datos (opcionales)</div>
+    <div class="cfg-lbl">Nombre / Empresa</div>
+    <input class="cfg" id="cfg-nombre" placeholder="Ej: Juan Martínez Electricidad" oninput="saveCfg()"/>
+    <div class="cfg-lbl">Teléfono</div>
+    <input class="cfg" id="cfg-tel" placeholder="Ej: 2944 000000" oninput="saveCfg()"/>
+    <div class="cfg-lbl">Email</div>
+    <input class="cfg" id="cfg-email" placeholder="Ej: juan@mail.com" oninput="saveCfg()"/>
+  </div>
+  <div class="card">
+    <div class="card-title">Importar lista de precios</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:9px;">Pegá el texto de Electro Instalador. La app detecta categorías y valores automáticamente.</p>
+    <textarea class="imp" id="import-text" placeholder="Pegá aquí la lista de precios…"></textarea>
+    <button class="btn-p btn-full" onclick="importPrices()">⚡ Procesar e importar</button>
+  </div>
+  <div class="card">
+    <div class="card-title">Base de datos</div>
+    <div id="db-stats" style="font-size:13px;color:var(--muted);margin-bottom:11px;"></div>
+    <button class="btn-danger btn-full" onclick="confirmReset()">🗑 Restaurar datos originales</button>
+  </div>
+</div>
+
+<!-- TOTAL BAR -->
+<div class="total-bar">
+  <div class="total-inner">
+    <div>
+      <div class="total-lbl">Total MO</div>
+      <div class="total-val" id="total-display">$ 0</div>
+    </div>
+    <div class="t-actions">
+      <button class="btn-s" onclick="switchTab('presupuesto')">Ver detalle</button>
+      <button class="btn-p" onclick="generateWA()">📸 WhatsApp</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: WA IMAGE -->
+<div class="overlay hidden" id="wa-modal">
+  <div class="modal">
+    <div class="modal-title">📸 Imagen para WhatsApp</div>
+    <img id="wa-img" class="modal-img" src="" alt="Presupuesto"/>
+    <div class="modal-actions">
+      <button class="btn-s" onclick="closeModal('wa-modal')">Cerrar</button>
+      <button class="btn-p" onclick="downloadWA()">⬇ Descargar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: HISTORIAL DETALLE -->
+<div class="overlay hidden" id="hist-modal">
+  <div class="modal">
+    <div class="modal-title" id="hm-title">Presupuesto</div>
+    <div id="hm-body"></div>
+    <div class="modal-actions" style="margin-top:14px;">
+      <button class="btn-s" onclick="closeModal('hist-modal')">Cerrar</button>
+      <button class="btn-p" onclick="restoreFromHistory()">Restaurar este presupuesto</button>
+    </div>
+  </div>
+</div>
+
+<!-- HIDDEN RENDER TARGET -->
+<div id="wa-src"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════
+let tasks     = [];
+let budget    = [];
+let materials = [];
+let settings  = { hideUnit: false, showMats: true };
+let userCfg   = { nombre: '', tel: '', email: '' };
+let history_  = [];      // array of saved budgets
+let activeCat = 'Todos';
+let activeHistIdx = null;
+
+// ══════════════════════════════════════════════════════════
+//  BUILT-IN DATA  (Electro Instalador Mar-Abr 2026)
+// ══════════════════════════════════════════════════════════
+const BUILTIN = [
+  {cat:'Acometidas',name:'Acometida monofásica hasta 10 kW',price:201700},
+  {cat:'Acometidas',name:'Acometida trifásica hasta 10 kW',price:283800},
+  {cat:'Acometidas',name:'Acometida trifásica 11 a 35 kW',price:373500},
+  {cat:'Acometidas',name:'Acometida trifásica 36 a 50 kW',price:545300},
+  {cat:'Cableado',name:'Cableado metálica embutida 1-50 bocas',price:32000},
+  {cat:'Cableado',name:'Cableado metálica embutida 51-100 bocas',price:30800},
+  {cat:'Cableado',name:'Cableado metálica embutida 101-500 bocas',price:30700},
+  {cat:'Cableado',name:'Subterráneo 1x4 a 4x16 mm²',price:20400},
+  {cat:'Cableado',name:'Subterráneo 1x25 a 4x35 mm²',price:40900},
+  {cat:'Cableado',name:'Subterráneo 1x35 a 4x70 mm²',price:73300},
+  {cat:'Cableado',name:'Subterráneo mayores 1x95 mm²',price:97600},
+  {cat:'Cableado',name:'Re-cableado 1-50 bocas',price:39500},
+  {cat:'Cableado',name:'Re-cableado 51-100 bocas',price:37600},
+  {cat:'Cableado',name:'Re-cableado 101-500 bocas',price:33100},
+  {cat:'Canalización',name:'Canalización embutida metálica 1-50 bocas',price:49700},
+  {cat:'Canalización',name:'Canalización embutida metálica 51-100 bocas',price:48700},
+  {cat:'Canalización',name:'Canalización embutida PVC 1-50 bocas',price:48700},
+  {cat:'Canalización',name:'Canalización embutida PVC 51-100 bocas',price:47400},
+  {cat:'Canalización',name:'Canalización a la vista metálica 1-50 bocas',price:47400},
+  {cat:'Canalización',name:'Canalización a la vista metálica 51-100 bocas',price:46400},
+  {cat:'Canalización',name:'Canalización a la vista PVC 1-50 bocas',price:46400},
+  {cat:'Canalización',name:'Canalización a la vista PVC 51-100 bocas',price:45500},
+  {cat:'Canalización',name:'Metálica 3/4 en Durlock 1-50 bocas',price:41400},
+  {cat:'Canalización',name:'Metálica 3/4 en Durlock 51-100 bocas',price:37000},
+  {cat:'Canalización',name:'PVC rígido 3/4 en Durlock 1-50 bocas',price:37700},
+  {cat:'Canalización',name:'PVC rígido 3/4 en Durlock 51-100 bocas',price:35100},
+  {cat:'Bandeja',name:'Bandeja metálica 300mm hasta 2m',price:47000},
+  {cat:'Bandeja',name:'Bandeja metálica 300mm 3-5m',price:51100},
+  {cat:'Bandeja',name:'Bandeja metálica 300mm 6-10m',price:56200},
+  {cat:'Bandeja',name:'Bandeja metálica 450mm hasta 2m',price:51100},
+  {cat:'Bandeja',name:'Bandeja metálica 450mm 3-5m',price:56200},
+  {cat:'Bandeja',name:'Bandeja metálica 450mm 6-10m',price:61800},
+  {cat:'Bandeja',name:'Bandeja metálica 600mm hasta 2m',price:56800},
+  {cat:'Bandeja',name:'Bandeja metálica 600mm 3-5m',price:61800},
+  {cat:'Bandeja',name:'Bandeja metálica 600mm 6-10m',price:67700},
+  {cat:'Cablecanal',name:'Cablecanal 1-50 bocas',price:44200},
+  {cat:'Cablecanal',name:'Cablecanal 51-100 bocas',price:43500},
+  {cat:'Cablecanal',name:'Cablecanal 101-500 bocas',price:42500},
+  {cat:'Cablecanal',name:'Cablecanal metro adicional',price:15200},
+  {cat:'Pisoducto',name:'Pisoducto por metro',price:36600},
+  {cat:'Pisoducto',name:'Pisoducto cajas de piso',price:54300},
+  {cat:'Pisoducto',name:'Pisoducto derivación',price:54300},
+  {cat:'Pisoducto',name:'Pisoducto curvas vertical',price:43100},
+  {cat:'Pisoducto',name:'Pisoducto curvas horizontal',price:43100},
+  {cat:'Pisoducto',name:'Pisoducto periscopios',price:51200},
+  {cat:'Pisoducto',name:'Cableado pisoducto energía',price:48500},
+  {cat:'Pisoducto',name:'Cableado pisoducto comunicación',price:45700},
+  {cat:'Pisoducto',name:'Pisoducto instalación de tomas',price:35800},
+  {cat:'CCTV',name:'CCTV 1 cámara en superficie',price:80200},
+  {cat:'CCTV',name:'CCTV BCR 3 cámaras en superficie',price:279900},
+  {cat:'CCTV',name:'CCTV BCR 6 cámaras en superficie',price:376700},
+  {cat:'CCTV',name:'CCTV BCR 12 cámaras en superficie',price:452000},
+  {cat:'CCTV',name:'CCTV BCR 18 cámaras en superficie',price:558500},
+  {cat:'CCTV',name:'CCTV 1 cámara con canalización',price:115100},
+  {cat:'CCTV',name:'CCTV BCR 3 cámaras con canalización',price:334700},
+  {cat:'CCTV',name:'CCTV BCR 6 cámaras con canalización',price:414500},
+  {cat:'CCTV',name:'CCTV BCR 12 cámaras con canalización',price:539100},
+  {cat:'CCTV',name:'CCTV BCR 18 cámaras con canalización',price:608700},
+  {cat:'Luminarias',name:'Aplique 1-2 luces',price:27200},
+  {cat:'Luminarias',name:'Aplique 3-5 luces',price:30500},
+  {cat:'Luminarias',name:'Colgante 1 luz',price:44500},
+  {cat:'Luminarias',name:'Colgante 2 luces',price:47800},
+  {cat:'Luminarias',name:'Farola de pared 1 luz',price:48900},
+  {cat:'Luminarias',name:'Farola de pared 2 luces',price:52200},
+  {cat:'Luminarias',name:'Artefacto tubo LED simple',price:51100},
+  {cat:'Luminarias',name:'Artefacto tubo LED 2 tubos',price:62000},
+  {cat:'Luminarias',name:'Luz de emergencia',price:40200},
+  {cat:'Luminarias',name:'Brazo alumbrado público',price:172200},
+  {cat:'Artefactos',name:'Extractor de aire baño',price:148000},
+  {cat:'Artefactos',name:'Extractor de aire cocina',price:209800},
+  {cat:'Artefactos',name:'Extractor de aire cocina 240mm',price:296800},
+  {cat:'Artefactos',name:'Campana tipo spar',price:137000},
+  {cat:'Artefactos',name:'Ventilador de techo sin luces',price:90200},
+  {cat:'Artefactos',name:'Ventilador de techo con luces',price:115800},
+  {cat:'Corrección Potencia',name:'Tablero monofásico hasta 2 kVAr',price:266400},
+  {cat:'Corrección Potencia',name:'Tablero trifásico hasta 10 kVAr',price:300600},
+  {cat:'Corrección Potencia',name:'Tablero trifásico hasta 20 kVAr',price:346700},
+  {cat:'Corrección Potencia',name:'Tablero trifásico c/contactor hasta 10 kVAr',price:424900},
+  {cat:'Corrección Potencia',name:'Tablero trifásico c/contactor hasta 20 kVAr',price:512600},
+  {cat:'Corrección Potencia',name:'Tablero trifásico automático 50 kVAr 6 pasos',price:512600},
+  {cat:'Corrección Potencia',name:'Tablero trifásico automático 100 kVAr 6 pasos',price:590600},
+  {cat:'Corrección Potencia',name:'Tablero trifásico automático 150 kVAr 6 pasos',price:1133900},
+  {cat:'Mantenimiento',name:'Emergencia L-V hasta 5 km (TM 4h)',price:250800},
+  {cat:'Mantenimiento',name:'Emergencia L-V hasta 10 km (TM 4:30h)',price:332100},
+  {cat:'Mantenimiento',name:'Emergencia L-V hasta 20 km (TM 5h)',price:445500},
+  {cat:'Mantenimiento',name:'Emergencia S/D/F hasta 5 km (TM 4h)',price:350000},
+  {cat:'Mantenimiento',name:'Emergencia S/D/F hasta 10 km (TM 4:30h)',price:496800},
+  {cat:'Mantenimiento',name:'Emergencia S/D/F hasta 20 km (TM 5h)',price:686500},
+  {cat:'Proyecto Eléctrico',name:'Proyecto hasta 25 bocas',price:388000},
+  {cat:'Proyecto Eléctrico',name:'Proyecto 26-50 bocas',price:535400},
+  {cat:'Proyecto Eléctrico',name:'Proyecto 51-100 bocas',price:632700},
+  {cat:'Proyecto Eléctrico',name:'Proyecto 101-500 bocas',price:979400},
+  {cat:'Puesta a Tierra',name:'Jabalina 1.5m + caja de inspección',price:94600},
+  {cat:'Tablero',name:'Fijación gabinete superficie 1-54 bocas',price:44000},
+  {cat:'Tablero',name:'Empotrado gabinete mampostería 1-24 bocas',price:185300},
+  {cat:'Tablero',name:'Empotrado gabinete mampostería 25-54 bocas',price:211100},
+  {cat:'Tablero',name:'Termomagnética/diferencial monofásico',price:81900},
+  {cat:'Tablero',name:'Termomagnética/diferencial trifásico',price:107900},
+  {cat:'Boca Completa',name:'Cañería metálica embutida 1-50',price:77200},
+  {cat:'Boca Completa',name:'Cañería metálica embutida 51-100',price:75300},
+  {cat:'Boca Completa',name:'Cañería metálica embutida 101-500',price:73900},
+  {cat:'Boca Completa',name:'Cañería metálica a la vista 1-50',price:75100},
+  {cat:'Boca Completa',name:'Cañería metálica a la vista 51-100',price:73100},
+  {cat:'Boca Completa',name:'Cañería metálica a la vista 101-500',price:72000},
+  {cat:'Boca Completa',name:'Cañería plástica embutida 1-50',price:76300},
+  {cat:'Boca Completa',name:'Cañería plástica embutida 51-100',price:74100},
+  {cat:'Boca Completa',name:'Cañería plástica embutida 101-500',price:73100},
+  {cat:'Boca Completa',name:'Cañería plástica a la vista 1-50',price:74100},
+  {cat:'Boca Completa',name:'Cañería plástica a la vista 51-100',price:72200},
+  {cat:'Boca Completa',name:'Cañería plástica a la vista 101-500',price:70800},
+  {cat:'Boca Completa',name:'Bandeja porta cables p/metro 1-50',price:61100},
+  {cat:'Boca Completa',name:'Bandeja porta cables p/metro 51-100',price:57000},
+  {cat:'Boca Completa',name:'Bandeja porta cables p/metro 101-500',price:54300},
+];
+
+// ══════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════
+function init() {
+  // Tasks
+  const st = ls('pv_tasks');
+  tasks = st ? JSON.parse(st) : BUILTIN.map((t,i)=>({...t,id:i}));
+  if (!st) lsSet('pv_tasks', JSON.stringify(tasks));
+
+  // Current session
+  const cs = ls('pv_current');
+  if (cs) {
+    const c = JSON.parse(cs);
+    budget    = c.budget    || [];
+    materials = c.materials || [];
+    document.getElementById('client-name').value    = c.client   || '';
+    document.getElementById('discount-input').value = c.discount || '';
+  }
+
+  // Settings
+  const ss = ls('pv_settings');
+  if (ss) settings = JSON.parse(ss);
+
+  // User config
+  const sc = ls('pv_config');
+  if (sc) userCfg = JSON.parse(sc);
+
+  // History
+  const sh = ls('pv_history');
+  history_ = sh ? JSON.parse(sh) : [];
+
+  applySettings();
+  renderCats();
+  renderTasks();
+  renderBudget();
+  renderMats();
+  renderHistory();
+  updateTotal();
+  loadCfgUI();
+  updateDBStats();
+}
+
+// localStorage helpers
+function ls(k)      { try { return localStorage.getItem(k); } catch(e){ return null; } }
+function lsSet(k,v) { try { localStorage.setItem(k, v); } catch(e){} }
+
+// Save current working state (budget + materials + client name + discount)
+function saveCurrentState() {
+  const state = {
+    client:   document.getElementById('client-name').value,
+    discount: document.getElementById('discount-input').value,
+    budget,
+    materials
+  };
+  lsSet('pv_current', JSON.stringify(state));
+}
+
+function saveCfg() {
+  userCfg.nombre = document.getElementById('cfg-nombre').value;
+  userCfg.tel    = document.getElementById('cfg-tel').value;
+  userCfg.email  = document.getElementById('cfg-email').value;
+  lsSet('pv_config', JSON.stringify(userCfg));
+}
+function loadCfgUI() {
+  document.getElementById('cfg-nombre').value = userCfg.nombre || '';
+  document.getElementById('cfg-tel').value    = userCfg.tel    || '';
+  document.getElementById('cfg-email').value  = userCfg.email  || '';
+}
+
+// ══════════════════════════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + tab).classList.add('active');
+  const idx = ['tareas','presupuesto','materiales','historial','config'].indexOf(tab);
+  document.querySelectorAll('.tab')[idx].classList.add('active');
+}
+
+// ══════════════════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════════════════
+let _tt;
+function toast(msg, err) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.background = err ? '#e05555' : '#4caf7d';
+  el.classList.add('show');
+  clearTimeout(_tt);
+  _tt = setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+// ══════════════════════════════════════════════════════════
+//  CATEGORIES
+// ══════════════════════════════════════════════════════════
+function renderCats() {
+  const cats = ['Todos', ...[...new Set(tasks.map(t=>t.cat))].filter(Boolean).sort()];
+  document.getElementById('cat-filters').innerHTML = cats.map(c =>
+    `<span class="cat-badge${c===activeCat?' active':''}" onclick="selCat(${JSON.stringify(c)})">${c}</span>`
+  ).join('');
+}
+function selCat(c) { activeCat = c; renderCats(); renderTasks(); }
+
+// ══════════════════════════════════════════════════════════
+//  TASK LIST
+// ══════════════════════════════════════════════════════════
+function filterTasks() { renderTasks(); }
+function renderTasks() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const f = tasks.filter(t => {
+    const mc = activeCat==='Todos' || t.cat===activeCat;
+    const ms = !q || t.name.toLowerCase().includes(q) || t.cat.toLowerCase().includes(q);
+    return mc && ms;
+  });
+  const el = document.getElementById('task-list');
+  if (!f.length) { el.innerHTML='<div class="empty">Sin resultados</div>'; return; }
+  el.innerHTML = f.map(t => `
+    <div class="task-item" onclick="addToBudget(${t.id})">
+      <div style="flex:1;min-width:0">
+        <div class="task-name">${t.name}</div>
+        <div class="task-cat">${t.cat}</div>
+      </div>
+      <div class="task-price">${fmt(t.price)}</div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+//  BUDGET
+// ══════════════════════════════════════════════════════════
+function addToBudget(id) {
+  const task = tasks.find(t=>t.id===id); if(!task) return;
+  const ex = budget.find(b=>b.taskId===id);
+  if (ex) ex.qty++; else budget.push({taskId:id, qty:1});
+  saveCurrentState(); renderBudget(); updateTotal();
+  toast('➕ ' + task.name.substring(0,38));
+}
+function changeQty(i, d) {
+  budget[i].qty += d;
+  if (budget[i].qty <= 0) budget.splice(i,1);
+  saveCurrentState(); renderBudget(); updateTotal();
+}
+function removeItem(i) {
+  budget.splice(i,1);
+  saveCurrentState(); renderBudget(); updateTotal();
+}
+
+function renderBudget() {
+  const el = document.getElementById('budget-list');
+  if (!budget.length) { el.innerHTML='<div class="empty">Agregá tareas desde ⚡ Tareas</div>'; return; }
+  const grp = {};
+  budget.forEach((b,i) => {
+    const t = tasks.find(x=>x.id===b.taskId); if(!t) return;
+    if (!grp[t.cat]) grp[t.cat]=[];
+    grp[t.cat].push({b,i,t});
+  });
+  let html='';
+  for (const [cat, items] of Object.entries(grp)) {
+    html += `<div class="sh">${cat}</div>`;
+    items.forEach(({b,i,t}) => {
+      const sub = t.price*b.qty;
+      html += `<div class="budget-item">
+        <div class="bi-info">
+          <div class="bi-name">${t.name}</div>
+          <div class="bi-price">${settings.hideUnit ? `× ${b.qty}` : `${fmt(t.price)} c/u · ${fmt(sub)}`}</div>
+        </div>
+        <div class="qty-wrap">
+          <div class="qbtn" onclick="changeQty(${i},-1)">−</div>
+          <div class="qval">${b.qty}</div>
+          <div class="qbtn" onclick="changeQty(${i},1)">+</div>
+        </div>
+        <div class="rmbtn" onclick="removeItem(${i})">✕</div>
+      </div>`;
+    });
+  }
+  if (settings.showMats && materials.length) {
+    html += `<div class="sh">Materiales</div>`;
+    materials.forEach(m => {
+      html += `<div class="mat-item${m.checked?' ck':''}">
+        <input type="checkbox" disabled ${m.checked?'checked':''}/>
+        <span class="mat-nm">${m.name}</span>
+      </div>`;
+    });
+  }
+  el.innerHTML = html;
+}
+
+function clearBudget() {
+  if (!budget.length) return;
+  if (!confirm('¿Limpiar el presupuesto actual?')) return;
+  budget=[]; saveCurrentState(); renderBudget(); updateTotal();
+  toast('Presupuesto limpiado');
+}
+
+// ══════════════════════════════════════════════════════════
+//  MATERIALS
+// ══════════════════════════════════════════════════════════
+function addMat() {
+  const inp = document.getElementById('mat-input');
+  const v = inp.value.trim(); if(!v) return;
+  materials.push({name:v, checked:false});
+  saveCurrentState(); inp.value=''; renderMats(); renderBudget();
+  toast('Material agregado');
+}
+function toggleMat(i) { materials[i].checked=!materials[i].checked; saveCurrentState(); renderMats(); renderBudget(); }
+function deleteMat(i) { materials.splice(i,1); saveCurrentState(); renderMats(); renderBudget(); }
+function renderMats() {
+  const el = document.getElementById('mat-list');
+  if (!materials.length) { el.innerHTML='<div class="empty">Sin materiales todavía.</div>'; return; }
+  el.innerHTML = materials.map((m,i)=>`
+    <div class="mat-item${m.checked?' ck':''}">
+      <input type="checkbox" onchange="toggleMat(${i})" ${m.checked?'checked':''}/>
+      <span class="mat-nm">${m.name}</span>
+      <span class="mat-del" onclick="deleteMat(${i})">✕</span>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+//  HISTORIAL
+// ══════════════════════════════════════════════════════════
+function saveBudgetToHistory() {
+  if (!budget.length) { toast('Agregá tareas antes de guardar','error'); return; }
+  const client = document.getElementById('client-name').value.trim() || 'Sin nombre';
+  const entry = {
+    id:       Date.now(),
+    client,
+    date:     new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'}),
+    total:    getTotal(),
+    subtotal: getSubtotal(),
+    discount: getDiscountPct(),
+    budget:   JSON.parse(JSON.stringify(budget)),
+    materials:JSON.parse(JSON.stringify(materials)),
+    status:   'pendiente'
+  };
+  history_.unshift(entry);
+  lsSet('pv_history', JSON.stringify(history_));
+  renderHistory();
+  toast(`✅ Guardado: ${client}`);
+}
+
+function setStatus(id, status) {
+  const entry = history_.find(h=>h.id===id);
+  if (!entry) return;
+  entry.status = status;
+  lsSet('pv_history', JSON.stringify(history_));
+  renderHistory();
+  toast(status==='aceptado' ? '🎉 ¡Presupuesto aceptado!' : status==='rechazado' ? '❌ Marcado como rechazado' : 'Estado actualizado');
+}
+
+function deleteHistEntry(id) {
+  if (!confirm('¿Eliminar este presupuesto del historial?')) return;
+  history_ = history_.filter(h=>h.id!==id);
+  lsSet('pv_history', JSON.stringify(history_));
+  renderHistory();
+}
+
+function clearHistory() {
+  if (!history_.length) return;
+  if (!confirm('¿Borrar todo el historial? Esta acción no se puede deshacer.')) return;
+  history_=[];
+  lsSet('pv_history', JSON.stringify(history_));
+  renderHistory();
+  toast('Historial borrado');
+}
+
+function viewHistEntry(id) {
+  const entry = history_.find(h=>h.id===id);
+  if (!entry) return;
+  activeHistIdx = id;
+  document.getElementById('hm-title').textContent = entry.client;
+  let html = `<div style="font-size:13px;color:var(--muted);margin-bottom:12px;">${entry.date} · ${fmt(entry.total)}</div>`;
+  const grp = {};
+  entry.budget.forEach(b => {
+    const t = tasks.find(x=>x.id===b.taskId); if(!t) return;
+    if (!grp[t.cat]) grp[t.cat]=[];
+    grp[t.cat].push({b,t});
+  });
+  for (const [cat, items] of Object.entries(grp)) {
+    html += `<div class="sh">${cat}</div>`;
+    items.forEach(({b,t}) => {
+      html += `<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between;gap:8px;">
+        <span>${t.name} <span style="color:var(--muted);">×${b.qty}</span></span>
+        <span style="color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-weight:700;">${fmt(t.price*b.qty)}</span>
+      </div>`;
+    });
+  }
+  if (entry.materials && entry.materials.length) {
+    html += `<div class="sh">Materiales</div>`;
+    entry.materials.forEach(m => {
+      html += `<div style="font-size:13px;padding:4px 0;color:var(--muted);">${m.checked?'☑':'☐'} ${m.name}</div>`;
+    });
+  }
+  document.getElementById('hm-body').innerHTML = html;
+  document.getElementById('hist-modal').classList.remove('hidden');
+}
+
+function restoreFromHistory() {
+  const entry = history_.find(h=>h.id===activeHistIdx);
+  if (!entry) return;
+  if (!confirm('¿Restaurar este presupuesto en el área de trabajo actual? Se perderá el presupuesto actual.')) return;
+  budget    = JSON.parse(JSON.stringify(entry.budget));
+  materials = JSON.parse(JSON.stringify(entry.materials));
+  document.getElementById('client-name').value = entry.client;
+  saveCurrentState(); renderBudget(); renderMats(); updateTotal();
+  closeModal('hist-modal');
+  switchTab('presupuesto');
+  toast('Presupuesto restaurado');
+}
+
+function renderHistory() {
+  const el = document.getElementById('hist-list');
+  const cnt = document.getElementById('hist-count');
+  cnt.textContent = history_.length ? `${history_.length} presupuesto${history_.length>1?'s':''} guardado${history_.length>1?'s':''}` : '';
+  if (!history_.length) { el.innerHTML='<div class="empty">No hay presupuestos guardados todavía.</div>'; return; }
+
+  const statusLabel = { pendiente:'⏳ Pendiente', aceptado:'✅ Aceptado', rechazado:'❌ Rechazado' };
+  const statusClass = { pendiente:'sb-pend', aceptado:'sb-ok', rechazado:'sb-no' };
+
+  el.innerHTML = history_.map(h => `
+    <div class="hist-item">
+      <div class="hist-header">
+        <span class="hist-client">${h.client}</span>
+        <span class="hist-total">${fmt(h.total)}</span>
+      </div>
+      <div class="hist-date">${h.date}</div>
+      <div class="hist-badges">
+        <button class="status-badge ${statusClass[h.status]}">${statusLabel[h.status]}</button>
+      </div>
+      <div class="hist-actions">
+        <button class="hist-mini-btn" onclick="viewHistEntry(${h.id})">👁 Ver</button>
+        <button class="hist-mini-btn" style="color:var(--green)" onclick="setStatus(${h.id},'aceptado')">✅ Aceptado</button>
+        <button class="hist-mini-btn" style="color:var(--danger)" onclick="setStatus(${h.id},'rechazado')">❌ Rechazado</button>
+        <button class="hist-mini-btn" onclick="setStatus(${h.id},'pendiente')">⏳ Pendiente</button>
+        <button class="hist-mini-btn" style="color:var(--danger)" onclick="deleteHistEntry(${h.id})">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+//  SWITCHES
+// ══════════════════════════════════════════════════════════
+function toggleSw(swId, key) {
+  settings[key] = !settings[key];
+  document.getElementById(swId).classList.toggle('on', settings[key]);
+  lsSet('pv_settings', JSON.stringify(settings));
+  renderBudget();
+}
+function applySettings() {
+  document.getElementById('sw-hide').classList.toggle('on', settings.hideUnit);
+  document.getElementById('sw-mats').classList.toggle('on', settings.showMats);
+}
+
+// ══════════════════════════════════════════════════════════
+//  TOTAL + DESCUENTO
+// ══════════════════════════════════════════════════════════
+function getSubtotal() {
+  return budget.reduce((s,b) => {
+    const t = tasks.find(x=>x.id===b.taskId);
+    return s + (t ? t.price*b.qty : 0);
+  }, 0);
+}
+function getDiscountPct() {
+  const v = parseFloat(document.getElementById('discount-input').value);
+  return (isNaN(v) || v < 0) ? 0 : Math.min(v, 100);
+}
+function getTotal() {
+  const sub = getSubtotal();
+  const pct = getDiscountPct();
+  return sub * (1 - pct / 100);
+}
+function applyDiscount() {
+  updateTotal();
+  saveCurrentState();
+}
+function updateTotal() {
+  const sub    = getSubtotal();
+  const pct    = getDiscountPct();
+  const saving = sub * pct / 100;
+  document.getElementById('total-display').textContent = fmt(sub - saving);
+  const savEl = document.getElementById('discount-saving');
+  if (savEl) savEl.textContent = saving > 0 ? '− ' + Math.round(saving).toLocaleString('es-AR') : '$ 0';
+}
+function fmt(n) { return '$ ' + Math.round(n).toLocaleString('es-AR'); }
+
+// ══════════════════════════════════════════════════════════
+//  IMPORT
+// ══════════════════════════════════════════════════════════
+function importPrices() {
+  const text = document.getElementById('import-text').value.trim();
+  if (!text) { toast('Pegá el texto primero','error'); return; }
+  const lines = text.split('\n');
+  let cat = 'Importado';
+  const imported = [];
+  let idCtr = Date.now();
+  const prRe = /\$\s*([\d.]+(?:,\d+)?)/;
+  const skip  = ['publicidad','prohibida','contacto','newsletter','cms','troop','grupo electro'];
+  lines.forEach(raw => {
+    const line = raw.trim();
+    if (!line || line.length < 3) return;
+    if (skip.some(w => line.toLowerCase().includes(w))) return;
+    if (!prRe.test(line)) {
+      if (line.length < 70 && !line.startsWith('De ') && !line.startsWith('Hasta ') && !line.includes('...') && !line.match(/^\d/)) {
+        const clean = line.replace(/[:\-–]/g,'').trim();
+        if (clean.length > 2) cat = clean;
+      }
+      return;
+    }
+    const m = line.match(prRe);
+    const price = parseFloat(m[1].replace(/\./g,'').replace(',','.'));
+    if (isNaN(price) || price < 500) return;
+    let name = line.split(/\.{2,}/)[0].replace(/:\s*$/,'').trim();
+    if (!name || name.length < 3) name = line.split('$')[0].replace(/:/,'').trim();
+    if (!name || name.length < 3) return;
+    imported.push({id:idCtr++, cat, name, price});
+  });
+  if (!imported.length) { toast('No se detectaron precios válidos','error'); return; }
+  const existing = new Set(tasks.map(t=>t.name.toLowerCase()));
+  const newOnes = imported.filter(t=>!existing.has(t.name.toLowerCase()));
+  tasks = [...tasks, ...newOnes];
+  lsSet('pv_tasks', JSON.stringify(tasks));
+  renderCats(); renderTasks(); updateDBStats();
+  document.getElementById('import-text').value='';
+  toast(`✅ ${newOnes.length} tareas importadas`);
+}
+
+function confirmReset() {
+  if (!confirm('¿Restaurar la base de datos original? Se perderán las tareas importadas.')) return;
+  tasks = BUILTIN.map((t,i)=>({...t,id:i}));
+  lsSet('pv_tasks', JSON.stringify(tasks));
+  activeCat='Todos'; renderCats(); renderTasks(); updateDBStats();
+  toast('Base de datos restaurada');
+}
+function updateDBStats() {
+  const cats = [...new Set(tasks.map(t=>t.cat))].length;
+  document.getElementById('db-stats').textContent =
+    `${tasks.length} tareas · ${cats} categorías · Electro Instalador Mar-Abr 2026`;
+}
+
+// ══════════════════════════════════════════════════════════
+//  MODAL
+// ══════════════════════════════════════════════════════════
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+// ══════════════════════════════════════════════════════════
+//  WHATSAPP IMAGE
+// ══════════════════════════════════════════════════════════
+function generateWA() {
+  if (!budget.length) { toast('Agregá tareas primero','error'); return; }
+  const client  = document.getElementById('client-name').value.trim();
+  const today   = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const expiry  = (() => {
+    const d = new Date(); d.setDate(d.getDate()+7);
+    return d.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
+  })();
+  const sub     = getSubtotal();
+  const pct     = getDiscountPct();
+  const saving  = sub * pct / 100;
+  const total   = sub - saving;
+
+  const grp = {};
+  budget.forEach(b => {
+    const t = tasks.find(x=>x.id===b.taskId); if(!t) return;
+    if (!grp[t.cat]) grp[t.cat]=[];
+    grp[t.cat].push({b,t});
+  });
+
+  let itemsHTML = '';
+  for (const [cat, items] of Object.entries(grp)) {
+    itemsHTML += `<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#7a8099;margin:15px 0 5px;font-family:'Barlow Condensed',sans-serif;">${cat}</div>`;
+    items.forEach(({b,t}) => {
+      const sub = t.price*b.qty;
+      itemsHTML += `
+        <div style="background:#1e2230;border:1px solid #2a2f3e;border-radius:7px;padding:9px 13px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;">
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:600;font-family:'Barlow',sans-serif;color:#e8eaf0;">${t.name}</div>
+            <div style="font-size:11px;color:#7a8099;font-family:'Barlow',sans-serif;">${settings.hideUnit ? `Cant: ${b.qty}` : `${fmt(t.price)} × ${b.qty}`}</div>
+          </div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:#f5c518;white-space:nowrap;margin-left:10px;">${fmt(sub)}</div>
+        </div>`;
+    });
+  }
+
+  let matsHTML = '';
+  if (settings.showMats && materials.length) {
+    matsHTML = `<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#7a8099;margin:15px 0 5px;font-family:'Barlow Condensed',sans-serif;">Materiales a comprar</div>`;
+    materials.forEach(m => {
+      matsHTML += `<div style="background:#1e2230;border:1px solid #2a2f3e;border-radius:7px;padding:7px 13px;margin-bottom:3px;font-size:12px;font-family:'Barlow',sans-serif;color:${m.checked?'#7a8099':'#e8eaf0'};${m.checked?'text-decoration:line-through;':''}">${m.checked?'☑':'☐'} ${m.name}</div>`;
+    });
+  }
+
+  const contactHTML = (userCfg.nombre || userCfg.tel || userCfg.email) ? `
+    <div style="background:#1e2230;border:1px solid #2a2f3e;border-radius:7px;padding:11px 14px;margin-top:15px;font-family:'Barlow',sans-serif;line-height:1.7;">
+      ${userCfg.nombre ? `<div style="font-weight:700;color:#e8eaf0;font-size:14px;">${userCfg.nombre}</div>` : ''}
+      ${userCfg.tel    ? `<div style="font-size:12px;color:#7a8099;">📞 ${userCfg.tel}</div>` : ''}
+      ${userCfg.email  ? `<div style="font-size:12px;color:#7a8099;">✉ ${userCfg.email}</div>` : ''}
+    </div>` : '';
+
+  const clientHTML = client
+    ? `<div style="background:#14161f;border:1px solid #f5c518;border-radius:7px;padding:8px 13px;margin-bottom:14px;font-family:'Barlow',sans-serif;">
+         <div style="font-size:10px;color:#7a8099;text-transform:uppercase;letter-spacing:1px;">Cliente / Obra</div>
+         <div style="font-size:16px;font-weight:700;color:#e8eaf0;">${client}</div>
+       </div>`
+    : '';
+
+  document.getElementById('wa-src').innerHTML = `
+    <div style="background:#0d0f14;padding:32px;width:700px;font-family:'Barlow Condensed',sans-serif;">
+      <!-- Header -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #f5c518;">
+        <div style="width:42px;height:42px;background:#f5c518;flex-shrink:0;clip-path:polygon(50% 0%,80% 40%,55% 40%,70% 100%,20% 55%,50% 55%);"></div>
+        <div style="flex:1;">
+          <div style="font-size:26px;font-weight:800;letter-spacing:1px;color:#f5c518;line-height:1;">PATAGONIA VOLT</div>
+          <div style="font-size:10px;color:#7a8099;letter-spacing:3px;text-transform:uppercase;margin-top:1px;">Instalaciones Eléctricas · Presupuesto</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;color:#7a8099;">Fecha: ${today}</div>
+          <div style="font-size:11px;color:#f5c518;font-weight:700;margin-top:3px;">✅ Válido por 7 días</div>
+          <div style="font-size:10px;color:#7a8099;">Vence: ${expiry}</div>
+        </div>
+      </div>
+      ${clientHTML}
+      ${itemsHTML}
+      ${matsHTML}
+      <!-- Total -->
+      <div style="background:#14161f;border:2px solid #f5c518;border-radius:9px;padding:14px 18px;margin-top:18px;">
+        ${pct > 0 ? `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #2a2f3e;">
+          <div style="font-size:11px;color:#7a8099;text-transform:uppercase;letter-spacing:2px;">Subtotal</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;color:#7a8099;text-decoration:line-through;">${fmt(sub)}</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #2a2f3e;">
+          <div style="font-size:11px;color:#4caf7d;text-transform:uppercase;letter-spacing:2px;">Descuento ${pct}%</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:#4caf7d;">− ${fmt(saving)}</div>
+        </div>` : ''}
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:11px;color:#7a8099;text-transform:uppercase;letter-spacing:2px;">Total Mano de Obra</div>
+            <div style="font-size:10px;color:#3a3f50;margin-top:2px;">No incluye materiales</div>
+          </div>
+          <div style="font-size:34px;font-weight:800;color:#f5c518;">${fmt(total)}</div>
+        </div>
+      </div>
+      ${contactHTML}
+      <div style="margin-top:16px;text-align:center;font-size:10px;color:#3a3f50;letter-spacing:1px;font-family:'Barlow',sans-serif;">
+        Valores de referencia · Electro Instalador Mar-Abr 2026 · No incluye materiales
+      </div>
+    </div>`;
+
+  toast('Generando imagen…');
+  setTimeout(() => {
+    html2canvas(document.getElementById('wa-src'), {
+      scale:2, backgroundColor:'#0d0f14', logging:false, useCORS:true
+    }).then(canvas => {
+      document.getElementById('wa-img').src = canvas.toDataURL('image/png');
+      document.getElementById('wa-modal').classList.remove('hidden');
+    }).catch(() => toast('Error al generar imagen','error'));
+  }, 160);
+}
+
+function downloadWA() {
+  const img = document.getElementById('wa-img');
+  if (!img.src || img.src===window.location.href) return;
+  const a=document.createElement('a'); a.href=img.src;
+  a.download='presupuesto-patagonia-volt.png'; a.click();
+  toast('✅ Imagen descargada');
+}
+
+// ══════════════════════════════════════════════════════════
+//  SERVICE WORKER REGISTRATION
+// ══════════════════════════════════════════════════════════
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(() => console.log('SW registrado'))
+      .catch(e => console.log('SW error:', e));
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+//  BOOT
+// ══════════════════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>
