@@ -8,8 +8,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="PatagoniaVolt"/>
-<link rel="manifest" href="manifest.json"/>
-<link rel="apple-touch-icon" href="icon-192.png"/>
+<link rel="manifest" href="./manifest.json"/>
+<link rel="apple-touch-icon" href="./icon-192.png"/>
 <title>Patagonia Volt</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -609,11 +609,23 @@ function toast(msg, err) {
 // ══════════════════════════════════════════════════════════
 function renderCats() {
   const cats = ['Todos', ...[...new Set(tasks.map(t=>t.cat))].filter(Boolean).sort()];
-  document.getElementById('cat-filters').innerHTML = cats.map(c =>
-    `<span class="cat-badge${c===activeCat?' active':''}" onclick="selCat(${JSON.stringify(c)})">${c}</span>`
-  ).join('');
+  const wrap = document.getElementById('cat-filters');
+  wrap.innerHTML = cats.map(c => {
+    const safeCat = c.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    const active  = c === activeCat ? ' active' : '';
+    return `<span class="cat-badge${active}" data-cat="${safeCat}">${c}</span>`;
+  }).join('');
 }
 function selCat(c) { activeCat = c; renderCats(); renderTasks(); }
+
+// Delegated click handler — avoids inline onclick breakage with accented chars
+document.addEventListener('click', function(e) {
+  const badge = e.target.closest('.cat-badge');
+  if (badge) {
+    const cat = badge.getAttribute('data-cat');
+    if (cat !== null) selCat(cat);
+  }
+});
 
 // ══════════════════════════════════════════════════════════
 //  TASK LIST
@@ -1082,7 +1094,7 @@ function downloadWA() {
 // ══════════════════════════════════════════════════════════
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js')
+    navigator.serviceWorker.register('./sw.js')
       .then(() => console.log('SW registrado'))
       .catch(e => console.log('SW error:', e));
   });
