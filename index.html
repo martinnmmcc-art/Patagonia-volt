@@ -303,6 +303,18 @@ input.cfg:focus { outline:none; border-color:var(--accent); }
     <input type="text" id="mat-input" placeholder="Agregar material…" onkeydown="if(event.key==='Enter')addMat()"/>
     <button class="btn-add" onclick="addMat()">+ Agregar</button>
   </div>
+
+  <div class="card">
+    <div class="card-title">Catálogo de materiales</div>
+    <div class="search-wrap">
+      <span class="si">🔍</span>
+      <input type="text" id="mat-cat-search" placeholder="Buscar material…" oninput="renderMatCatalog()"/>
+    </div>
+    <div class="cat-wrap" id="mat-cat-filters"></div>
+    <div class="task-list" id="mat-catalog-list" style="padding-bottom:6px;"></div>
+  </div>
+
+  <div class="sh">Materiales del presupuesto</div>
   <div id="mat-list"></div>
 </div>
 
@@ -397,6 +409,7 @@ let settings  = { hideUnit: false, showMats: true };
 let userCfg   = { nombre: '', tel: '', email: '' };
 let history_  = [];      // array of saved budgets
 let activeCat = 'Todos';
+let activeMatCat = 'Todos';
 let activeHistIdx = null;
 
 // ══════════════════════════════════════════════════════════
@@ -519,6 +532,148 @@ const BUILTIN = [
 ];
 
 // ══════════════════════════════════════════════════════════
+//  CATÁLOGO DE MATERIALES (sin precio, solo descripción — uso residencial AR)
+// ══════════════════════════════════════════════════════════
+const MATERIAL_CATALOG = [
+  // Caños y accesorios PVC
+  {cat:'Caños y accesorios PVC', name:'Caño PVC rígido 5/8" (16mm) x 3m'},
+  {cat:'Caños y accesorios PVC', name:'Caño PVC rígido 3/4" (19mm) x 3m'},
+  {cat:'Caños y accesorios PVC', name:'Caño PVC rígido 1" (25mm) x 3m'},
+  {cat:'Caños y accesorios PVC', name:'Caño PVC rígido 1 1/4" (32mm) x 3m'},
+  {cat:'Caños y accesorios PVC', name:'Caño PVC rígido 1 1/2" (38mm) x 3m'},
+  {cat:'Caños y accesorios PVC', name:'Curva PVC 90° 3/4"'},
+  {cat:'Caños y accesorios PVC', name:'Curva PVC 90° 1"'},
+  {cat:'Caños y accesorios PVC', name:'Codo PVC 3/4"'},
+  {cat:'Caños y accesorios PVC', name:'Unión PVC (cupla) 3/4"'},
+  {cat:'Caños y accesorios PVC', name:'Unión PVC (cupla) 1"'},
+  {cat:'Caños y accesorios PVC', name:'Boquilla PVC 3/4"'},
+  {cat:'Caños y accesorios PVC', name:'Conector caño-caja PVC 3/4"'},
+  {cat:'Caños y accesorios PVC', name:'Grampa/abrazadera para caño PVC 3/4"'},
+  {cat:'Caños y accesorios PVC', name:'Pegamento para PVC (pomo)'},
+  {cat:'Caños y accesorios PVC', name:'Cinta de teflón'},
+
+  // Caños corrugados
+  {cat:'Caños corrugados', name:'Corrugado liviano 3/4" (rollo)'},
+  {cat:'Caños corrugados', name:'Corrugado liviano 1" (rollo)'},
+  {cat:'Caños corrugados', name:'Corrugado semipesado 3/4" (rollo)'},
+  {cat:'Caños corrugados', name:'Corrugado semipesado 1" (rollo)'},
+  {cat:'Caños corrugados', name:'Corrugado reforzado (pesado) 3/4" (rollo)'},
+  {cat:'Caños corrugados', name:'Boquilla para corrugado 3/4"'},
+  {cat:'Caños corrugados', name:'Conector corrugado-caja'},
+  {cat:'Caños corrugados', name:'Sonda pasacables (fiscal) 3/4"'},
+
+  // Cajas rectangulares
+  {cat:'Cajas rectangulares', name:'Caja rectangular PVC 5x10cm'},
+  {cat:'Cajas rectangulares', name:'Caja rectangular PVC doble 10x10cm'},
+  {cat:'Cajas rectangulares', name:'Caja rectangular metálica 5x10cm'},
+  {cat:'Cajas rectangulares', name:'Caja rectangular metálica doble 10x10cm'},
+  {cat:'Cajas rectangulares', name:'Tapa ciega para caja rectangular'},
+
+  // Cajas octogonales
+  {cat:'Cajas octogonales', name:'Caja octogonal PVC chica (55mm)'},
+  {cat:'Cajas octogonales', name:'Caja octogonal PVC grande (100mm)'},
+  {cat:'Cajas octogonales', name:'Caja octogonal metálica chica'},
+  {cat:'Cajas octogonales', name:'Caja octogonal metálica grande'},
+  {cat:'Cajas octogonales', name:'Tapa ciega para caja octogonal'},
+
+  // Cajas estanco (IP65/IP55)
+  {cat:'Cajas estanco', name:'Caja estanco 100x100x50mm (IP65)'},
+  {cat:'Cajas estanco', name:'Caja estanco 150x150x70mm (IP65)'},
+  {cat:'Cajas estanco', name:'Caja estanco 200x200x90mm (IP65)'},
+  {cat:'Cajas estanco', name:'Caja estanco 250x200x100mm (IP65)'},
+  {cat:'Cajas estanco', name:'Caja estanco 300x300x120mm (IP65)'},
+  {cat:'Cajas estanco', name:'Caja estanco 400x300x150mm (IP65)'},
+  {cat:'Cajas estanco', name:'Prensacable (racor) PG para caja estanco'},
+
+  // Puesta a tierra
+  {cat:'Puesta a tierra', name:'Jabalina copperweld 1,5m'},
+  {cat:'Puesta a tierra', name:'Jabalina copperweld 2m'},
+  {cat:'Puesta a tierra', name:'Grampa bimetálica para jabalina'},
+  {cat:'Puesta a tierra', name:'Caja de inspección PVC para jabalina'},
+  {cat:'Puesta a tierra', name:'Cable desnudo p/PAT 16mm²'},
+  {cat:'Puesta a tierra', name:'Cable desnudo p/PAT 25mm²'},
+  {cat:'Puesta a tierra', name:'Soldadura exotérmica (cartucho)'},
+  {cat:'Puesta a tierra', name:'Borne/barra de puesta a tierra'},
+
+  // Tableros
+  {cat:'Tableros', name:'Tablero de embutir monofásico 1x8 módulos'},
+  {cat:'Tableros', name:'Tablero de embutir monofásico 1x12 módulos'},
+  {cat:'Tableros', name:'Tablero de embutir monofásico 1x18 módulos'},
+  {cat:'Tableros', name:'Tablero de embutir monofásico 1x24 módulos'},
+  {cat:'Tableros', name:'Tablero de embutir monofásico 1x36 módulos'},
+  {cat:'Tableros', name:'Tablero de aplicar monofásico 1x8 módulos'},
+  {cat:'Tableros', name:'Tablero de aplicar monofásico 1x12 módulos'},
+  {cat:'Tableros', name:'Tablero de aplicar monofásico 1x18 módulos'},
+  {cat:'Tableros', name:'Tablero de aplicar monofásico 1x24 módulos'},
+  {cat:'Tableros', name:'Tablero de aplicar monofásico 1x36 módulos'},
+  {cat:'Tableros', name:'Tablero trifásico de embutir'},
+  {cat:'Tableros', name:'Tablero trifásico de aplicar'},
+  {cat:'Tableros', name:'Riel DIN 35mm'},
+  {cat:'Tableros', name:'Peine/bornera de distribución'},
+
+  // Gabinetes
+  {cat:'Gabinetes', name:'Gabinete metálico IP54 (chico)'},
+  {cat:'Gabinetes', name:'Gabinete metálico IP54 (mediano)'},
+  {cat:'Gabinetes', name:'Gabinete metálico IP54 (grande)'},
+  {cat:'Gabinetes', name:'Gabinete de PVC IP65'},
+  {cat:'Gabinetes', name:'Gabinete para medidor (caja de toma)'},
+  {cat:'Gabinetes', name:'Placa de montaje para gabinete'},
+
+  // Contactores, relés y guardamotores
+  {cat:'Contactores y relés', name:'Contactor 9A'},
+  {cat:'Contactores y relés', name:'Contactor 18A'},
+  {cat:'Contactores y relés', name:'Contactor 25A'},
+  {cat:'Contactores y relés', name:'Contactor 32A'},
+  {cat:'Contactores y relés', name:'Contactor 40A'},
+  {cat:'Contactores y relés', name:'Relé térmico (protección motor)'},
+  {cat:'Contactores y relés', name:'Guardamotor'},
+  {cat:'Contactores y relés', name:'Relé de estado sólido (SSR)'},
+  {cat:'Contactores y relés', name:'Relé temporizador (timer)'},
+  {cat:'Contactores y relés', name:'Base/zócalo para relé'},
+  {cat:'Contactores y relés', name:'Relé auxiliar/interfase 24V'},
+
+  // Señalización y comando
+  {cat:'Señalización y comando', name:'Baliza / señalizador luminoso'},
+  {cat:'Señalización y comando', name:'Piloto/luz indicadora (verde/rojo)'},
+  {cat:'Señalización y comando', name:'Pulsador de comando (marcha/paro)'},
+  {cat:'Señalización y comando', name:'Selector de comando (2 o 3 posiciones)'},
+  {cat:'Señalización y comando', name:'Seta de emergencia'},
+  {cat:'Señalización y comando', name:'Buzzer/sirena de señalización'},
+
+  // Protecciones y accesorios de tablero
+  {cat:'Protecciones', name:'Interruptor termomagnético monofásico'},
+  {cat:'Protecciones', name:'Interruptor termomagnético trifásico'},
+  {cat:'Protecciones', name:'Disyuntor diferencial (ID) monofásico'},
+  {cat:'Protecciones', name:'Disyuntor diferencial (ID) trifásico'},
+  {cat:'Protecciones', name:'Protector contra sobretensión (DPS)'},
+  {cat:'Protecciones', name:'Fusible tipo NH / cuchilla'},
+  {cat:'Protecciones', name:'Base portafusible'},
+
+  // Conductores
+  {cat:'Conductores', name:'Cable unipolar 1,5mm² (rollo)'},
+  {cat:'Conductores', name:'Cable unipolar 2,5mm² (rollo)'},
+  {cat:'Conductores', name:'Cable unipolar 4mm² (rollo)'},
+  {cat:'Conductores', name:'Cable unipolar 6mm² (rollo)'},
+  {cat:'Conductores', name:'Cable unipolar 10mm² (rollo)'},
+  {cat:'Conductores', name:'Cable subterráneo (tetrapolar)'},
+  {cat:'Conductores', name:'Cable tipo taller (bipolar)'},
+
+  // Accesorios varios / terminación
+  {cat:'Accesorios y terminación', name:'Tomacorriente simple con tapa'},
+  {cat:'Accesorios y terminación', name:'Tomacorriente doble con tapa'},
+  {cat:'Accesorios y terminación', name:'Interruptor de luz simple'},
+  {cat:'Accesorios y terminación', name:'Interruptor combinación (9 puntos)'},
+  {cat:'Accesorios y terminación', name:'Módulo/tecla ciega'},
+  {cat:'Accesorios y terminación', name:'Ficha/enchufe macho'},
+  {cat:'Accesorios y terminación', name:'Ficha/enchufe hembra'},
+  {cat:'Accesorios y terminación', name:'Portalámparas'},
+  {cat:'Accesorios y terminación', name:'Cinta aisladora'},
+  {cat:'Accesorios y terminación', name:'Precinto plástico'},
+  {cat:'Accesorios y terminación', name:'Terminal a compresión'},
+  {cat:'Accesorios y terminación', name:'Bandeja portacable metálica (tramo)'},
+];
+
+// ══════════════════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════════════════
 function init() {
@@ -554,15 +709,94 @@ function init() {
   renderTasks();
   renderBudget();
   renderMats();
+  renderMatCatFilters();
+  renderMatCatalog();
   renderHistory();
   updateTotal();
   loadCfgUI();
   updateDBStats();
+
+  // Traer la versión más reciente desde Supabase (si hay conexión).
+  // La app sigue funcionando 100% offline con lo que ya cargó de localStorage;
+  // esto solo actualiza si encuentra datos guardados desde otro dispositivo.
+  syncPullFromSupabase();
+}
+
+// ══════════════════════════════════════════════════════════
+//  SINCRONIZACIÓN CON SUPABASE (multi-dispositivo)
+// ══════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://kmkprbnwcbavonfnyput.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtta3ByYm53Y2Jhdm9uZm55cHV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzODUyMjgsImV4cCI6MjEwMDk2MTIyOH0.A-d1FquQftEcXheF7uTnEHJ-Z1UULb5VSIqq9e1cR8c';
+
+async function syncPullFromSupabase() {
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/pv_data?id=eq.workspace&select=payload`,
+      { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
+    );
+    if (!res.ok) return;
+    const rows = await res.json();
+    const remote = rows && rows[0] && rows[0].payload;
+    if (!remote || typeof remote !== 'object' || !Object.keys(remote).length) return;
+
+    if (Array.isArray(remote.tasks) && remote.tasks.length) {
+      tasks = remote.tasks; lsSetSilent('pv_tasks', JSON.stringify(tasks));
+    }
+    if (remote.current) {
+      budget    = remote.current.budget    || [];
+      materials = remote.current.materials || [];
+      document.getElementById('client-name').value    = remote.current.client   || '';
+      document.getElementById('discount-input').value = remote.current.discount || '';
+      lsSetSilent('pv_current', JSON.stringify(remote.current));
+    }
+    if (remote.settings) { settings = remote.settings; lsSetSilent('pv_settings', JSON.stringify(settings)); }
+    if (remote.userCfg)  { userCfg  = remote.userCfg;  lsSetSilent('pv_config', JSON.stringify(userCfg)); }
+    if (Array.isArray(remote.history_)) { history_ = remote.history_; lsSetSilent('pv_history', JSON.stringify(history_)); }
+    if (remote.prices_updated_at) lsSetSilent('pv_prices_updated_at', remote.prices_updated_at);
+
+    applySettings(); renderCats(); renderTasks(); renderBudget();
+    renderMats(); renderHistory(); updateTotal(); loadCfgUI(); updateDBStats();
+    toast('☁️ Sincronizado con la nube');
+  } catch (e) {
+    // Sin conexión o error de red: seguimos con lo que ya hay en el celular.
+  }
+}
+
+let _pushTimer;
+function schedulePush() {
+  clearTimeout(_pushTimer);
+  _pushTimer = setTimeout(pushStateToSupabase, 900);
+}
+
+async function pushStateToSupabase() {
+  try {
+    const payload = {
+      tasks,
+      current: JSON.parse(ls('pv_current') || '{}'),
+      settings,
+      userCfg,
+      history_,
+      prices_updated_at: ls('pv_prices_updated_at') || null
+    };
+    await fetch(`${SUPABASE_URL}/rest/v1/pv_data?id=eq.workspace`, {
+      method: 'PATCH',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal'
+      },
+      body: JSON.stringify({ payload, updated_at: new Date().toISOString() })
+    });
+  } catch (e) {
+    // Sin conexión: el cambio queda guardado local y se sincroniza en el próximo intento.
+  }
 }
 
 // localStorage helpers
 function ls(k)      { try { return localStorage.getItem(k); } catch(e){ return null; } }
-function lsSet(k,v) { try { localStorage.setItem(k, v); } catch(e){} }
+function lsSet(k,v) { try { localStorage.setItem(k, v); } catch(e){} schedulePush(); }
+function lsSetSilent(k,v) { try { localStorage.setItem(k, v); } catch(e){} } // usado al recibir datos de Supabase, no vuelve a empujar
 
 // Save current working state (budget + materials + client name + discount)
 function saveCurrentState() {
@@ -745,6 +979,52 @@ function renderMats() {
       <span class="mat-nm">${m.name}</span>
       <span class="mat-del" onclick="deleteMat(${i})">✕</span>
     </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+//  CATÁLOGO DE MATERIALES (selección rápida, sin precio)
+// ══════════════════════════════════════════════════════════
+function renderMatCatFilters() {
+  const cats = ['Todos', ...[...new Set(MATERIAL_CATALOG.map(m=>m.cat))].sort()];
+  const wrap = document.getElementById('mat-cat-filters');
+  wrap.innerHTML = cats.map(c => {
+    const safe = c.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    const active = c === activeMatCat ? ' active' : '';
+    return `<span class="cat-badge${active}" data-mcat="${safe}">${c}</span>`;
+  }).join('');
+}
+function selMatCat(c) { activeMatCat = c; renderMatCatFilters(); renderMatCatalog(); }
+
+document.addEventListener('click', function(e) {
+  const mbadge = e.target.closest('[data-mcat]');
+  if (mbadge) selMatCat(mbadge.getAttribute('data-mcat'));
+});
+
+function renderMatCatalog() {
+  const qEl = document.getElementById('mat-cat-search');
+  const q = qEl ? qEl.value.toLowerCase() : '';
+  const f = MATERIAL_CATALOG.filter(m => {
+    const mc = activeMatCat==='Todos' || m.cat===activeMatCat;
+    const ms = !q || m.name.toLowerCase().includes(q) || m.cat.toLowerCase().includes(q);
+    return mc && ms;
+  });
+  const el = document.getElementById('mat-catalog-list');
+  if (!el) return;
+  if (!f.length) { el.innerHTML = '<div class="empty">Sin resultados</div>'; return; }
+  el.innerHTML = f.map(m => `
+    <div class="task-item" onclick='addMatFromCatalog(${JSON.stringify(m.name)})'>
+      <div style="flex:1;min-width:0">
+        <div class="task-name">${m.name}</div>
+        <div class="task-cat">${m.cat}</div>
+      </div>
+      <div class="task-price" style="color:var(--muted);font-size:16px;">+</div>
+    </div>`).join('');
+}
+
+function addMatFromCatalog(name) {
+  materials.push({name, checked:false});
+  saveCurrentState(); renderMats(); renderBudget();
+  toast('➕ ' + name.substring(0,38));
 }
 
 // ══════════════════════════════════════════════════════════
