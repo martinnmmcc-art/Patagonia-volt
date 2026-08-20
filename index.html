@@ -225,6 +225,7 @@ input.cfg:focus { outline:none; border-color:var(--accent); }
       <span class="sub">Presupuestador Eléctrico</span>
     </div>
   </div>
+  <button class="hbtn js-update-price-btn" onclick="updatePricesFromWeb()">🔄 Precios</button>
   <button class="hbtn" onclick="clearBudget()">🗑 Limpiar</button>
   <button class="hbtn" onclick="saveBudgetToHistory()" style="background:var(--accent);color:#000;border-color:var(--accent);">💾 Guardar</button>
 </header>
@@ -326,8 +327,14 @@ input.cfg:focus { outline:none; border-color:var(--accent); }
     <input class="cfg" id="cfg-email" placeholder="Ej: juan@mail.com" oninput="saveCfg()"/>
   </div>
   <div class="card">
-    <div class="card-title">Importar lista de precios</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:9px;">Pegá el texto de Electro Instalador. La app detecta categorías y valores automáticamente.</p>
+    <div class="card-title">Actualizar precios desde la web</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:6px;">Trae los valores actuales de Electro Instalador automáticamente, sin copiar y pegar. Actualiza los precios de las tareas existentes y agrega las que sean nuevas.</p>
+    <p style="font-size:11px;color:var(--muted);margin-bottom:9px;" id="last-price-update"></p>
+    <button class="btn-p btn-full js-update-price-btn" onclick="updatePricesFromWeb()">🔄 Actualizar precios ahora</button>
+  </div>
+  <div class="card">
+    <div class="card-title">Importar lista de precios (manual)</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:9px;">Alternativa si la actualización automática falla: pegá el texto de Electro Instalador. La app detecta categorías y valores automáticamente.</p>
     <textarea class="imp" id="import-text" placeholder="Pegá aquí la lista de precios…"></textarea>
     <button class="btn-p btn-full" onclick="importPrices()">⚡ Procesar e importar</button>
   </div>
@@ -958,7 +965,65 @@ function confirmReset() {
 function updateDBStats() {
   const cats = [...new Set(tasks.map(t=>t.cat))].length;
   document.getElementById('db-stats').textContent =
-    `${tasks.length} tareas · ${cats} categorías · Electro Instalador Mar-Abr 2026`;
+    `${tasks.length} tareas · ${cats} categorías`;
+  updateLastPriceUpdateLabel();
+}
+
+// ══════════════════════════════════════════════════════════
+//  ACTUALIZACIÓN AUTOMÁTICA DE PRECIOS (via Supabase Edge Function)
+// ══════════════════════════════════════════════════════════
+const PRICE_UPDATE_API = 'https://kmkprbnwcbavonfnyput.supabase.co/functions/v1/update-prices';
+
+function updateLastPriceUpdateLabel() {
+  const el = document.getElementById('last-price-update');
+  if (!el) return;
+  const iso = ls('pv_prices_updated_at');
+  el.textContent = iso
+    ? 'Última actualización: ' + new Date(iso).toLocaleString('es-AR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})
+    : 'Todavía no actualizaste los precios desde la web.';
+}
+
+async function updatePricesFromWeb() {
+  const btns = document.querySelectorAll('.js-update-price-btn');
+  const originals = [];
+  btns.forEach((b,i) => { originals[i] = b.textContent; b.disabled = true; b.textContent = '⏳ Actualizando…'; });
+
+  try {
+    const res = await fetch(PRICE_UPDATE_API);
+    let data;
+    try { data = await res.json(); }
+    catch (e) { throw new Error('Respuesta inválida del servidor (' + res.status + ')'); }
+    if (!data.ok) throw new Error(data.error || ('Error del servidor (' + res.status + ')'));
+    if (!Array.isArray(data.items) || !data.items.length) throw new Error('No se recibieron precios');
+
+    const byName = new Map(tasks.map(t => [t.name.trim().toLowerCase(), t]));
+    let updated = 0, added = 0, idCtr = Date.now();
+
+    data.items.forEach(it => {
+      if (!it || !it.name || typeof it.price !== 'number' || it.price <= 0) return;
+      const key = it.name.trim().toLowerCase();
+      const existing = byName.get(key);
+      if (existing) {
+        if (existing.price !== it.price) { existing.price = it.price; updated++; }
+        if (it.cat) existing.cat = it.cat;
+      } else {
+        const t = { id: idCtr++, cat: it.cat || 'Importado', name: it.name.trim(), price: it.price };
+        tasks.push(t);
+        byName.set(key, t);
+        added++;
+      }
+    });
+
+    lsSet('pv_tasks', JSON.stringify(tasks));
+    lsSet('pv_prices_updated_at', data.updated_at || new Date().toISOString());
+
+    renderCats(); renderTasks(); renderBudget(); updateDBStats();
+    toast(`✅ Precios actualizados: ${updated} cambiados, ${added} nuevos`);
+  } catch (e) {
+    toast('❌ No se pudo actualizar: ' + (e.message || e), true);
+  } finally {
+    btns.forEach((b,i) => { b.disabled = false; b.textContent = originals[i]; });
+  }
 }
 
 // ══════════════════════════════════════════════════════════
