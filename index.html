@@ -42,6 +42,7 @@
   <div class="tab active" onclick="switchTab('tareas')">⚡ Tareas</div>
   <div class="tab" onclick="switchTab('presupuesto')">📋 Presupuesto</div>
   <div class="tab" onclick="switchTab('materiales')">🔧 Materiales</div>
+  <div class="tab" onclick="switchTab('visita')">🧰 Visita</div>
   <div class="tab" onclick="switchTab('historial')">🗂 Historial</div>
   <div class="tab" onclick="switchTab('config')">⚙️ Config</div>
 </nav>
@@ -123,6 +124,33 @@
   <div id="mat-list"></div>
 </div>
 
+<!-- PAGE: VISITA -->
+<div class="page" id="page-visita">
+  <div class="card">
+    <div class="card-title">Datos del cliente / obra</div>
+    <div class="cfg-lbl">Cliente</div>
+    <input class="cfg" id="visit-client" placeholder="Nombre y apellido"/>
+    <div class="cfg-lbl">Dirección</div>
+    <input class="cfg" id="visit-address" placeholder="Ej: Belgrano 1234"/>
+    <div class="cfg-lbl">Teléfono</div>
+    <input class="cfg" id="visit-phone" placeholder="Ej: 2944 000000"/>
+  </div>
+  <div class="card">
+    <div class="card-title">Detalle de la visita</div>
+    <div class="cfg-lbl">Fecha</div>
+    <input class="cfg" type="date" id="visit-date"/>
+    <div class="cfg-lbl">Tarea a realizar / motivo de la visita</div>
+    <textarea class="imp" id="visit-motivo" style="min-height:70px;" placeholder="Ej: Revisar disparo del diferencial en cocina, agregar 1 toma en dormitorio…"></textarea>
+    <div class="cfg-lbl">Mediciones</div>
+    <textarea class="imp" id="visit-mediciones" style="min-height:60px;" placeholder="Ej: Resistencia PAT: 18Ω · Tensión: 224V · Diferencial: dispara OK"></textarea>
+    <div class="cfg-lbl">Observaciones</div>
+    <textarea class="imp" id="visit-obs" style="min-height:60px;" placeholder="Notas adicionales, materiales que faltan, próximos pasos…"></textarea>
+    <button class="btn-p btn-full" style="margin-top:8px;" onclick="saveVisit()">💾 Guardar visita</button>
+  </div>
+  <div class="sh">Visitas guardadas</div>
+  <div id="visit-list"></div>
+</div>
+
 <!-- PAGE: HISTORIAL -->
 <div class="page" id="page-historial">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
@@ -144,10 +172,18 @@
     <input class="cfg" id="cfg-email" placeholder="Ej: juan@mail.com" oninput="saveCfg()"/>
   </div>
   <div class="card">
-    <div class="card-title">Descripciones de tareas (por categoría)</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:9px;">Escribí acá qué incluye cada tipo de tarea (ej: "Acometidas"). Cuando esté activado el switch en la pestaña Tareas, este texto se muestra debajo de cada ítem del presupuesto de esa categoría. Podés editarlo cuando quieras.</p>
-    <select class="cfg" id="desc-cat-select" onchange="loadDescForCat()"></select>
-    <textarea class="imp" id="desc-cat-text" style="min-height:90px;margin-top:8px;" placeholder="Ej: Incluye apertura de canaleta y colocación de caño de bajada hasta el gabinete. No incluye jabalina ni materiales." oninput="saveDescForCat()"></textarea>
+    <div class="card-title">Descripciones técnicas por tarea</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:9px;">Cada tarea ya trae una descripción técnica propia (AEA 90364 + criterio de obra). Buscá una tarea puntual acá si querés editar su texto a tu manera de trabajar.</p>
+    <div class="search-wrap">
+      <span class="si">🔍</span>
+      <input type="text" id="desc-task-search" placeholder="Buscar tarea…" oninput="renderDescTaskList()"/>
+    </div>
+    <div class="task-list" id="desc-task-list" style="max-height:220px;overflow-y:auto;margin-top:6px;"></div>
+    <div id="desc-task-editor" style="display:none;margin-top:12px;">
+      <div class="cfg-lbl" id="desc-task-editor-title"></div>
+      <textarea class="imp" id="desc-task-text" style="min-height:110px;" oninput="saveTaskDescOverride()"></textarea>
+      <button class="btn-s" style="margin-top:8px;" onclick="resetTaskDescOverride()">↺ Restaurar descripción técnica original</button>
+    </div>
   </div>
   <div class="card">
     <div class="card-title">Actualizar precios desde la web</div>
