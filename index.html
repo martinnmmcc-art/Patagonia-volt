@@ -126,29 +126,66 @@
 
 <!-- PAGE: VISITA -->
 <div class="page" id="page-visita">
-  <div class="card">
-    <div class="card-title">Datos del cliente / obra</div>
-    <div class="cfg-lbl">Cliente</div>
-    <input class="cfg" id="visit-client" placeholder="Nombre y apellido"/>
-    <div class="cfg-lbl">Dirección</div>
-    <input class="cfg" id="visit-address" placeholder="Ej: Belgrano 1234"/>
-    <div class="cfg-lbl">Teléfono</div>
-    <input class="cfg" id="visit-phone" placeholder="Ej: 2944 000000"/>
+
+  <!-- PASO 1: elegir o crear cliente -->
+  <div id="visit-picker">
+    <div class="card">
+      <div class="card-title">Buscar cliente</div>
+      <div class="search-wrap">
+        <span class="si">🔍</span>
+        <input type="text" id="client-search" placeholder="Buscar por nombre…" oninput="renderClientPicker()"/>
+      </div>
+      <div class="task-list" id="client-picker-list" style="max-height:260px;overflow-y:auto;margin-top:6px;"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">+ Nuevo cliente</div>
+      <div class="cfg-lbl">Nombre</div>
+      <input class="cfg" id="new-client-nombre" placeholder="Nombre y apellido"/>
+      <div class="cfg-lbl">Dirección</div>
+      <input class="cfg" id="new-client-direccion" placeholder="Ej: Belgrano 1234"/>
+      <div class="cfg-lbl">Teléfono</div>
+      <input class="cfg" id="new-client-telefono" placeholder="Ej: 2944 000000"/>
+      <button class="btn-p btn-full" style="margin-top:8px;" onclick="createClient()">+ Crear y elegir cliente</button>
+    </div>
   </div>
-  <div class="card">
-    <div class="card-title">Detalle de la visita</div>
-    <div class="cfg-lbl">Fecha</div>
-    <input class="cfg" type="date" id="visit-date"/>
-    <div class="cfg-lbl">Tarea a realizar / motivo de la visita</div>
-    <textarea class="imp" id="visit-motivo" style="min-height:70px;" placeholder="Ej: Revisar disparo del diferencial en cocina, agregar 1 toma en dormitorio…"></textarea>
-    <div class="cfg-lbl">Mediciones</div>
-    <textarea class="imp" id="visit-mediciones" style="min-height:60px;" placeholder="Ej: Resistencia PAT: 18Ω · Tensión: 224V · Diferencial: dispara OK"></textarea>
-    <div class="cfg-lbl">Observaciones</div>
-    <textarea class="imp" id="visit-obs" style="min-height:60px;" placeholder="Notas adicionales, materiales que faltan, próximos pasos…"></textarea>
-    <button class="btn-p btn-full" style="margin-top:8px;" onclick="saveVisit()">💾 Guardar visita</button>
+
+  <!-- PASO 2: ficha del cliente elegido -->
+  <div id="visit-detail" style="display:none;">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div style="min-width:0;">
+          <div style="font-size:18px;font-weight:800;" id="client-detail-nombre"></div>
+          <div style="font-size:12px;color:var(--muted);" id="client-detail-info"></div>
+        </div>
+        <div class="hbtn" onclick="closeClientDetail()" style="flex-shrink:0;">↩ Cambiar</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Nueva visita</div>
+      <div class="cfg-lbl">Fecha</div>
+      <input class="cfg" type="date" id="visit-date"/>
+      <div class="cfg-lbl">Tarea realizada / cambio hecho</div>
+      <textarea class="imp" id="visit-motivo" style="min-height:60px;" placeholder="Ej: Se cambió térmica de cocina por disparo reiterado…"></textarea>
+      <div class="cfg-lbl">Pendiente / qué falta</div>
+      <textarea class="imp" id="visit-pendiente" style="min-height:50px;" placeholder="Ej: Falta cambiar diferencial del tablero principal…"></textarea>
+
+      <div class="card-title" style="margin-top:14px;">Mediciones</div>
+      <div id="visit-mediciones-fields"></div>
+
+      <div class="cfg-lbl" style="margin-top:8px;">Observaciones</div>
+      <textarea class="imp" id="visit-obs" style="min-height:50px;" placeholder="Notas adicionales, materiales que faltan, recomendaciones…"></textarea>
+      <button class="btn-p btn-full" style="margin-top:8px;" onclick="saveVisit()">💾 Guardar visita</button>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div class="sh" style="margin-bottom:0;">Historial de este cliente</div>
+      <div class="hbtn" onclick="downloadClientHistory()">📥 Descargar</div>
+    </div>
+    <div id="client-visit-list"></div>
   </div>
-  <div class="sh">Visitas guardadas</div>
-  <div id="visit-list"></div>
+
+  <div id="visit-hist-src"></div>
 </div>
 
 <!-- PAGE: HISTORIAL -->
