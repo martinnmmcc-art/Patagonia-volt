@@ -498,6 +498,7 @@ function init() {
   loadCfgUI();
   updateDBStats();
   renderMedicionFields();
+  renderCircuitRows();
   renderClientPicker();
 
   // Traer la versión más reciente desde Supabase (si hay conexión).
@@ -915,13 +916,39 @@ function restoreFromHistory() {
 //  VISITA AL CLIENTE (clientes + historial + mediciones)
 // ══════════════════════════════════════════════════════════
 const MEDICION_FIELDS = [
-  { key:'tensionFN',  label:'Tensión Fase-Neutro',                 unit:'V'  },
-  { key:'tensionFF',  label:'Tensión Fase-Fase (trifásico)',       unit:'V'  },
-  { key:'tensionNPAT',label:'Tensión Neutro-Tierra (N-PAT)',       unit:'V'  },
-  { key:'tienePAT',   label:'¿Tiene puesta a tierra (PAT)?',       select:['Sí','No','A verificar'] },
-  { key:'difTest',    label:'Diferencial · test de botón',         select:['Dispara OK','No dispara','No tiene'] },
-  { key:'corriente',  label:'Corriente medida (pinza amperométrica)', unit:'A' },
-  { key:'megado',     label:'Resistencia de aislación (Megado, si tenés instrumento)', unit:'MΩ' },
+  // ── Tensiones por fase ──
+  { key:'tensionF1N',  section:'Tensiones', label:'Tensión F1-Neutro',                 unit:'V' },
+  { key:'tensionF2N',  section:'Tensiones', label:'Tensión F2-Neutro (trifásico)',     unit:'V' },
+  { key:'tensionF3N',  section:'Tensiones', label:'Tensión F3-Neutro (trifásico)',     unit:'V' },
+  { key:'tensionF1F2', section:'Tensiones', label:'Tensión F1-F2 (trifásico)',         unit:'V' },
+  { key:'tensionF2F3', section:'Tensiones', label:'Tensión F2-F3 (trifásico)',         unit:'V' },
+  { key:'tensionF1F3', section:'Tensiones', label:'Tensión F1-F3 (trifásico)',         unit:'V' },
+  { key:'tensionNPAT', section:'Tensiones', label:'Tensión Neutro-Tierra (N-PAT)',     unit:'V' },
+
+  // ── Puesta a tierra ──
+  { key:'tienePAT', section:'Puesta a tierra', label:'¿Tiene puesta a tierra (PAT)?', select:['Sí','No','A verificar'] },
+
+  // ── Aislación (megóhmetro) ──
+  { key:'megado',          section:'Aislación (megado)', label:'Resistencia de aislación', unit:'MΩ' },
+  { key:'tipoCableMegado', section:'Aislación (megado)', label:'Tipo de cable medido', select:['Unipolar','Subterráneo','Tipo taller'] },
+
+  // ── Probador de disyuntor diferencial (tipo Unit) ──
+  { key:'difSensibilidad', section:'Disyuntor diferencial', label:'Sensibilidad nominal (IΔn)', select:['10mA','30mA','100mA','300mA'] },
+  { key:'difCurva',        section:'Disyuntor diferencial', label:'Corriente de prueba', select:['½ IΔn (no debe disparar)','1 IΔn','5 IΔn'] },
+  { key:'difTiempo',       section:'Disyuntor diferencial', label:'Tiempo de disparo medido', unit:'ms' },
+  { key:'difResultado',    section:'Disyuntor diferencial', label:'Resultado', select:['OK (dentro de norma)','Fuera de norma','No dispara','No tiene diferencial'] },
+
+  // ── Corriente de consumo general ──
+  { key:'corrienteTotal', section:'Corriente de consumo', label:'Corriente total de la casa/local', unit:'A' },
+
+  // ── Motores ──
+  { key:'motorTipo',      section:'Motores', label:'Tipo de motor', select:['—','Monofásico','Trifásico'] },
+  { key:'motorArranque',  section:'Motores', label:'Corriente de arranque', unit:'A' },
+  { key:'motorNominal',   section:'Motores', label:'Corriente nominal (marcha)', unit:'A' },
+
+  // ── Tipo de instalación ──
+  { key:'usoInstalacion', section:'Tipo de instalación', label:'Uso del inmueble', select:['Vivienda','Local comercial','Industria'] },
+  { key:'canalizacion',   section:'Tipo de instalación', label:'Canalización', select:['Embutida - corrugado','Embutida - caño PVC','Embutida - caño metálico','A la vista - caño PVC','A la vista - caño metálico','Bandeja portacables'] },
 ];
 
 let activeClientId = null;
@@ -931,12 +958,21 @@ let editingVisitId = null;
 function renderMedicionFields() {
   const el = document.getElementById('visit-mediciones-fields');
   if (!el) return;
-  el.innerHTML = MEDICION_FIELDS.map(f => `
+  let lastSection = null;
+  el.innerHTML = MEDICION_FIELDS.map(f => {
+    const sectionHTML = f.section !== lastSection
+      ? (lastSection === null
+          ? `<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-top:4px;">${f.section}</div>`
+          : `<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-top:14px;">${f.section}</div>`)
+      : '';
+    lastSection = f.section;
+    return `${sectionHTML}
     <div class="cfg-lbl">${f.label}${f.unit ? ' (' + f.unit + ')' : ''}</div>
     ${f.select
       ? `<select class="cfg" id="med-${f.key}"><option value="">—</option>${f.select.map(o=>`<option value="${o}">${o}</option>`).join('')}</select>`
       : `<input class="cfg" type="text" inputmode="decimal" id="med-${f.key}" placeholder="Valor medido"/>`
-    }`).join('');
+    }`;
+  }).join('');
 }
 function getMedicionValues() {
   const v = {};
@@ -948,6 +984,38 @@ function getMedicionValues() {
 }
 function clearMedicionFields() {
   MEDICION_FIELDS.forEach(f => { const el = document.getElementById('med-' + f.key); if (el) el.value = ''; });
+}
+
+// ── Consumo por circuito (tabla dinámica dentro de la visita) ──
+let currentCircuitRows = [];
+function addCircuitRow() {
+  currentCircuitRows.push({ nombre:'', normal:'', maximo:'' });
+  renderCircuitRows();
+}
+function removeCircuitRow(i) {
+  currentCircuitRows.splice(i, 1);
+  renderCircuitRows();
+}
+function updateCircuitRow(i, field, value) {
+  if (currentCircuitRows[i]) currentCircuitRows[i][field] = value;
+}
+function renderCircuitRows() {
+  const el = document.getElementById('circuit-rows');
+  if (!el) return;
+  if (!currentCircuitRows.length) { el.innerHTML = '<div class="empty" style="padding:10px;">Sin circuitos cargados.</div>'; return; }
+  el.innerHTML = currentCircuitRows.map((r,i) => `
+    <div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">
+      <input class="cfg" style="flex:2;margin:0;" placeholder="Nombre" value="${(r.nombre||'').replace(/"/g,'&quot;')}" oninput="updateCircuitRow(${i},'nombre',this.value)"/>
+      <input class="cfg" style="flex:1;margin:0;" placeholder="Normal A" value="${(r.normal||'').replace(/"/g,'&quot;')}" oninput="updateCircuitRow(${i},'normal',this.value)"/>
+      <input class="cfg" style="flex:1;margin:0;" placeholder="Máx A" value="${(r.maximo||'').replace(/"/g,'&quot;')}" oninput="updateCircuitRow(${i},'maximo',this.value)"/>
+      <div class="rmbtn" onclick="removeCircuitRow(${i})">✕</div>
+    </div>`).join('');
+}
+function circuitsToText(rows) {
+  if (!rows || !rows.length) return '';
+  return rows.filter(r => r.nombre && r.nombre.trim())
+    .map(r => `${r.nombre}: normal ${r.normal || '—'}A / máx ${r.maximo || '—'}A`)
+    .join(' · ');
 }
 
 // Migra visitas del formato viejo (client/address/phone sueltos) a clientes reales, una sola vez.
@@ -1006,6 +1074,8 @@ function openClientDetail(id) {
   document.getElementById('visit-pendiente').value = '';
   document.getElementById('visit-obs').value = '';
   clearMedicionFields();
+  currentCircuitRows = [];
+  renderCircuitRows();
   document.getElementById('visit-form-title').textContent = 'Nueva visita';
   document.getElementById('visit-save-btn').textContent = '💾 Guardar visita';
   document.getElementById('visit-cancel-edit').style.display = 'none';
@@ -1072,21 +1142,22 @@ function saveVisit() {
   const pendiente = document.getElementById('visit-pendiente').value.trim();
   const obs       = document.getElementById('visit-obs').value.trim();
   const mediciones= getMedicionValues();
+  const circuitos = currentCircuitRows.filter(r => r.nombre && r.nombre.trim());
 
-  if (!motivo && !pendiente && !Object.keys(mediciones).length) {
+  if (!motivo && !pendiente && !Object.keys(mediciones).length && !circuitos.length) {
     toast('Cargá al menos la tarea realizada, lo pendiente o una medición', true); return;
   }
 
   if (editingVisitId) {
     const v = visits.find(x => x.id === editingVisitId);
-    if (v) { v.date = date; v.motivo = motivo; v.pendiente = pendiente; v.mediciones = mediciones; v.obs = obs; }
+    if (v) { v.date = date; v.motivo = motivo; v.pendiente = pendiente; v.mediciones = mediciones; v.obs = obs; v.circuitos = circuitos; }
     editingVisitId = null;
     document.getElementById('visit-form-title').textContent = 'Nueva visita';
     document.getElementById('visit-save-btn').textContent = '💾 Guardar visita';
     document.getElementById('visit-cancel-edit').style.display = 'none';
     toast('✅ Visita actualizada');
   } else {
-    visits.unshift({ id: Date.now(), clientId: activeClientId, date, motivo, pendiente, mediciones, obs });
+    visits.unshift({ id: Date.now(), clientId: activeClientId, date, motivo, pendiente, mediciones, obs, circuitos });
     toast('✅ Visita guardada en el historial del cliente');
   }
   lsSet('pv_visits', JSON.stringify(visits));
@@ -1095,6 +1166,8 @@ function saveVisit() {
   document.getElementById('visit-pendiente').value = '';
   document.getElementById('visit-obs').value = '';
   clearMedicionFields();
+  currentCircuitRows = [];
+  renderCircuitRows();
   document.getElementById('visit-date').value = new Date().toISOString().slice(0,10);
 
   renderClientVisitList();
@@ -1107,6 +1180,8 @@ function editVisit(id) {
   document.getElementById('visit-pendiente').value = v.pendiente || '';
   document.getElementById('visit-obs').value = v.obs || '';
   MEDICION_FIELDS.forEach(f => { const el = document.getElementById('med-' + f.key); if (el) el.value = (v.mediciones && v.mediciones[f.key]) || ''; });
+  currentCircuitRows = v.circuitos ? JSON.parse(JSON.stringify(v.circuitos)) : [];
+  renderCircuitRows();
   document.getElementById('visit-form-title').textContent = 'Editar visita';
   document.getElementById('visit-save-btn').textContent = '💾 Guardar cambios';
   document.getElementById('visit-cancel-edit').style.display = 'inline-block';
@@ -1117,6 +1192,8 @@ function cancelEditVisit() {
   document.getElementById('visit-pendiente').value = '';
   document.getElementById('visit-obs').value = '';
   clearMedicionFields();
+  currentCircuitRows = [];
+  renderCircuitRows();
   document.getElementById('visit-date').value = new Date().toISOString().slice(0,10);
   document.getElementById('visit-form-title').textContent = 'Nueva visita';
   document.getElementById('visit-save-btn').textContent = '💾 Guardar visita';
@@ -1190,6 +1267,7 @@ function renderClientVisitList() {
   if (!list.length) { el.innerHTML = '<div class="empty">Sin visitas registradas todavía para este cliente.</div>'; return; }
   el.innerHTML = list.map(v => {
     const medTxt = medicionesToText(v.mediciones);
+    const circTxt = circuitsToText(v.circuitos);
     return `
     <div class="card" style="margin-bottom:8px;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
@@ -1202,6 +1280,7 @@ function renderClientVisitList() {
       ${v.motivo ? `<div style="margin-top:6px;font-size:13px;"><b>Hecho:</b> ${v.motivo}</div>` : ''}
       ${v.pendiente ? `<div style="margin-top:5px;font-size:13px;color:#f5c518;"><b>⏳ Pendiente:</b> ${v.pendiente}</div>` : ''}
       ${medTxt ? `<div style="margin-top:5px;font-size:12px;color:var(--muted);"><b>Mediciones:</b> ${medTxt}</div>` : ''}
+      ${circTxt ? `<div style="margin-top:5px;font-size:12px;color:var(--muted);"><b>Circuitos:</b> ${circTxt}</div>` : ''}
       ${v.obs ? `<div style="margin-top:5px;font-size:12px;color:var(--muted);">${v.obs}</div>` : ''}
     </div>`;
   }).join('');
@@ -1217,12 +1296,14 @@ function downloadClientHistory() {
 
   const rowsHTML = list.map(v => {
     const medTxt = medicionesToText(v.mediciones);
+    const circTxt = circuitsToText(v.circuitos);
     return `
     <div style="background:#1e2230;border:1px solid #2a2f3e;border-radius:7px;padding:10px 13px;margin-bottom:6px;">
       <div style="font-size:11px;color:#f5c518;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;">${v.date || ''}</div>
       ${v.motivo ? `<div style="font-size:13px;color:#e8eaf0;margin-top:4px;font-family:'Barlow',sans-serif;"><b>Hecho:</b> ${v.motivo}</div>` : ''}
       ${v.pendiente ? `<div style="font-size:13px;color:#f5c518;margin-top:3px;font-family:'Barlow',sans-serif;"><b>Pendiente:</b> ${v.pendiente}</div>` : ''}
       ${medTxt ? `<div style="font-size:12px;color:#9aa0b5;margin-top:3px;font-family:'Barlow',sans-serif;"><b>Mediciones:</b> ${medTxt}</div>` : ''}
+      ${circTxt ? `<div style="font-size:12px;color:#9aa0b5;margin-top:3px;font-family:'Barlow',sans-serif;"><b>Circuitos:</b> ${circTxt}</div>` : ''}
       ${v.obs ? `<div style="font-size:12px;color:#7a8099;margin-top:3px;font-family:'Barlow',sans-serif;">${v.obs}</div>` : ''}
     </div>`;
   }).join('');
@@ -1628,11 +1709,4 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
       .then(() => console.log('SW registrado'))
-      .catch(e => console.log('SW error:', e));
-  });
-}
-
-// ══════════════════════════════════════════════════════════
-//  BOOT
-// ══════════════════════════════════════════════════════════
-init();
+      .cat
