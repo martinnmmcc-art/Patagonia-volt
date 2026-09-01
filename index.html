@@ -152,17 +152,38 @@
   <!-- PASO 2: ficha del cliente elegido -->
   <div id="visit-detail" style="display:none;">
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-        <div style="min-width:0;">
-          <div style="font-size:18px;font-weight:800;" id="client-detail-nombre"></div>
-          <div style="font-size:12px;color:var(--muted);" id="client-detail-info"></div>
+      <div id="client-header-view">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div style="min-width:0;">
+            <div style="font-size:18px;font-weight:800;" id="client-detail-nombre"></div>
+            <div style="font-size:12px;color:var(--muted);" id="client-detail-info"></div>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <div class="hbtn" onclick="toggleEditClient()">✏️ Editar</div>
+            <div class="hbtn" onclick="closeClientDetail()">↩ Cambiar</div>
+          </div>
         </div>
-        <div class="hbtn" onclick="closeClientDetail()" style="flex-shrink:0;">↩ Cambiar</div>
+      </div>
+      <div id="client-header-edit" style="display:none;">
+        <div class="cfg-lbl">Nombre</div>
+        <input class="cfg" id="edit-client-nombre" placeholder="Nombre y apellido"/>
+        <div class="cfg-lbl">Dirección</div>
+        <input class="cfg" id="edit-client-direccion" placeholder="Ej: Belgrano 1234"/>
+        <div class="cfg-lbl">Teléfono</div>
+        <input class="cfg" id="edit-client-telefono" placeholder="Ej: 2944 000000"/>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button class="btn-s" style="flex:1;" onclick="toggleEditClient()">Cancelar</button>
+          <button class="btn-p" style="flex:1;" onclick="saveClientEdit()">Guardar</button>
+        </div>
+        <button class="btn-s" style="margin-top:8px;width:100%;color:#e05555;" onclick="deleteClient()">🗑 Eliminar cliente</button>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title">Nueva visita</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="card-title" id="visit-form-title" style="margin-bottom:0;">Nueva visita</div>
+        <div class="hbtn" id="visit-cancel-edit" style="display:none;" onclick="cancelEditVisit()">✕ Cancelar edición</div>
+      </div>
       <div class="cfg-lbl">Fecha</div>
       <input class="cfg" type="date" id="visit-date"/>
       <div class="cfg-lbl">Tarea realizada / cambio hecho</div>
@@ -175,14 +196,20 @@
 
       <div class="cfg-lbl" style="margin-top:8px;">Observaciones</div>
       <textarea class="imp" id="visit-obs" style="min-height:50px;" placeholder="Notas adicionales, materiales que faltan, recomendaciones…"></textarea>
-      <button class="btn-p btn-full" style="margin-top:8px;" onclick="saveVisit()">💾 Guardar visita</button>
+      <button class="btn-p btn-full" id="visit-save-btn" style="margin-top:8px;" onclick="saveVisit()">💾 Guardar visita</button>
     </div>
 
     <div style="display:flex;justify-content:space-between;align-items:center;">
-      <div class="sh" style="margin-bottom:0;">Historial de este cliente</div>
+      <div class="sh" style="margin-bottom:0;">Historial de visitas</div>
       <div class="hbtn" onclick="downloadClientHistory()">📥 Descargar</div>
     </div>
     <div id="client-visit-list"></div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div class="sh" style="margin-bottom:0;">Presupuestos vinculados</div>
+      <div class="hbtn" onclick="attachCurrentBudgetToClient()">📋 Adjuntar el actual</div>
+    </div>
+    <div id="client-budget-list"></div>
   </div>
 
   <div id="visit-hist-src"></div>
