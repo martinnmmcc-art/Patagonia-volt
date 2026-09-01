@@ -7,27 +7,78 @@ let materials = [];
 const DEFAULT_SETTINGS = { hideUnit: false, showMats: true, includeDesc: true };
 let settings  = { ...DEFAULT_SETTINGS };
 const DEFAULT_TASK_DESC = {
-  // Redacción propia: mezcla lo que exige la reglamentación AEA 90364 con explicación en criollo,
-  // pensada para que el cliente entienda qué está pagando. Editalas en Config cuando quieras.
-  'Acometidas': 'Es traer la conexión eléctrica desde la red pública hasta el medidor, protegida dentro de un caño embutido en la pared (así lo exige la norma AEA, para que el cable no quede expuesto a golpes ni humedad). El precio varía según la potencia contratada: a mayor kW, se necesita conductor más grueso y caño de mayor diámetro. No incluye materiales ni la jabalina de puesta a tierra.',
-  'Cableado': 'Es pasar los cables por dentro de los caños (nuevos o ya instalados) hasta cada punto de luz o toma. La norma AEA exige respetar el color de cable según su función (por ejemplo, verde-amarillo para tierra) y un grosor mínimo según lo que va a alimentar cada circuito. El precio se calcula por cantidad de bocas: cuantas más bocas, menor el costo por unidad. No incluye materiales.',
-  'Canalización': 'Es instalar los caños y las cajas por donde después van a pasar los cables, embutidos en la pared o a la vista. La norma AEA exige mantener una distancia mínima respecto a cañerías de gas o agua, y usar cajas con espacio suficiente para no apretar los cables al conectar. El costo cambia según el material (metálico o PVC) y si va embutido o a la vista. No incluye materiales.',
-  'CCTV': 'Es instalar el cableado de cada cámara de seguridad hasta el grabador (BCR), con o sin canalización según lo que se elija. No incluye las cámaras, el grabador ni la configuración del sistema.',
-  'Tablero': 'Es fijar el gabinete del tablero (a la vista o empotrado en la pared) y conectar las llaves térmicas y el disyuntor diferencial. La norma AEA exige que cada circuito tenga su propia protección térmica y que toda la instalación quede protegida por un diferencial, por seguridad de las personas. El precio varía según si va empotrado (más trabajo de albañilería) o a la vista, y según la cantidad de bocas. No incluye materiales.',
-  'Puesta a Tierra': 'Es clavar la jabalina de tierra en el suelo y colocarle su caja de inspección, para poder medir y mantener el sistema de puesta a tierra. La norma AEA exige que la resistencia de tierra sea baja, así el disyuntor diferencial actúa rápido ante una falla, y que el conductor tenga la sección mínima correspondiente. No incluye materiales.',
-  'Artefactos': 'Es fijar el artefacto (extractor de aire, campana, ventilador de techo, etc.) y conectarlo eléctricamente a una salida que ya está cableada. No incluye el artefacto ni materiales de fijación.',
-  'Bandeja': 'Es colocar una bandeja portacables (canaleta metálica abierta) para llevar varios cables juntos por un mismo recorrido, típico en locales o galpones. La norma exige fijarla firme cada cierta distancia y, si es metálica, conectarla a tierra para que no quede con tensión ante una falla. El precio depende del ancho de la bandeja y de la altura de trabajo. No incluye materiales.',
-  'Boca Completa': 'Es el paquete completo de una boca: caño, caja y cableado, dejándola lista para conectar el artefacto o el tomacorriente. El precio baja a medida que aumenta la cantidad de bocas del trabajo, y también cambia según si la cañería es metálica o de PVC, embutida o a la vista. No incluye materiales.',
-  'Cablecanal': 'Es colocar una canaleta plástica con tapa, a la vista, para llevar los cables de forma prolija sin romper la pared (muy usado en reformas). El precio es por boca, más un adicional por cada metro extra de recorrido. No incluye materiales.',
-  'Corrección Potencia': 'Es armar y conectar un tablero con capacitores para corregir el factor de potencia de una instalación, y así evitar que la distribuidora cobre un recargo por "baja potencia" en instalaciones grandes (comercios, industrias). El precio varía según la capacidad en kvar y si el sistema es automático o no. No incluye materiales.',
-  'Luminarias': 'Es fijar la luminaria (aplique, colgante, farola, tubo LED, luz de emergencia, etc.) y conectarla eléctricamente a la salida ya cableada. El tiempo y el precio varían según el tipo de artefacto y la cantidad de luces. No incluye el artefacto ni materiales de fijación.',
-  'Mantenimiento': 'Es la visita de urgencia ante una falla eléctrica, con un tiempo máximo de trabajo (TM) incluido en el precio; superado ese tiempo, se cobra por hora adicional. El costo varía según la distancia al domicilio y si es en horario normal o fin de semana/feriado. No incluye materiales.',
-  'Pisoducto': 'Es instalar los ductos dentro del contrapiso para poder sacar tomas de corriente o de datos en el medio de un ambiente (típico en oficinas o islas de cocina), incluyendo cajas de piso, curvas y derivaciones. Puede incluir también el cableado de energía o de datos por dentro, según se indique. No incluye materiales.',
-  'Proyecto Eléctrico': 'Es el trabajo de planificación previo a instalar: relevar el inmueble, calcular las cargas eléctricas necesarias y armar la documentación técnica según la norma AEA, para que la instalación se pueda ejecutar correctamente. El precio depende de la cantidad de bocas del proyecto. No incluye trámites ante la empresa distribuidora.',
+  // Redacción propia, basada en la Reglamentación AEA 90364 (Asociación Electrotécnica Argentina)
+  // y sus secciones/cláusulas específicas — no copiado de ningún sitio comercial. Editalas en Config.
+  'Acometidas': 'Conexión desde la red pública hasta el medidor. La AEA exige que el conductor de bajada quede inaccesible sin uso de herramientas (protegido en caño embutido) y prohíbe interconectar la masa del circuito con las cañerías de agua o gas (AEA 90364, Anexo 771-C.3.2.2). El calibre del conductor y el diámetro del caño se dimensionan según la potencia contratada (kW). No incluye materiales ni la jabalina de puesta a tierra.',
+  'Cableado': 'Tendido de conductores por cañería (nueva o existente) hasta cada boca. La AEA 90364-7-771 exige separar los circuitos de Iluminación de Uso General (IUG) de los de Tomas de Uso General (TUG): IUG con sección mínima 1,5mm² y protección de 10A (hasta 15 bocas por circuito), TUG con sección mínima 2,5mm² y protección de 16A (hasta 8 bocas), cada uno con su propia térmica. Colores obligatorios (AEA 90364-5-514): fase marrón/negro/rojo, neutro celeste, protección (tierra) verde-amarillo exclusivo. El precio se calcula por cantidad de bocas. No incluye materiales.',
+  'Canalización': 'Colocación de caños y cajas, embutidos o a la vista. La AEA 90364-7-771 (cláusula 771.12.3) exige un máximo de 3 curvas entre cajas o gabinetes, y que todo cambio de sistema de canalización se resuelva dentro de una caja; también prohíbe interconectar las cañerías eléctricas con las de gas o agua (Anexo 771-C.3.2.2). La fijación a la pared depende de la longitud del tramo (mínimo 2 puntos si mide menos de 2m, 3 puntos o más si es mayor). El costo cambia según el material (metálico o PVC) y si va embutido o a la vista. No incluye materiales.',
+  'CCTV': 'Cableado de cada cámara de seguridad hasta el grabador (BCR), con o sin canalización según se elija. La AEA 90364 no regula específicamente los sistemas de CCTV por ser de baja tensión y datos (quedan fuera del alcance de la Sección 771 de viviendas), pero si comparten cañería con la instalación de fuerza deben mantenerse separados de los circuitos de energía. No incluye las cámaras, el grabador ni la configuración del sistema.',
+  'Tablero': 'Fijación (a la vista) o empotrado del gabinete y conexión de las protecciones. La AEA exige una separación mínima de 8cm entre los elementos y los laterales del tablero, y 8cm entre filas de térmicas (Anexo AEA 90364), además de un grado de protección IP acorde al ambiente (cláusula 770.16.2.1): IP44 en exteriores, lavaderos y cocinas; IP55 en tableros de uso industrial. Cada circuito debe tener su propia protección termomagnética, y los circuitos de tomas deben estar protegidos por un diferencial de 30mA (AEA 90364-7-770). El precio varía según si va empotrado o a la vista, y la cantidad de bocas. No incluye materiales.',
+  'Puesta a Tierra': 'Hincado de la jabalina y colocación de la caja de inspección. La AEA 90364 (subcláusula 771.3.3.1) fija un valor máximo reglamentario de resistencia de puesta a tierra de 40Ω, aunque el objetivo de ingeniería recomendado —combinado con un diferencial de 30mA— es de 10Ω o menos, para que el diferencial actúe rápido ante una falla (regla Ra×Ia≤50V, AEA 90364-4-41). El conductor de protección (PE) se identifica siempre en verde-amarillo (AEA 90364-5-514) y ese color no puede usarse para ninguna otra función. No incluye materiales.',
+  'Artefactos': 'Fijación mecánica y conexión eléctrica del artefacto (extractor, campana, ventilador de techo, etc.) a una salida ya cableada, correspondiente al circuito de Toma de Uso Especial (TUE) cuando alimenta un solo equipo de potencia, con sección dimensionada según el consumo del artefacto (AEA 90364-7-771). No incluye el artefacto ni materiales de fijación.',
+  'Bandeja': 'Tendido y fijación de la bandeja portacables a la altura indicada. La AEA exige la puesta a tierra de las bandejas metálicas (por ser masa accesible) y una fijación firme que evite deformación o pandeo del tramo. El precio depende del ancho de la bandeja y la altura de trabajo. No incluye materiales.',
+  'Boca Completa': 'Paquete completo: canalización, cableado y caja, dejando la boca lista para conectar. Aplican las mismas exigencias de sección y protección de los circuitos IUG (iluminación) o TUG (tomas) según el uso de la boca, establecidas en la AEA 90364-7-771. El precio baja según la cantidad de bocas del trabajo, y cambia según el material de la cañería (metálica o PVC) y si va embutida o a la vista. No incluye materiales.',
+  'Cablecanal': 'Colocación de una canaleta plástica con tapa, a la vista, para el tendido de cables sin romper la pared. El material debe cumplir la normativa IRAM correspondiente al tipo de canalización (Tabla 770.10 de la AEA) y respetar la misma separación entre circuitos que exige cualquier otra canalización. El precio es por boca, más un adicional por cada metro extra de recorrido. No incluye materiales.',
+  'Corrección Potencia': 'Armado y conexión de un tablero con capacitores para corregir el factor de potencia y evitar el recargo que aplican las distribuidoras por bajo factor en instalaciones de mayor consumo (comercios, industrias). No es un requisito de la AEA 90364 —que regula instalaciones domiciliarias e inmuebles— sino una exigencia habitual de las empresas distribuidoras a partir de cierto nivel de consumo. El precio varía según la capacidad en kvar y si el sistema es automático. No incluye materiales.',
+  'Luminarias': 'Fijación mecánica y conexión eléctrica de la luminaria a una salida ya cableada, correspondiente al circuito de Iluminación de Uso General (IUG: sección mínima 1,5mm², protección 10A, AEA 90364-7-771). El tiempo y el precio varían según el tipo de artefacto y la cantidad de luces. No incluye el artefacto ni materiales de fijación.',
+  'Mantenimiento': 'Visita de urgencia ante una falla eléctrica, con un tiempo máximo de trabajo (TM) incluido en el precio; superado ese tiempo se cobra por hora adicional. Ante cualquier intervención, la AEA 90364-6 exige verificar la continuidad de las masas y el correcto funcionamiento del diferencial antes de restablecer el suministro. El costo varía según la distancia al domicilio y el horario (día hábil u horario especial). No incluye materiales.',
+  'Pisoducto': 'Instalación de los ductos dentro del contrapiso (cajas de piso, curvas, derivaciones) y/o su cableado de energía o datos. Debe respetar la misma separación entre circuitos de energía y de datos que exige la AEA para cualquier canalización. No incluye materiales.',
+  'Proyecto Eléctrico': 'Relevamiento, cálculo de cargas y documentación técnica según el grado de electrificación que define la AEA 90364-7-771: Mínimo (3,3kW, hasta 60m²), Medio (6,6kW, hasta 120m²), Elevado (9,9kW, con calefacción o cocina eléctrica) y Superior (13,2kW). Ese grado determina la cantidad mínima de circuitos y el calibre de la acometida. El precio depende de la cantidad de bocas del proyecto. No incluye trámites ante la empresa distribuidora.',
 };
-let taskDescCat = { ...DEFAULT_TASK_DESC }; // copia editable; se fusiona con lo guardado en init()
+
+// Reglas técnicas por tarea (más específicas que la categoría). Redacción propia, criterio de
+// ingeniero senior + AEA 90364 donde aplica. Se evalúan en orden; la primera que matchea el
+// nombre de la tarea gana. Si ninguna matchea, se usa DEFAULT_TASK_DESC[categoría] como respaldo.
+const TASK_DESC_RULES = [
+  [/acometida monof/i, 'Acometida domiciliaria monofásica (fase + neutro). La AEA exige que el conductor de bajada quede inaccesible sin herramientas (embutido en caño de doble aislación) y prohíbe unir la masa del circuito a las cañerías de agua o gas (Anexo 771-C.3.2.2). El calibre se dimensiona según la potencia contratada. No incluye materiales ni jabalina de puesta a tierra.'],
+  [/acometida trif/i, 'Acometida domiciliaria trifásica (tres fases + neutro), para cargas mayores o cuando la distribuidora exige suministro trifásico. Mismas exigencias que la acometida monofásica en protección mecánica del conductor y separación de cañerías de gas/agua. El calibre se dimensiona según el tramo de potencia. No incluye materiales ni jabalina de puesta a tierra.'],
+  [/subterráneo/i, 'Cableado subterráneo, directamente enterrado o entubado. Si no se alcanza la profundidad mínima de 0,70m, el conductor debe protegerse con caño recubierto por una capa de hormigón de al menos 8cm, y colocar una cámara de inspección cada 40m en tramos rectos (Anexo de la Reglamentación AEA 90364). La sección se dimensiona según la sección total del cable. No incluye materiales.'],
+  [/re-?cableado/i, 'Retiro del cableado existente y tendido de conductores nuevos por la misma cañería, típico en reformas. Aplican las mismas exigencias de sección y separación de circuitos IUG/TUG que un cableado nuevo (AEA 90364-7-771). El precio baja según la cantidad de bocas. No incluye materiales.'],
+  [/^cableado/i, 'Tendido de conductores por cañería ya canalizada, hasta cada boca. Circuitos IUG (iluminación: 1,5mm², protección 10A, hasta 15 bocas) y TUG (tomas: 2,5mm², protección 16A, hasta 8 bocas) separados según AEA 90364-7-771, con colores normalizados: fase marrón/negro/rojo, neutro celeste, tierra verde-amarillo exclusivo (AEA 90364-5-514). El precio baja según la cantidad de bocas. No incluye materiales.'],
+  [/canalización embutida metálica/i, 'Colocación de cañería metálica embutida en la pared, con sus cajas. La AEA exige un máximo de 3 curvas entre cajas o gabinetes (cláusula 771.12.3) y prohíbe la unión con cañerías de gas o agua (Anexo 771-C.3.2.2). El precio se cobra por boca. No incluye materiales.'],
+  [/canalización embutida pvc/i, 'Colocación de cañería de PVC embutida en la pared, con sus cajas. Mismas exigencias de recorrido y separación que la canalización metálica (AEA 90364-7-771, cláusula 771.12.3). El precio se cobra por boca. No incluye materiales.'],
+  [/canalización a la vista/i, 'Colocación de cañería (metálica o PVC) a la vista, sujeta con grampas o abrazaderas. La fijación depende de la longitud del tramo: mínimo 2 puntos si mide menos de 2m, 3 puntos o más si es mayor. El precio se cobra por boca. No incluye materiales.'],
+  [/durlock/i, 'Colocación de cañería (metálica o PVC rígido) embutida dentro de un tabique de Durlock, con sus cajas para ese tipo de tabique. Mismas exigencias de recorrido y curvas que cualquier canalización embutida (AEA 90364-7-771). El precio se cobra por boca. No incluye materiales.'],
+  [/pisoducto (por metro|cajas|derivación|curvas|periscopio)/i, 'Instalación física del pisoducto dentro del contrapiso: tramo recto, caja de piso, derivación, curva o periscopio, según corresponda. Debe respetar la misma separación entre circuitos de energía y de datos que exige la AEA para cualquier canalización. No incluye materiales.'],
+  [/cableado pisoducto|pisoducto instalación de tomas/i, 'Tendido de cables de energía o de comunicación/datos, o instalación de la toma, dentro del pisoducto ya instalado. Los conductores de energía y de datos deben mantenerse separados dentro del ducto. No incluye materiales.'],
+  [/cctv.*superficie/i, 'Cableado de la(s) cámara(s) hasta el grabador (BCR) en canalización a la vista o cablecanal existente. La AEA no regula específicamente los sistemas de CCTV (son de baja tensión/datos), pero si comparten cañería con la instalación de fuerza deben mantenerse separados de los circuitos de energía. No incluye cámaras, grabador ni configuración del sistema.'],
+  [/cctv.*canalización/i, 'Incluye una canalización corta (aprox. 5m por cámara) además del cableado hasta el grabador (BCR) y su conexión. No incluye cámaras, grabador, materiales de canalización ni configuración del sistema.'],
+  [/aplique/i, 'Fijación mecánica del aplique de pared y conexión eléctrica a la salida ya cableada del circuito de iluminación (IUG). No incluye el artefacto ni materiales de fijación.'],
+  [/colgante/i, 'Fijación del artefacto colgante (a techo, con cadena, cable o varilla) y conexión eléctrica a la salida ya cableada del circuito de iluminación (IUG). No incluye el artefacto ni materiales de fijación.'],
+  [/farola/i, 'Fijación de la farola de pared y conexión eléctrica a la salida ya cableada, verificando el grado de protección IP adecuado para uso exterior (mínimo IP65 en zonas de intemperie). No incluye el artefacto ni materiales de fijación.'],
+  [/tubo led/i, 'Fijación del artefacto para tubo LED (tipo bandeja o regleta) y conexión eléctrica a la salida ya cableada del circuito de iluminación. No incluye el artefacto ni materiales de fijación.'],
+  [/luz de emergencia/i, 'Fijación y conexión del equipo autónomo de luz de emergencia, alimentado antes de la llave general para que funcione ante un corte de suministro. La AEA 90364 no regula específicamente los equipos de emergencia (dependen de la normativa de seguridad contra incendios/IRAM del tipo de local), pero sí la alimentación eléctrica del circuito. No incluye el equipo ni materiales de fijación.'],
+  [/alumbrado público/i, 'Fijación del brazo/luminaria en el poste y conexión eléctrica. Por ser instalación de intemperie, la AEA exige un grado de protección mínimo IP65 en el artefacto. No incluye el artefacto ni materiales de fijación.'],
+  [/extractor|campana/i, 'Fijación mecánica y conexión eléctrica del extractor de aire o campana a una salida ya cableada, correspondiente a un circuito de Toma de Uso Especial (TUE) si alimenta un solo equipo de potencia, con sección dimensionada según su consumo. No incluye el artefacto, la conexión al conducto de extracción ni materiales de fijación.'],
+  [/ventilador de techo/i, 'Fijación mecánica del ventilador de techo (incluye reforzar el punto de anclaje si es necesario) y conexión eléctrica a la salida ya cableada del circuito de iluminación. No incluye el artefacto ni materiales de fijación.'],
+  [/c\/contactor/i, 'Corrección de factor de potencia con contactor para conectar/desconectar los capacitores según la demanda, reduciendo el riesgo de sobrecompensación en horarios de bajo consumo. No es un requisito de la AEA 90364 sino una exigencia habitual de la distribuidora a partir de cierto nivel de consumo. No incluye materiales.'],
+  [/automático.*kvar|kvar.*automático/i, 'Tablero automático de corrección de potencia con regulador que conecta/desconecta escalones (pasos) de capacitores según el factor de potencia medido en tiempo real. Requiere más pasos cuanto más variable sea la carga de la instalación. No incluye materiales.'],
+  [/tablero (monofásico|trifásico) hasta.*kvar/i, 'Armado y conexión de un tablero de corrección de factor de potencia con capacitores fijos, dimensionado en kVAr según el consumo reactivo de la instalación. No es un requisito de la AEA 90364 sino una exigencia habitual de la distribuidora a partir de cierto nivel de consumo. No incluye materiales.'],
+  [/emergencia l-v/i, 'Visita de urgencia en horario hábil (lunes a viernes), con un tiempo máximo de trabajo (TM) incluido en el precio; superado ese tiempo se cobra por hora adicional. Ante cualquier intervención, la AEA 90364-6 exige verificar la continuidad de las masas y el funcionamiento del diferencial antes de restablecer el suministro. No incluye materiales.'],
+  [/emergencia s\/d\/f/i, 'Visita de urgencia en sábado, domingo o feriado, con un tiempo máximo de trabajo (TM) incluido en el precio; superado ese tiempo se cobra por hora adicional a la tarifa de fin de semana. No incluye materiales.'],
+  [/fijación gabinete superficie/i, 'Fijación del gabinete de protecciones a la pared mediante tarugos u otro anclaje mecánico, sin obra de albañilería. La AEA exige una separación mínima de 8cm entre los elementos y los laterales del tablero, y 8cm entre filas de térmicas (Anexo AEA 90364). No incluye materiales.'],
+  [/empotrado gabinete/i, 'Apertura del nicho en la mampostería (perforado de pared) y fijación del gabinete mediante mezcla de cal y cemento. Mismas exigencias de separación interna que el tablero de superficie (Anexo AEA 90364). No incluye materiales.'],
+  [/termomagnética\/diferencial monofásico/i, 'Conexión mecánica de la protección termomagnética y el disyuntor diferencial en un circuito monofásico. La AEA exige que cada circuito tenga su propia térmica y que los circuitos de tomas estén protegidos por un diferencial de 30mA (AEA 90364-7-770). No incluye la térmica ni el diferencial (materiales).'],
+  [/termomagnética\/diferencial trifásico/i, 'Igual que en monofásico, pero para un circuito trifásico (protecciones tripolares o tetrapolares según el esquema). No incluye la térmica ni el diferencial (materiales).'],
+  [/cañería metálica embutida/i, 'Boca completa con cañería metálica embutida: canalización, cableado y caja, lista para conectar. Aplican las exigencias de sección de los circuitos IUG/TUG según el uso de la boca (AEA 90364-7-771). No incluye materiales.'],
+  [/cañería metálica a la vista/i, 'Boca completa con cañería metálica a la vista: canalización, cableado y caja, lista para conectar. Mismas exigencias de sección que la boca embutida. No incluye materiales.'],
+  [/cañería plástica embutida/i, 'Boca completa con cañería de PVC embutida: canalización, cableado y caja, lista para conectar. Mismas exigencias de sección que cualquier boca completa (AEA 90364-7-771). No incluye materiales.'],
+  [/cañería plástica a la vista/i, 'Boca completa con cañería de PVC a la vista: canalización, cableado y caja, lista para conectar. Mismas exigencias de sección que cualquier boca completa. No incluye materiales.'],
+  [/bandeja porta cables/i, 'Boca completa cableada sobre bandeja portacables, sin cañería individual: tendido del conductor sobre la bandeja y conexión en la boca. No incluye materiales.'],
+];
+
+let taskDescOverride = {}; // { 'nombre de tarea': 'texto editado a mano por el usuario' }
+
+function getTaskDesc(task) {
+  if (!task) return '';
+  if (taskDescOverride[task.name]) return taskDescOverride[task.name];
+  for (const [re, text] of TASK_DESC_RULES) { if (re.test(task.name)) return text; }
+  return DEFAULT_TASK_DESC[task.cat] || '';
+}
+
 let userCfg   = { nombre: '', tel: '', email: '' };
 let history_  = [];      // array of saved budgets
+let visits    = [];      // array of client visits (visita al cliente)
 let activeCat = 'Todos';
 let activeMatCat = 'Todos';
 let activeHistIdx = null;
@@ -424,8 +475,11 @@ function init() {
   const sh = ls('pv_history');
   history_ = sh ? JSON.parse(sh) : [];
 
-  const std = ls('pv_taskdesc');
-  taskDescCat = std ? { ...DEFAULT_TASK_DESC, ...JSON.parse(std) } : { ...DEFAULT_TASK_DESC };
+  const svs = ls('pv_visits');
+  visits = svs ? JSON.parse(svs) : [];
+
+  const std = ls('pv_taskdesc_override');
+  taskDescOverride = std ? JSON.parse(std) : {};
 
   applySettings();
   renderCats();
@@ -438,7 +492,9 @@ function init() {
   updateTotal();
   loadCfgUI();
   updateDBStats();
-  renderDescCatSelect();
+  renderVisits();
+  const vd = document.getElementById('visit-date');
+  if (vd && !vd.value) vd.value = new Date().toISOString().slice(0,10);
 
   // Traer la versión más reciente desde Supabase (si hay conexión).
   // La app sigue funcionando 100% offline con lo que ya cargó de localStorage;
@@ -476,11 +532,12 @@ async function syncPullFromSupabase() {
     if (remote.settings) { settings = { ...DEFAULT_SETTINGS, ...remote.settings }; lsSetSilent('pv_settings', JSON.stringify(settings)); }
     if (remote.userCfg)  { userCfg  = remote.userCfg;  lsSetSilent('pv_config', JSON.stringify(userCfg)); }
     if (Array.isArray(remote.history_)) { history_ = remote.history_; lsSetSilent('pv_history', JSON.stringify(history_)); }
+    if (Array.isArray(remote.visits)) { visits = remote.visits; lsSetSilent('pv_visits', JSON.stringify(visits)); }
     if (remote.prices_updated_at) lsSetSilent('pv_prices_updated_at', remote.prices_updated_at);
-    if (remote.taskDescCat) { taskDescCat = { ...DEFAULT_TASK_DESC, ...remote.taskDescCat }; lsSetSilent('pv_taskdesc', JSON.stringify(taskDescCat)); }
+    if (remote.taskDescOverride) { taskDescOverride = remote.taskDescOverride; lsSetSilent('pv_taskdesc_override', JSON.stringify(taskDescOverride)); }
 
     applySettings(); renderCats(); renderTasks(); renderBudget();
-    renderMats(); renderHistory(); updateTotal(); loadCfgUI(); updateDBStats(); renderDescCatSelect();
+    renderMats(); renderHistory(); renderVisits(); updateTotal(); loadCfgUI(); updateDBStats();
     toast('☁️ Sincronizado con la nube');
   } catch (e) {
     // Sin conexión o error de red: seguimos con lo que ya hay en el celular.
@@ -501,8 +558,9 @@ async function pushStateToSupabase() {
       settings,
       userCfg,
       history_,
+      visits,
       prices_updated_at: ls('pv_prices_updated_at') || null,
-      taskDescCat
+      taskDescOverride
     };
     await fetch(`${SUPABASE_URL}/rest/v1/pv_data?id=eq.workspace`, {
       method: 'PATCH',
@@ -554,7 +612,7 @@ function switchTab(tab) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + tab).classList.add('active');
-  const idx = ['tareas','presupuesto','materiales','historial','config'].indexOf(tab);
+  const idx = ['tareas','presupuesto','materiales','visita','historial','config'].indexOf(tab);
   document.querySelectorAll('.tab')[idx].classList.add('active');
 }
 
@@ -649,15 +707,14 @@ function renderBudget() {
   let html='';
   for (const [cat, items] of Object.entries(grp)) {
     html += `<div class="sh">${cat}</div>`;
-    if (settings.includeDesc && taskDescCat[cat]) {
-      html += `<div class="empty" style="padding:6px 10px;font-size:12px;text-align:left;">📝 ${taskDescCat[cat].replace(/</g,'&lt;')}</div>`;
-    }
     items.forEach(({b,i,t}) => {
       const sub = t.price*b.qty;
+      const desc = settings.includeDesc ? getTaskDesc(t) : '';
       html += `<div class="budget-item">
         <div class="bi-info">
           <div class="bi-name">${t.name}</div>
           <div class="bi-price">${settings.hideUnit ? `× ${b.qty}` : `${fmt(t.price)} c/u · ${fmt(sub)}`}</div>
+          ${desc ? `<div style="font-size:11.5px;color:var(--muted);line-height:1.4;margin-top:4px;">📝 ${desc.replace(/</g,'&lt;')}</div>` : ''}
         </div>
         <div class="qty-wrap">
           <div class="qbtn" onclick="changeQty(${i},-1)">−</div>
@@ -848,6 +905,55 @@ function restoreFromHistory() {
   toast('Presupuesto restaurado');
 }
 
+// ══════════════════════════════════════════════════════════
+//  VISITA AL CLIENTE
+// ══════════════════════════════════════════════════════════
+function saveVisit() {
+  const client    = document.getElementById('visit-client').value.trim();
+  const address   = document.getElementById('visit-address').value.trim();
+  const phone     = document.getElementById('visit-phone').value.trim();
+  const date      = document.getElementById('visit-date').value || new Date().toISOString().slice(0,10);
+  const motivo    = document.getElementById('visit-motivo').value.trim();
+  const mediciones= document.getElementById('visit-mediciones').value.trim();
+  const obs       = document.getElementById('visit-obs').value.trim();
+
+  if (!client && !motivo) { toast('Cargá al menos el cliente o el motivo de la visita', true); return; }
+
+  visits.unshift({ id: Date.now(), date, client, address, phone, motivo, mediciones, obs });
+  lsSet('pv_visits', JSON.stringify(visits));
+
+  ['visit-client','visit-address','visit-phone','visit-motivo','visit-mediciones','visit-obs'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('visit-date').value = new Date().toISOString().slice(0,10);
+
+  renderVisits();
+  toast('✅ Visita guardada');
+}
+function deleteVisit(id) {
+  visits = visits.filter(v => v.id !== id);
+  lsSet('pv_visits', JSON.stringify(visits));
+  renderVisits();
+}
+function renderVisits() {
+  const el = document.getElementById('visit-list');
+  if (!el) return;
+  if (!visits.length) { el.innerHTML = '<div class="empty">Sin visitas guardadas todavía.</div>'; return; }
+  el.innerHTML = visits.map(v => `
+    <div class="card" style="margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+        <div style="min-width:0;">
+          <div style="font-weight:700;">${v.client || '(sin nombre)'}</div>
+          <div style="font-size:11px;color:var(--muted);">${v.date || ''}${v.address ? ' · ' + v.address : ''}${v.phone ? ' · ' + v.phone : ''}</div>
+        </div>
+        <div class="rmbtn" onclick="deleteVisit(${v.id})">✕</div>
+      </div>
+      ${v.motivo ? `<div style="margin-top:7px;font-size:13px;"><b>Tarea / motivo:</b> ${v.motivo}</div>` : ''}
+      ${v.mediciones ? `<div style="margin-top:5px;font-size:13px;"><b>Mediciones:</b> ${v.mediciones}</div>` : ''}
+      ${v.obs ? `<div style="margin-top:5px;font-size:12px;color:var(--muted);">${v.obs}</div>` : ''}
+    </div>`).join('');
+}
+
 function renderHistory() {
   const el = document.getElementById('hist-list');
   const cnt = document.getElementById('hist-count');
@@ -893,28 +999,49 @@ function applySettings() {
 }
 
 // ══════════════════════════════════════════════════════════
-//  DESCRIPCIONES DE TAREA POR CATEGORÍA (editables por el usuario)
+//  DESCRIPCIONES TÉCNICAS POR TAREA (editables por el usuario)
 // ══════════════════════════════════════════════════════════
-function renderDescCatSelect() {
-  const sel = document.getElementById('desc-cat-select');
-  if (!sel) return;
-  const cats = [...new Set(tasks.map(t=>t.cat))].sort();
-  sel.innerHTML = cats.map(c => `<option value="${c.replace(/"/g,'&quot;')}">${c}</option>`).join('');
-  loadDescForCat();
+let selectedDescTaskId = null;
+
+function renderDescTaskList() {
+  const el = document.getElementById('desc-task-list');
+  const qEl = document.getElementById('desc-task-search');
+  if (!el || !qEl) return;
+  const q = qEl.value.toLowerCase().trim();
+  if (!q) { el.innerHTML = '<div class="empty">Escribí para buscar una tarea…</div>'; return; }
+  const list = tasks.filter(t => t.name.toLowerCase().includes(q) || t.cat.toLowerCase().includes(q)).slice(0, 25);
+  if (!list.length) { el.innerHTML = '<div class="empty">Sin resultados</div>'; return; }
+  el.innerHTML = list.map(t => `
+    <div class="task-item" onclick="openTaskDescEditor(${t.id})">
+      <div style="flex:1;min-width:0">
+        <div class="task-name">${t.name}</div>
+        <div class="task-cat">${t.cat}${taskDescOverride[t.name] ? ' · ✏️ editada' : ''}</div>
+      </div>
+    </div>`).join('');
 }
-function loadDescForCat() {
-  const sel = document.getElementById('desc-cat-select');
-  const txt = document.getElementById('desc-cat-text');
-  if (!sel || !txt) return;
-  txt.value = taskDescCat[sel.value] || '';
+function openTaskDescEditor(id) {
+  const t = tasks.find(x => x.id === id); if (!t) return;
+  selectedDescTaskId = id;
+  document.getElementById('desc-task-editor').style.display = 'block';
+  document.getElementById('desc-task-editor-title').textContent = t.name;
+  document.getElementById('desc-task-text').value = getTaskDesc(t);
 }
-function saveDescForCat() {
-  const sel = document.getElementById('desc-cat-select');
-  const txt = document.getElementById('desc-cat-text');
-  if (!sel || !txt) return;
-  taskDescCat[sel.value] = txt.value;
-  lsSet('pv_taskdesc', JSON.stringify(taskDescCat));
+function saveTaskDescOverride() {
+  if (selectedDescTaskId == null) return;
+  const t = tasks.find(x => x.id === selectedDescTaskId); if (!t) return;
+  taskDescOverride[t.name] = document.getElementById('desc-task-text').value;
+  lsSet('pv_taskdesc_override', JSON.stringify(taskDescOverride));
   renderBudget();
+}
+function resetTaskDescOverride() {
+  if (selectedDescTaskId == null) return;
+  const t = tasks.find(x => x.id === selectedDescTaskId); if (!t) return;
+  delete taskDescOverride[t.name];
+  lsSet('pv_taskdesc_override', JSON.stringify(taskDescOverride));
+  document.getElementById('desc-task-text').value = getTaskDesc(t);
+  renderDescTaskList();
+  renderBudget();
+  toast('Descripción restaurada a la técnica original');
 }
 
 // ══════════════════════════════════════════════════════════
@@ -985,7 +1112,7 @@ function importPrices() {
   const newOnes = imported.filter(t=>!existing.has(t.name.toLowerCase()));
   tasks = [...tasks, ...newOnes];
   lsSet('pv_tasks', JSON.stringify(tasks));
-  renderCats(); renderTasks(); updateDBStats(); renderDescCatSelect();
+  renderCats(); renderTasks(); updateDBStats();
   document.getElementById('import-text').value='';
   toast(`✅ ${newOnes.length} tareas importadas`);
 }
@@ -994,7 +1121,7 @@ function confirmReset() {
   if (!confirm('¿Restaurar la base de datos original? Se perderán las tareas importadas.')) return;
   tasks = BUILTIN.map((t,i)=>({...t,id:i}));
   lsSet('pv_tasks', JSON.stringify(tasks));
-  activeCat='Todos'; renderCats(); renderTasks(); updateDBStats(); renderDescCatSelect();
+  activeCat='Todos'; renderCats(); renderTasks(); updateDBStats();
   toast('Base de datos restaurada');
 }
 function updateDBStats() {
@@ -1052,7 +1179,7 @@ async function updatePricesFromWeb() {
     lsSet('pv_tasks', JSON.stringify(tasks));
     lsSet('pv_prices_updated_at', data.updated_at || new Date().toISOString());
 
-    renderCats(); renderTasks(); renderBudget(); updateDBStats(); renderDescCatSelect();
+    renderCats(); renderTasks(); renderBudget(); updateDBStats();
     toast(`✅ Precios actualizados: ${updated} cambiados, ${added} nuevos`);
   } catch (e) {
     toast('❌ No se pudo actualizar: ' + (e.message || e), true);
@@ -1092,16 +1219,15 @@ function generateWA() {
   let itemsHTML = '';
   for (const [cat, items] of Object.entries(grp)) {
     itemsHTML += `<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#7a8099;margin:15px 0 5px;font-family:'Barlow Condensed',sans-serif;">${cat}</div>`;
-    if (settings.includeDesc && taskDescCat[cat]) {
-      itemsHTML += `<div style="font-size:11px;color:#9aa0b5;font-family:'Barlow',sans-serif;line-height:1.5;margin-bottom:7px;padding:7px 10px;background:#171a24;border-left:3px solid #f5c518;border-radius:4px;">📝 ${taskDescCat[cat]}</div>`;
-    }
     items.forEach(({b,t}) => {
       const sub = t.price*b.qty;
+      const desc = settings.includeDesc ? getTaskDesc(t) : '';
       itemsHTML += `
         <div style="background:#1e2230;border:1px solid #2a2f3e;border-radius:7px;padding:9px 13px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;">
           <div style="flex:1;min-width:0;">
             <div style="font-size:13px;font-weight:600;font-family:'Barlow',sans-serif;color:#e8eaf0;">${t.name}</div>
             <div style="font-size:11px;color:#7a8099;font-family:'Barlow',sans-serif;">${settings.hideUnit ? `Cant: ${b.qty}` : `${fmt(t.price)} × ${b.qty}`}</div>
+            ${desc ? `<div style="font-size:10.5px;color:#9aa0b5;font-family:'Barlow',sans-serif;line-height:1.4;margin-top:4px;">📝 ${desc}</div>` : ''}
           </div>
           <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:#f5c518;white-space:nowrap;margin-left:10px;">${fmt(sub)}</div>
         </div>`;
