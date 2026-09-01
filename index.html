@@ -251,6 +251,10 @@ input.cfg:focus { outline:none; border-color:var(--accent); }
     <span class="si">🔍</span>
     <input type="text" id="search-input" placeholder="Buscar tarea…" oninput="filterTasks()"/>
   </div>
+  <div class="sw-row" style="margin-bottom:8px;">
+    <span class="sw-lbl">📝 Agregar descripción de la tarea al presupuesto</span>
+    <div class="switch" id="sw-desc" onclick="toggleSw('sw-desc','includeDesc')"></div>
+  </div>
   <div class="cat-wrap" id="cat-filters"></div>
   <div class="task-list" id="task-list"></div>
 </div>
@@ -339,6 +343,12 @@ input.cfg:focus { outline:none; border-color:var(--accent); }
     <input class="cfg" id="cfg-email" placeholder="Ej: juan@mail.com" oninput="saveCfg()"/>
   </div>
   <div class="card">
+    <div class="card-title">Descripciones de tareas (por categoría)</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:9px;">Escribí acá qué incluye cada tipo de tarea (ej: "Acometidas"). Cuando esté activado el switch en la pestaña Tareas, este texto se muestra debajo de cada ítem del presupuesto de esa categoría. Podés editarlo cuando quieras.</p>
+    <select class="cfg" id="desc-cat-select" onchange="loadDescForCat()"></select>
+    <textarea class="imp" id="desc-cat-text" style="min-height:90px;margin-top:8px;" placeholder="Ej: Incluye apertura de canaleta y colocación de caño de bajada hasta el gabinete. No incluye jabalina ni materiales." oninput="saveDescForCat()"></textarea>
+  </div>
+  <div class="card">
     <div class="card-title">Actualizar precios desde la web</div>
     <p style="font-size:13px;color:var(--muted);margin-bottom:6px;">Trae los valores actuales de Electro Instalador automáticamente, sin copiar y pegar. Actualiza los precios de las tareas existentes y agrega las que sean nuevas.</p>
     <p style="font-size:11px;color:var(--muted);margin-bottom:9px;" id="last-price-update"></p>
@@ -405,7 +415,26 @@ input.cfg:focus { outline:none; border-color:var(--accent); }
 let tasks     = [];
 let budget    = [];
 let materials = [];
-let settings  = { hideUnit: false, showMats: true };
+let settings  = { hideUnit: false, showMats: true, includeDesc: false };
+let taskDescCat = {
+  // Redacción propia: mezcla lo que exige la reglamentación AEA 90364 con explicación en criollo,
+  // pensada para que el cliente entienda qué está pagando. Editalas en Config cuando quieras.
+  'Acometidas': 'Es traer la conexión eléctrica desde la red pública hasta el medidor, protegida dentro de un caño embutido en la pared (así lo exige la norma AEA, para que el cable no quede expuesto a golpes ni humedad). El precio varía según la potencia contratada: a mayor kW, se necesita conductor más grueso y caño de mayor diámetro. No incluye materiales ni la jabalina de puesta a tierra.',
+  'Cableado': 'Es pasar los cables por dentro de los caños (nuevos o ya instalados) hasta cada punto de luz o toma. La norma AEA exige respetar el color de cable según su función (por ejemplo, verde-amarillo para tierra) y un grosor mínimo según lo que va a alimentar cada circuito. El precio se calcula por cantidad de bocas: cuantas más bocas, menor el costo por unidad. No incluye materiales.',
+  'Canalización': 'Es instalar los caños y las cajas por donde después van a pasar los cables, embutidos en la pared o a la vista. La norma AEA exige mantener una distancia mínima respecto a cañerías de gas o agua, y usar cajas con espacio suficiente para no apretar los cables al conectar. El costo cambia según el material (metálico o PVC) y si va embutido o a la vista. No incluye materiales.',
+  'CCTV': 'Es instalar el cableado de cada cámara de seguridad hasta el grabador (BCR), con o sin canalización según lo que se elija. No incluye las cámaras, el grabador ni la configuración del sistema.',
+  'Tablero': 'Es fijar el gabinete del tablero (a la vista o empotrado en la pared) y conectar las llaves térmicas y el disyuntor diferencial. La norma AEA exige que cada circuito tenga su propia protección térmica y que toda la instalación quede protegida por un diferencial, por seguridad de las personas. El precio varía según si va empotrado (más trabajo de albañilería) o a la vista, y según la cantidad de bocas. No incluye materiales.',
+  'Puesta a Tierra': 'Es clavar la jabalina de tierra en el suelo y colocarle su caja de inspección, para poder medir y mantener el sistema de puesta a tierra. La norma AEA exige que la resistencia de tierra sea baja, así el disyuntor diferencial actúa rápido ante una falla, y que el conductor tenga la sección mínima correspondiente. No incluye materiales.',
+  'Artefactos': 'Es fijar el artefacto (extractor de aire, campana, ventilador de techo, etc.) y conectarlo eléctricamente a una salida que ya está cableada. No incluye el artefacto ni materiales de fijación.',
+  'Bandeja': 'Es colocar una bandeja portacables (canaleta metálica abierta) para llevar varios cables juntos por un mismo recorrido, típico en locales o galpones. La norma exige fijarla firme cada cierta distancia y, si es metálica, conectarla a tierra para que no quede con tensión ante una falla. El precio depende del ancho de la bandeja y de la altura de trabajo. No incluye materiales.',
+  'Boca Completa': 'Es el paquete completo de una boca: caño, caja y cableado, dejándola lista para conectar el artefacto o el tomacorriente. El precio baja a medida que aumenta la cantidad de bocas del trabajo, y también cambia según si la cañería es metálica o de PVC, embutida o a la vista. No incluye materiales.',
+  'Cablecanal': 'Es colocar una canaleta plástica con tapa, a la vista, para llevar los cables de forma prolija sin romper la pared (muy usado en reformas). El precio es por boca, más un adicional por cada metro extra de recorrido. No incluye materiales.',
+  'Corrección Potencia': 'Es armar y conectar un tablero con capacitores para corregir el factor de potencia de una instalación, y así evitar que la distribuidora cobre un recargo por "baja potencia" en instalaciones grandes (comercios, industrias). El precio varía según la capacidad en kvar y si el sistema es automático o no. No incluye materiales.',
+  'Luminarias': 'Es fijar la luminaria (aplique, colgante, farola, tubo LED, luz de emergencia, etc.) y conectarla eléctricamente a la salida ya cableada. El tiempo y el precio varían según el tipo de artefacto y la cantidad de luces. No incluye el artefacto ni materiales de fijación.',
+  'Mantenimiento': 'Es la visita de urgencia ante una falla eléctrica, con un tiempo máximo de trabajo (TM) incluido en el precio; superado ese tiempo, se cobra por hora adicional. El costo varía según la distancia al domicilio y si es en horario normal o fin de semana/feriado. No incluye materiales.',
+  'Pisoducto': 'Es instalar los ductos dentro del contrapiso para poder sacar tomas de corriente o de datos en el medio de un ambiente (típico en oficinas o islas de cocina), incluyendo cajas de piso, curvas y derivaciones. Puede incluir también el cableado de energía o de datos por dentro, según se indique. No incluye materiales.',
+  'Proyecto Eléctrico': 'Es el trabajo de planificación previo a instalar: relevar el inmueble, calcular las cargas eléctricas necesarias y armar la documentación técnica según la norma AEA, para que la instalación se pueda ejecutar correctamente. El precio depende de la cantidad de bocas del proyecto. No incluye trámites ante la empresa distribuidora.',
+};
 let userCfg   = { nombre: '', tel: '', email: '' };
 let history_  = [];      // array of saved budgets
 let activeCat = 'Todos';
@@ -804,6 +833,9 @@ function init() {
   const sh = ls('pv_history');
   history_ = sh ? JSON.parse(sh) : [];
 
+  const std = ls('pv_taskdesc');
+  taskDescCat = std ? JSON.parse(std) : {};
+
   applySettings();
   renderCats();
   renderTasks();
@@ -815,6 +847,7 @@ function init() {
   updateTotal();
   loadCfgUI();
   updateDBStats();
+  renderDescCatSelect();
 
   // Traer la versión más reciente desde Supabase (si hay conexión).
   // La app sigue funcionando 100% offline con lo que ya cargó de localStorage;
@@ -853,9 +886,10 @@ async function syncPullFromSupabase() {
     if (remote.userCfg)  { userCfg  = remote.userCfg;  lsSetSilent('pv_config', JSON.stringify(userCfg)); }
     if (Array.isArray(remote.history_)) { history_ = remote.history_; lsSetSilent('pv_history', JSON.stringify(history_)); }
     if (remote.prices_updated_at) lsSetSilent('pv_prices_updated_at', remote.prices_updated_at);
+    if (remote.taskDescCat) { taskDescCat = remote.taskDescCat; lsSetSilent('pv_taskdesc', JSON.stringify(taskDescCat)); }
 
     applySettings(); renderCats(); renderTasks(); renderBudget();
-    renderMats(); renderHistory(); updateTotal(); loadCfgUI(); updateDBStats();
+    renderMats(); renderHistory(); updateTotal(); loadCfgUI(); updateDBStats(); renderDescCatSelect();
     toast('☁️ Sincronizado con la nube');
   } catch (e) {
     // Sin conexión o error de red: seguimos con lo que ya hay en el celular.
@@ -876,7 +910,8 @@ async function pushStateToSupabase() {
       settings,
       userCfg,
       history_,
-      prices_updated_at: ls('pv_prices_updated_at') || null
+      prices_updated_at: ls('pv_prices_updated_at') || null,
+      taskDescCat
     };
     await fetch(`${SUPABASE_URL}/rest/v1/pv_data?id=eq.workspace`, {
       method: 'PATCH',
@@ -1023,6 +1058,9 @@ function renderBudget() {
   let html='';
   for (const [cat, items] of Object.entries(grp)) {
     html += `<div class="sh">${cat}</div>`;
+    if (settings.includeDesc && taskDescCat[cat]) {
+      html += `<div class="empty" style="padding:6px 10px;font-size:12px;text-align:left;">📝 ${taskDescCat[cat].replace(/</g,'&lt;')}</div>`;
+    }
     items.forEach(({b,i,t}) => {
       const sub = t.price*b.qty;
       html += `<div class="budget-item">
@@ -1260,6 +1298,32 @@ function toggleSw(swId, key) {
 function applySettings() {
   document.getElementById('sw-hide').classList.toggle('on', settings.hideUnit);
   document.getElementById('sw-mats').classList.toggle('on', settings.showMats);
+  document.getElementById('sw-desc').classList.toggle('on', settings.includeDesc);
+}
+
+// ══════════════════════════════════════════════════════════
+//  DESCRIPCIONES DE TAREA POR CATEGORÍA (editables por el usuario)
+// ══════════════════════════════════════════════════════════
+function renderDescCatSelect() {
+  const sel = document.getElementById('desc-cat-select');
+  if (!sel) return;
+  const cats = [...new Set(tasks.map(t=>t.cat))].sort();
+  sel.innerHTML = cats.map(c => `<option value="${c.replace(/"/g,'&quot;')}">${c}</option>`).join('');
+  loadDescForCat();
+}
+function loadDescForCat() {
+  const sel = document.getElementById('desc-cat-select');
+  const txt = document.getElementById('desc-cat-text');
+  if (!sel || !txt) return;
+  txt.value = taskDescCat[sel.value] || '';
+}
+function saveDescForCat() {
+  const sel = document.getElementById('desc-cat-select');
+  const txt = document.getElementById('desc-cat-text');
+  if (!sel || !txt) return;
+  taskDescCat[sel.value] = txt.value;
+  lsSet('pv_taskdesc', JSON.stringify(taskDescCat));
+  renderBudget();
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1330,7 +1394,7 @@ function importPrices() {
   const newOnes = imported.filter(t=>!existing.has(t.name.toLowerCase()));
   tasks = [...tasks, ...newOnes];
   lsSet('pv_tasks', JSON.stringify(tasks));
-  renderCats(); renderTasks(); updateDBStats();
+  renderCats(); renderTasks(); updateDBStats(); renderDescCatSelect();
   document.getElementById('import-text').value='';
   toast(`✅ ${newOnes.length} tareas importadas`);
 }
@@ -1339,7 +1403,7 @@ function confirmReset() {
   if (!confirm('¿Restaurar la base de datos original? Se perderán las tareas importadas.')) return;
   tasks = BUILTIN.map((t,i)=>({...t,id:i}));
   lsSet('pv_tasks', JSON.stringify(tasks));
-  activeCat='Todos'; renderCats(); renderTasks(); updateDBStats();
+  activeCat='Todos'; renderCats(); renderTasks(); updateDBStats(); renderDescCatSelect();
   toast('Base de datos restaurada');
 }
 function updateDBStats() {
@@ -1397,7 +1461,7 @@ async function updatePricesFromWeb() {
     lsSet('pv_tasks', JSON.stringify(tasks));
     lsSet('pv_prices_updated_at', data.updated_at || new Date().toISOString());
 
-    renderCats(); renderTasks(); renderBudget(); updateDBStats();
+    renderCats(); renderTasks(); renderBudget(); updateDBStats(); renderDescCatSelect();
     toast(`✅ Precios actualizados: ${updated} cambiados, ${added} nuevos`);
   } catch (e) {
     toast('❌ No se pudo actualizar: ' + (e.message || e), true);
