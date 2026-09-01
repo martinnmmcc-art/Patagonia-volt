@@ -194,6 +194,13 @@
       <div class="card-title" style="margin-top:14px;">Mediciones</div>
       <div id="visit-mediciones-fields"></div>
 
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;">
+        <div class="card-title" style="margin-bottom:0;">Consumo por circuito</div>
+        <div class="hbtn" onclick="addCircuitRow()">+ Agregar</div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin:4px 0 6px;">Ej: Cocina, Aire acondicionado, TUG dormitorios…</div>
+      <div id="circuit-rows"></div>
+
       <div class="cfg-lbl" style="margin-top:8px;">Observaciones</div>
       <textarea class="imp" id="visit-obs" style="min-height:50px;" placeholder="Notas adicionales, materiales que faltan, recomendaciones…"></textarea>
       <button class="btn-p btn-full" id="visit-save-btn" style="margin-top:8px;" onclick="saveVisit()">💾 Guardar visita</button>
