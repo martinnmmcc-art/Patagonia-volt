@@ -4,8 +4,9 @@
 let tasks     = [];
 let budget    = [];
 let materials = [];
-let settings  = { hideUnit: false, showMats: true, includeDesc: false };
-let taskDescCat = {
+const DEFAULT_SETTINGS = { hideUnit: false, showMats: true, includeDesc: true };
+let settings  = { ...DEFAULT_SETTINGS };
+const DEFAULT_TASK_DESC = {
   // Redacción propia: mezcla lo que exige la reglamentación AEA 90364 con explicación en criollo,
   // pensada para que el cliente entienda qué está pagando. Editalas en Config cuando quieras.
   'Acometidas': 'Es traer la conexión eléctrica desde la red pública hasta el medidor, protegida dentro de un caño embutido en la pared (así lo exige la norma AEA, para que el cable no quede expuesto a golpes ni humedad). El precio varía según la potencia contratada: a mayor kW, se necesita conductor más grueso y caño de mayor diámetro. No incluye materiales ni la jabalina de puesta a tierra.',
@@ -24,6 +25,7 @@ let taskDescCat = {
   'Pisoducto': 'Es instalar los ductos dentro del contrapiso para poder sacar tomas de corriente o de datos en el medio de un ambiente (típico en oficinas o islas de cocina), incluyendo cajas de piso, curvas y derivaciones. Puede incluir también el cableado de energía o de datos por dentro, según se indique. No incluye materiales.',
   'Proyecto Eléctrico': 'Es el trabajo de planificación previo a instalar: relevar el inmueble, calcular las cargas eléctricas necesarias y armar la documentación técnica según la norma AEA, para que la instalación se pueda ejecutar correctamente. El precio depende de la cantidad de bocas del proyecto. No incluye trámites ante la empresa distribuidora.',
 };
+let taskDescCat = { ...DEFAULT_TASK_DESC }; // copia editable; se fusiona con lo guardado en init()
 let userCfg   = { nombre: '', tel: '', email: '' };
 let history_  = [];      // array of saved budgets
 let activeCat = 'Todos';
@@ -412,7 +414,7 @@ function init() {
 
   // Settings
   const ss = ls('pv_settings');
-  if (ss) settings = JSON.parse(ss);
+  if (ss) settings = { ...DEFAULT_SETTINGS, ...JSON.parse(ss) };
 
   // User config
   const sc = ls('pv_config');
@@ -423,7 +425,7 @@ function init() {
   history_ = sh ? JSON.parse(sh) : [];
 
   const std = ls('pv_taskdesc');
-  taskDescCat = std ? JSON.parse(std) : {};
+  taskDescCat = std ? { ...DEFAULT_TASK_DESC, ...JSON.parse(std) } : { ...DEFAULT_TASK_DESC };
 
   applySettings();
   renderCats();
@@ -471,11 +473,11 @@ async function syncPullFromSupabase() {
       document.getElementById('discount-input').value = remote.current.discount || '';
       lsSetSilent('pv_current', JSON.stringify(remote.current));
     }
-    if (remote.settings) { settings = remote.settings; lsSetSilent('pv_settings', JSON.stringify(settings)); }
+    if (remote.settings) { settings = { ...DEFAULT_SETTINGS, ...remote.settings }; lsSetSilent('pv_settings', JSON.stringify(settings)); }
     if (remote.userCfg)  { userCfg  = remote.userCfg;  lsSetSilent('pv_config', JSON.stringify(userCfg)); }
     if (Array.isArray(remote.history_)) { history_ = remote.history_; lsSetSilent('pv_history', JSON.stringify(history_)); }
     if (remote.prices_updated_at) lsSetSilent('pv_prices_updated_at', remote.prices_updated_at);
-    if (remote.taskDescCat) { taskDescCat = remote.taskDescCat; lsSetSilent('pv_taskdesc', JSON.stringify(taskDescCat)); }
+    if (remote.taskDescCat) { taskDescCat = { ...DEFAULT_TASK_DESC, ...remote.taskDescCat }; lsSetSilent('pv_taskdesc', JSON.stringify(taskDescCat)); }
 
     applySettings(); renderCats(); renderTasks(); renderBudget();
     renderMats(); renderHistory(); updateTotal(); loadCfgUI(); updateDBStats(); renderDescCatSelect();
