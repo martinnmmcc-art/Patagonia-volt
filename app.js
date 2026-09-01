@@ -915,15 +915,18 @@ function restoreFromHistory() {
 //  VISITA AL CLIENTE (clientes + historial + mediciones)
 // ══════════════════════════════════════════════════════════
 const MEDICION_FIELDS = [
-  { key:'tensionFN',  label:'Tensión Fase-Neutro',                       unit:'V'  },
-  { key:'tensionFF',  label:'Tensión Fase-Fase (trifásico)',             unit:'V'  },
-  { key:'megado',     label:'Resistencia de aislación (Megado)',         unit:'MΩ' },
-  { key:'pat',        label:'Resistencia de puesta a tierra',            unit:'Ω'  },
-  { key:'difDisparo', label:'Diferencial · tiempo de disparo',           unit:'ms' },
-  { key:'continuidad',label:'Continuidad del conductor de protección (PE)', select:['Sí','No'] },
+  { key:'tensionFN',  label:'Tensión Fase-Neutro',                 unit:'V'  },
+  { key:'tensionFF',  label:'Tensión Fase-Fase (trifásico)',       unit:'V'  },
+  { key:'tensionNPAT',label:'Tensión Neutro-Tierra (N-PAT)',       unit:'V'  },
+  { key:'tienePAT',   label:'¿Tiene puesta a tierra (PAT)?',       select:['Sí','No','A verificar'] },
+  { key:'difTest',    label:'Diferencial · test de botón',         select:['Dispara OK','No dispara','No tiene'] },
+  { key:'corriente',  label:'Corriente medida (pinza amperométrica)', unit:'A' },
+  { key:'megado',     label:'Resistencia de aislación (Megado, si tenés instrumento)', unit:'MΩ' },
 ];
 
 let activeClientId = null;
+let editingClient = false;
+let editingVisitId = null;
 
 function renderMedicionFields() {
   const el = document.getElementById('visit-mediciones-fields');
@@ -993,23 +996,75 @@ function createClient() {
 function openClientDetail(id) {
   const c = clients.find(x => x.id === id); if (!c) return;
   activeClientId = id;
+  editingClient = false;
+  editingVisitId = null;
   document.getElementById('visit-picker').style.display = 'none';
   document.getElementById('visit-detail').style.display = 'block';
-  document.getElementById('client-detail-nombre').textContent = c.nombre;
-  document.getElementById('client-detail-info').textContent = [c.direccion, c.telefono].filter(Boolean).join(' · ') || 'Sin datos adicionales';
+  renderClientHeader();
   document.getElementById('visit-date').value = new Date().toISOString().slice(0,10);
   document.getElementById('visit-motivo').value = '';
   document.getElementById('visit-pendiente').value = '';
   document.getElementById('visit-obs').value = '';
   clearMedicionFields();
+  document.getElementById('visit-form-title').textContent = 'Nueva visita';
+  document.getElementById('visit-save-btn').textContent = '💾 Guardar visita';
+  document.getElementById('visit-cancel-edit').style.display = 'none';
   renderClientVisitList();
+  renderClientBudgetList();
 }
 function closeClientDetail() {
   activeClientId = null;
+  editingClient = false;
+  editingVisitId = null;
   document.getElementById('visit-detail').style.display = 'none';
   document.getElementById('visit-picker').style.display = 'block';
   renderClientPicker();
 }
+
+// ── Editar / eliminar cliente ──
+function renderClientHeader() {
+  const c = clients.find(x => x.id === activeClientId); if (!c) return;
+  const view = document.getElementById('client-header-view');
+  const edit = document.getElementById('client-header-edit');
+  if (editingClient) {
+    view.style.display = 'none'; edit.style.display = 'block';
+    document.getElementById('edit-client-nombre').value = c.nombre;
+    document.getElementById('edit-client-direccion').value = c.direccion || '';
+    document.getElementById('edit-client-telefono').value = c.telefono || '';
+  } else {
+    view.style.display = 'block'; edit.style.display = 'none';
+    document.getElementById('client-detail-nombre').textContent = c.nombre;
+    document.getElementById('client-detail-info').textContent = [c.direccion, c.telefono].filter(Boolean).join(' · ') || 'Sin datos adicionales';
+  }
+}
+function toggleEditClient() {
+  if (!activeClientId) return;
+  editingClient = !editingClient;
+  renderClientHeader();
+}
+function saveClientEdit() {
+  const c = clients.find(x => x.id === activeClientId); if (!c) return;
+  const nombre = document.getElementById('edit-client-nombre').value.trim();
+  if (!nombre) { toast('El nombre no puede quedar vacío', true); return; }
+  c.nombre = nombre;
+  c.direccion = document.getElementById('edit-client-direccion').value.trim();
+  c.telefono = document.getElementById('edit-client-telefono').value.trim();
+  lsSet('pv_clients', JSON.stringify(clients));
+  editingClient = false;
+  renderClientHeader();
+  renderClientPicker();
+  toast('✅ Cliente actualizado');
+}
+function deleteClient() {
+  if (!activeClientId) return;
+  if (!confirm('¿Eliminar este cliente? Sus visitas y presupuestos vinculados no se borran, pero quedan sin cliente asignado.')) return;
+  clients = clients.filter(x => x.id !== activeClientId);
+  lsSet('pv_clients', JSON.stringify(clients));
+  closeClientDetail();
+  toast('Cliente eliminado');
+}
+
+// ── Guardar / editar visita ──
 function saveVisit() {
   if (!activeClientId) return;
   const date      = document.getElementById('visit-date').value || new Date().toISOString().slice(0,10);
@@ -1022,7 +1077,18 @@ function saveVisit() {
     toast('Cargá al menos la tarea realizada, lo pendiente o una medición', true); return;
   }
 
-  visits.unshift({ id: Date.now(), clientId: activeClientId, date, motivo, pendiente, mediciones, obs });
+  if (editingVisitId) {
+    const v = visits.find(x => x.id === editingVisitId);
+    if (v) { v.date = date; v.motivo = motivo; v.pendiente = pendiente; v.mediciones = mediciones; v.obs = obs; }
+    editingVisitId = null;
+    document.getElementById('visit-form-title').textContent = 'Nueva visita';
+    document.getElementById('visit-save-btn').textContent = '💾 Guardar visita';
+    document.getElementById('visit-cancel-edit').style.display = 'none';
+    toast('✅ Visita actualizada');
+  } else {
+    visits.unshift({ id: Date.now(), clientId: activeClientId, date, motivo, pendiente, mediciones, obs });
+    toast('✅ Visita guardada en el historial del cliente');
+  }
   lsSet('pv_visits', JSON.stringify(visits));
 
   document.getElementById('visit-motivo').value = '';
@@ -1032,12 +1098,82 @@ function saveVisit() {
   document.getElementById('visit-date').value = new Date().toISOString().slice(0,10);
 
   renderClientVisitList();
-  toast('✅ Visita guardada en el historial del cliente');
+}
+function editVisit(id) {
+  const v = visits.find(x => x.id === id); if (!v) return;
+  editingVisitId = id;
+  document.getElementById('visit-date').value = v.date || new Date().toISOString().slice(0,10);
+  document.getElementById('visit-motivo').value = v.motivo || '';
+  document.getElementById('visit-pendiente').value = v.pendiente || '';
+  document.getElementById('visit-obs').value = v.obs || '';
+  MEDICION_FIELDS.forEach(f => { const el = document.getElementById('med-' + f.key); if (el) el.value = (v.mediciones && v.mediciones[f.key]) || ''; });
+  document.getElementById('visit-form-title').textContent = 'Editar visita';
+  document.getElementById('visit-save-btn').textContent = '💾 Guardar cambios';
+  document.getElementById('visit-cancel-edit').style.display = 'inline-block';
+}
+function cancelEditVisit() {
+  editingVisitId = null;
+  document.getElementById('visit-motivo').value = '';
+  document.getElementById('visit-pendiente').value = '';
+  document.getElementById('visit-obs').value = '';
+  clearMedicionFields();
+  document.getElementById('visit-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('visit-form-title').textContent = 'Nueva visita';
+  document.getElementById('visit-save-btn').textContent = '💾 Guardar visita';
+  document.getElementById('visit-cancel-edit').style.display = 'none';
 }
 function deleteVisit(id) {
   visits = visits.filter(v => v.id !== id);
   lsSet('pv_visits', JSON.stringify(visits));
+  if (editingVisitId === id) cancelEditVisit();
   renderClientVisitList();
+}
+
+// ── Vincular presupuestos al cliente ──
+function attachCurrentBudgetToClient() {
+  if (!activeClientId) return;
+  if (!budget.length) { toast('No hay tareas cargadas en el presupuesto actual (pestaña Presupuesto)', true); return; }
+  const c = clients.find(x => x.id === activeClientId); if (!c) return;
+  const entry = {
+    id: Date.now(),
+    client: c.nombre,
+    clientId: activeClientId,
+    date: new Date().toLocaleDateString('es-AR', {day:'2-digit',month:'2-digit',year:'numeric'}),
+    total: getTotal(),
+    subtotal: getSubtotal(),
+    discount: getDiscountPct(),
+    budget: JSON.parse(JSON.stringify(budget)),
+    materials: JSON.parse(JSON.stringify(materials)),
+    status: 'pendiente'
+  };
+  history_.unshift(entry);
+  lsSet('pv_history', JSON.stringify(history_));
+  renderHistory();
+  renderClientBudgetList();
+  toast('✅ Presupuesto vinculado a ' + c.nombre);
+}
+function renderClientBudgetList() {
+  const el = document.getElementById('client-budget-list');
+  if (!el || !activeClientId) return;
+  const list = history_.filter(h => h.clientId === activeClientId);
+  if (!list.length) { el.innerHTML = '<div class="empty">Sin presupuestos vinculados todavía.</div>'; return; }
+  el.innerHTML = list.map(h => `
+    <div class="card" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+      <div style="min-width:0;">
+        <div style="font-weight:700;">${h.date} · ${fmt(h.total)}</div>
+        <div style="font-size:11px;color:var(--muted);text-transform:capitalize;">${h.status}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <div class="hbtn" onclick="viewHistEntry(${h.id})">Ver</div>
+        <div class="rmbtn" onclick="unlinkClientBudget(${h.id})">✕</div>
+      </div>
+    </div>`).join('');
+}
+function unlinkClientBudget(id) {
+  const h = history_.find(x => x.id === id); if (!h) return;
+  delete h.clientId;
+  lsSet('pv_history', JSON.stringify(history_));
+  renderClientBudgetList();
 }
 function medicionesToText(m) {
   if (!m) return '';
@@ -1058,7 +1194,10 @@ function renderClientVisitList() {
     <div class="card" style="margin-bottom:8px;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
         <div style="font-size:12px;color:var(--muted);font-weight:700;">${v.date || ''}</div>
-        <div class="rmbtn" onclick="deleteVisit(${v.id})">✕</div>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <div class="hbtn" onclick="editVisit(${v.id})">✏️</div>
+          <div class="rmbtn" onclick="deleteVisit(${v.id})">✕</div>
+        </div>
       </div>
       ${v.motivo ? `<div style="margin-top:6px;font-size:13px;"><b>Hecho:</b> ${v.motivo}</div>` : ''}
       ${v.pendiente ? `<div style="margin-top:5px;font-size:13px;color:#f5c518;"><b>⏳ Pendiente:</b> ${v.pendiente}</div>` : ''}
