@@ -79,6 +79,7 @@ function getTaskDesc(task) {
 let userCfg   = { nombre: '', tel: '', email: '' };
 let history_  = [];      // array of saved budgets
 let visits    = [];      // array of client visits (visita al cliente)
+let clients   = [];      // array of clients { id, nombre, direccion, telefono }
 let activeCat = 'Todos';
 let activeMatCat = 'Todos';
 let activeHistIdx = null;
@@ -478,6 +479,10 @@ function init() {
   const svs = ls('pv_visits');
   visits = svs ? JSON.parse(svs) : [];
 
+  const scl = ls('pv_clients');
+  clients = scl ? JSON.parse(scl) : [];
+  migrateVisitsToClients();
+
   const std = ls('pv_taskdesc_override');
   taskDescOverride = std ? JSON.parse(std) : {};
 
@@ -492,9 +497,8 @@ function init() {
   updateTotal();
   loadCfgUI();
   updateDBStats();
-  renderVisits();
-  const vd = document.getElementById('visit-date');
-  if (vd && !vd.value) vd.value = new Date().toISOString().slice(0,10);
+  renderMedicionFields();
+  renderClientPicker();
 
   // Traer la versión más reciente desde Supabase (si hay conexión).
   // La app sigue funcionando 100% offline con lo que ya cargó de localStorage;
@@ -533,11 +537,12 @@ async function syncPullFromSupabase() {
     if (remote.userCfg)  { userCfg  = remote.userCfg;  lsSetSilent('pv_config', JSON.stringify(userCfg)); }
     if (Array.isArray(remote.history_)) { history_ = remote.history_; lsSetSilent('pv_history', JSON.stringify(history_)); }
     if (Array.isArray(remote.visits)) { visits = remote.visits; lsSetSilent('pv_visits', JSON.stringify(visits)); }
+    if (Array.isArray(remote.clients)) { clients = remote.clients; lsSetSilent('pv_clients', JSON.stringify(clients)); }
     if (remote.prices_updated_at) lsSetSilent('pv_prices_updated_at', remote.prices_updated_at);
     if (remote.taskDescOverride) { taskDescOverride = remote.taskDescOverride; lsSetSilent('pv_taskdesc_override', JSON.stringify(taskDescOverride)); }
 
     applySettings(); renderCats(); renderTasks(); renderBudget();
-    renderMats(); renderHistory(); renderVisits(); updateTotal(); loadCfgUI(); updateDBStats();
+    renderMats(); renderHistory(); renderClientPicker(); if (activeClientId) renderClientVisitList(); updateTotal(); loadCfgUI(); updateDBStats();
     toast('☁️ Sincronizado con la nube');
   } catch (e) {
     // Sin conexión o error de red: seguimos con lo que ya hay en el celular.
@@ -559,6 +564,7 @@ async function pushStateToSupabase() {
       userCfg,
       history_,
       visits,
+      clients,
       prices_updated_at: ls('pv_prices_updated_at') || null,
       taskDescOverride
     };
@@ -906,52 +912,209 @@ function restoreFromHistory() {
 }
 
 // ══════════════════════════════════════════════════════════
-//  VISITA AL CLIENTE
+//  VISITA AL CLIENTE (clientes + historial + mediciones)
 // ══════════════════════════════════════════════════════════
+const MEDICION_FIELDS = [
+  { key:'tensionFN',  label:'Tensión Fase-Neutro',                       unit:'V'  },
+  { key:'tensionFF',  label:'Tensión Fase-Fase (trifásico)',             unit:'V'  },
+  { key:'megado',     label:'Resistencia de aislación (Megado)',         unit:'MΩ' },
+  { key:'pat',        label:'Resistencia de puesta a tierra',            unit:'Ω'  },
+  { key:'difDisparo', label:'Diferencial · tiempo de disparo',           unit:'ms' },
+  { key:'continuidad',label:'Continuidad del conductor de protección (PE)', select:['Sí','No'] },
+];
+
+let activeClientId = null;
+
+function renderMedicionFields() {
+  const el = document.getElementById('visit-mediciones-fields');
+  if (!el) return;
+  el.innerHTML = MEDICION_FIELDS.map(f => `
+    <div class="cfg-lbl">${f.label}${f.unit ? ' (' + f.unit + ')' : ''}</div>
+    ${f.select
+      ? `<select class="cfg" id="med-${f.key}"><option value="">—</option>${f.select.map(o=>`<option value="${o}">${o}</option>`).join('')}</select>`
+      : `<input class="cfg" type="text" inputmode="decimal" id="med-${f.key}" placeholder="Valor medido"/>`
+    }`).join('');
+}
+function getMedicionValues() {
+  const v = {};
+  MEDICION_FIELDS.forEach(f => {
+    const el = document.getElementById('med-' + f.key);
+    if (el && el.value.trim()) v[f.key] = el.value.trim();
+  });
+  return v;
+}
+function clearMedicionFields() {
+  MEDICION_FIELDS.forEach(f => { const el = document.getElementById('med-' + f.key); if (el) el.value = ''; });
+}
+
+// Migra visitas del formato viejo (client/address/phone sueltos) a clientes reales, una sola vez.
+function migrateVisitsToClients() {
+  let changed = false;
+  visits.forEach(v => {
+    if (v.clientId) return;
+    const nombre = (v.client || '').trim();
+    if (!nombre) return;
+    let c = clients.find(x => x.nombre.toLowerCase() === nombre.toLowerCase());
+    if (!c) { c = { id: Date.now() + Math.random(), nombre, direccion: v.address || '', telefono: v.phone || '' }; clients.push(c); }
+    v.clientId = c.id;
+    if (!v.pendiente) v.pendiente = '';
+    if (typeof v.mediciones === 'string') v.mediciones = v.mediciones ? { _libre: v.mediciones } : {};
+    changed = true;
+  });
+  if (changed) { lsSet('pv_clients', JSON.stringify(clients)); lsSet('pv_visits', JSON.stringify(visits)); }
+}
+
+function renderClientPicker() {
+  const el = document.getElementById('client-picker-list');
+  const qEl = document.getElementById('client-search');
+  if (!el || !qEl) return;
+  const q = qEl.value.toLowerCase().trim();
+  const list = !q ? clients.slice(0, 15) : clients.filter(c => c.nombre.toLowerCase().includes(q));
+  if (!list.length) { el.innerHTML = `<div class="empty">${q ? 'Sin resultados' : 'Todavía no cargaste clientes.'}</div>`; return; }
+  el.innerHTML = list.map(c => `
+    <div class="task-item" onclick="openClientDetail(${c.id})">
+      <div style="flex:1;min-width:0">
+        <div class="task-name">${c.nombre}</div>
+        <div class="task-cat">${[c.direccion, c.telefono].filter(Boolean).join(' · ') || 'Sin datos adicionales'}</div>
+      </div>
+    </div>`).join('');
+}
+function createClient() {
+  const nombre    = document.getElementById('new-client-nombre').value.trim();
+  const direccion = document.getElementById('new-client-direccion').value.trim();
+  const telefono  = document.getElementById('new-client-telefono').value.trim();
+  if (!nombre) { toast('Cargá al menos el nombre del cliente', true); return; }
+  const c = { id: Date.now(), nombre, direccion, telefono };
+  clients.unshift(c);
+  lsSet('pv_clients', JSON.stringify(clients));
+  ['new-client-nombre','new-client-direccion','new-client-telefono'].forEach(id => document.getElementById(id).value = '');
+  openClientDetail(c.id);
+}
+function openClientDetail(id) {
+  const c = clients.find(x => x.id === id); if (!c) return;
+  activeClientId = id;
+  document.getElementById('visit-picker').style.display = 'none';
+  document.getElementById('visit-detail').style.display = 'block';
+  document.getElementById('client-detail-nombre').textContent = c.nombre;
+  document.getElementById('client-detail-info').textContent = [c.direccion, c.telefono].filter(Boolean).join(' · ') || 'Sin datos adicionales';
+  document.getElementById('visit-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('visit-motivo').value = '';
+  document.getElementById('visit-pendiente').value = '';
+  document.getElementById('visit-obs').value = '';
+  clearMedicionFields();
+  renderClientVisitList();
+}
+function closeClientDetail() {
+  activeClientId = null;
+  document.getElementById('visit-detail').style.display = 'none';
+  document.getElementById('visit-picker').style.display = 'block';
+  renderClientPicker();
+}
 function saveVisit() {
-  const client    = document.getElementById('visit-client').value.trim();
-  const address   = document.getElementById('visit-address').value.trim();
-  const phone     = document.getElementById('visit-phone').value.trim();
+  if (!activeClientId) return;
   const date      = document.getElementById('visit-date').value || new Date().toISOString().slice(0,10);
   const motivo    = document.getElementById('visit-motivo').value.trim();
-  const mediciones= document.getElementById('visit-mediciones').value.trim();
+  const pendiente = document.getElementById('visit-pendiente').value.trim();
   const obs       = document.getElementById('visit-obs').value.trim();
+  const mediciones= getMedicionValues();
 
-  if (!client && !motivo) { toast('Cargá al menos el cliente o el motivo de la visita', true); return; }
+  if (!motivo && !pendiente && !Object.keys(mediciones).length) {
+    toast('Cargá al menos la tarea realizada, lo pendiente o una medición', true); return;
+  }
 
-  visits.unshift({ id: Date.now(), date, client, address, phone, motivo, mediciones, obs });
+  visits.unshift({ id: Date.now(), clientId: activeClientId, date, motivo, pendiente, mediciones, obs });
   lsSet('pv_visits', JSON.stringify(visits));
 
-  ['visit-client','visit-address','visit-phone','visit-motivo','visit-mediciones','visit-obs'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.value = '';
-  });
+  document.getElementById('visit-motivo').value = '';
+  document.getElementById('visit-pendiente').value = '';
+  document.getElementById('visit-obs').value = '';
+  clearMedicionFields();
   document.getElementById('visit-date').value = new Date().toISOString().slice(0,10);
 
-  renderVisits();
-  toast('✅ Visita guardada');
+  renderClientVisitList();
+  toast('✅ Visita guardada en el historial del cliente');
 }
 function deleteVisit(id) {
   visits = visits.filter(v => v.id !== id);
   lsSet('pv_visits', JSON.stringify(visits));
-  renderVisits();
+  renderClientVisitList();
 }
-function renderVisits() {
-  const el = document.getElementById('visit-list');
-  if (!el) return;
-  if (!visits.length) { el.innerHTML = '<div class="empty">Sin visitas guardadas todavía.</div>'; return; }
-  el.innerHTML = visits.map(v => `
+function medicionesToText(m) {
+  if (!m) return '';
+  if (m._libre) return m._libre;
+  return MEDICION_FIELDS
+    .filter(f => m[f.key])
+    .map(f => `${f.label}: ${m[f.key]}${f.unit ? f.unit : ''}`)
+    .join(' · ');
+}
+function renderClientVisitList() {
+  const el = document.getElementById('client-visit-list');
+  if (!el || !activeClientId) return;
+  const list = visits.filter(v => v.clientId === activeClientId);
+  if (!list.length) { el.innerHTML = '<div class="empty">Sin visitas registradas todavía para este cliente.</div>'; return; }
+  el.innerHTML = list.map(v => {
+    const medTxt = medicionesToText(v.mediciones);
+    return `
     <div class="card" style="margin-bottom:8px;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
-        <div style="min-width:0;">
-          <div style="font-weight:700;">${v.client || '(sin nombre)'}</div>
-          <div style="font-size:11px;color:var(--muted);">${v.date || ''}${v.address ? ' · ' + v.address : ''}${v.phone ? ' · ' + v.phone : ''}</div>
-        </div>
+        <div style="font-size:12px;color:var(--muted);font-weight:700;">${v.date || ''}</div>
         <div class="rmbtn" onclick="deleteVisit(${v.id})">✕</div>
       </div>
-      ${v.motivo ? `<div style="margin-top:7px;font-size:13px;"><b>Tarea / motivo:</b> ${v.motivo}</div>` : ''}
-      ${v.mediciones ? `<div style="margin-top:5px;font-size:13px;"><b>Mediciones:</b> ${v.mediciones}</div>` : ''}
+      ${v.motivo ? `<div style="margin-top:6px;font-size:13px;"><b>Hecho:</b> ${v.motivo}</div>` : ''}
+      ${v.pendiente ? `<div style="margin-top:5px;font-size:13px;color:#f5c518;"><b>⏳ Pendiente:</b> ${v.pendiente}</div>` : ''}
+      ${medTxt ? `<div style="margin-top:5px;font-size:12px;color:var(--muted);"><b>Mediciones:</b> ${medTxt}</div>` : ''}
       ${v.obs ? `<div style="margin-top:5px;font-size:12px;color:var(--muted);">${v.obs}</div>` : ''}
-    </div>`).join('');
+    </div>`;
+  }).join('');
+}
+
+let _lastImageFilename = 'presupuesto-patagonia-volt.png';
+
+function downloadClientHistory() {
+  if (!activeClientId) return;
+  const c = clients.find(x => x.id === activeClientId); if (!c) return;
+  const list = visits.filter(v => v.clientId === activeClientId).sort((a,b) => (a.date||'').localeCompare(b.date||''));
+  if (!list.length) { toast('Este cliente todavía no tiene visitas registradas', true); return; }
+
+  const rowsHTML = list.map(v => {
+    const medTxt = medicionesToText(v.mediciones);
+    return `
+    <div style="background:#1e2230;border:1px solid #2a2f3e;border-radius:7px;padding:10px 13px;margin-bottom:6px;">
+      <div style="font-size:11px;color:#f5c518;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;">${v.date || ''}</div>
+      ${v.motivo ? `<div style="font-size:13px;color:#e8eaf0;margin-top:4px;font-family:'Barlow',sans-serif;"><b>Hecho:</b> ${v.motivo}</div>` : ''}
+      ${v.pendiente ? `<div style="font-size:13px;color:#f5c518;margin-top:3px;font-family:'Barlow',sans-serif;"><b>Pendiente:</b> ${v.pendiente}</div>` : ''}
+      ${medTxt ? `<div style="font-size:12px;color:#9aa0b5;margin-top:3px;font-family:'Barlow',sans-serif;"><b>Mediciones:</b> ${medTxt}</div>` : ''}
+      ${v.obs ? `<div style="font-size:12px;color:#7a8099;margin-top:3px;font-family:'Barlow',sans-serif;">${v.obs}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  document.getElementById('visit-hist-src').innerHTML = `
+    <div style="background:#0d0f14;padding:32px;width:700px;font-family:'Barlow Condensed',sans-serif;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #f5c518;">
+        <div style="width:42px;height:42px;background:#f5c518;flex-shrink:0;clip-path:polygon(50% 0%,80% 40%,55% 40%,70% 100%,20% 55%,50% 55%);"></div>
+        <div style="flex:1;">
+          <div style="font-size:26px;font-weight:800;letter-spacing:1px;color:#f5c518;line-height:1;">PATAGONIA VOLT</div>
+          <div style="font-size:10px;color:#7a8099;letter-spacing:3px;text-transform:uppercase;margin-top:1px;">Historial de Visitas</div>
+        </div>
+      </div>
+      <div style="background:#14161f;border:1px solid #f5c518;border-radius:7px;padding:8px 13px;margin-bottom:14px;font-family:'Barlow',sans-serif;">
+        <div style="font-size:10px;color:#7a8099;text-transform:uppercase;letter-spacing:1px;">Cliente</div>
+        <div style="font-size:16px;font-weight:700;color:#e8eaf0;">${c.nombre}</div>
+        <div style="font-size:11px;color:#7a8099;">${[c.direccion, c.telefono].filter(Boolean).join(' · ')}</div>
+      </div>
+      ${rowsHTML}
+    </div>`;
+
+  toast('Generando imagen…');
+  setTimeout(() => {
+    html2canvas(document.getElementById('visit-hist-src'), {
+      scale:2, backgroundColor:'#0d0f14', logging:false, useCORS:true
+    }).then(canvas => {
+      _lastImageFilename = `historial-${c.nombre.replace(/[^a-z0-9]+/gi,'-').toLowerCase()}.png`;
+      document.getElementById('wa-img').src = canvas.toDataURL('image/png');
+      document.getElementById('wa-modal').classList.remove('hidden');
+    }).catch(() => toast('Error al generar imagen', true));
+  }, 160);
 }
 
 function renderHistory() {
@@ -1304,6 +1467,7 @@ function generateWA() {
     html2canvas(document.getElementById('wa-src'), {
       scale:2, backgroundColor:'#0d0f14', logging:false, useCORS:true
     }).then(canvas => {
+      _lastImageFilename = 'presupuesto-patagonia-volt.png';
       document.getElementById('wa-img').src = canvas.toDataURL('image/png');
       document.getElementById('wa-modal').classList.remove('hidden');
     }).catch(() => toast('Error al generar imagen','error'));
@@ -1314,7 +1478,7 @@ function downloadWA() {
   const img = document.getElementById('wa-img');
   if (!img.src || img.src===window.location.href) return;
   const a=document.createElement('a'); a.href=img.src;
-  a.download='presupuesto-patagonia-volt.png'; a.click();
+  a.download = _lastImageFilename || 'presupuesto-patagonia-volt.png'; a.click();
   toast('✅ Imagen descargada');
 }
 
