@@ -111,6 +111,11 @@ header {
 .qty-wrap { display: flex; align-items: center; gap: 4px; }
 .qbtn { width:27px; height:27px; background:var(--surface); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
 .qval { font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:16px; min-width:22px; text-align:center; }
+.qval-input {
+  font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:16px; text-align:center;
+  width:38px; background:transparent; border:none; color:var(--text); -moz-appearance:textfield;
+}
+.qval-input::-webkit-outer-spin-button, .qval-input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
 .rmbtn { color:var(--danger); font-size:17px; cursor:pointer; padding:3px; flex-shrink:0; }
 
 /* ── MATERIALS ── */

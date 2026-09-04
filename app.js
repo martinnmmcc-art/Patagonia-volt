@@ -251,19 +251,28 @@ const MATERIAL_CATALOG = [
   {cat:'Caños corrugados', name:'Corrugado semipesado 3/4" (rollo)'},
   {cat:'Caños corrugados', name:'Corrugado semipesado 1" (rollo)'},
   {cat:'Caños corrugados', name:'Corrugado semipesado 1 1/4" (rollo)'},
+  {cat:'Caños corrugados', name:'Corrugado semipesado 1 1/2" (rollo)'},
+  {cat:'Caños corrugados', name:'Corrugado semipesado 2" (rollo)'},
   {cat:'Caños corrugados', name:'Corrugado reforzado (pesado) 3/4" (rollo)'},
   {cat:'Caños corrugados', name:'Corrugado reforzado (pesado) 1" (rollo)'},
   {cat:'Caños corrugados', name:'Corrugado reforzado (pesado) 1 1/4" (rollo)'},
   {cat:'Caños corrugados', name:'Corrugado reforzado (pesado) 1 1/2" (rollo)'},
+  {cat:'Caños corrugados', name:'Corrugado reforzado (pesado) 2" (rollo)'},
+  {cat:'Caños corrugados', name:'Corrugado reforzado (pesado) 3" (rollo)'},
   {cat:'Caños corrugados', name:'Conector recto para corrugado 3/8"'},
   {cat:'Caños corrugados', name:'Conector recto para corrugado 1/2"'},
   {cat:'Caños corrugados', name:'Conector recto para corrugado 3/4"'},
   {cat:'Caños corrugados', name:'Conector recto para corrugado 1"'},
+  {cat:'Caños corrugados', name:'Conector recto para corrugado 1 1/4"'},
+  {cat:'Caños corrugados', name:'Conector recto para corrugado 1 1/2"'},
+  {cat:'Caños corrugados', name:'Conector recto para corrugado 2"'},
   {cat:'Caños corrugados', name:'Sonda pasacables (fiscal) 3/4"'},
 
   // ═══ CAJAS RECTANGULARES ═══
   {cat:'Cajas rectangulares', name:'Caja rectangular de aplicar PVC 5x10cm'},
   {cat:'Cajas rectangulares', name:'Caja rectangular de aplicar PVC doble 10x10cm'},
+  {cat:'Cajas rectangulares', name:'Caja rectangular de embutir PVC 5x10cm'},
+  {cat:'Cajas rectangulares', name:'Caja rectangular de embutir PVC doble 10x10cm'},
   {cat:'Cajas rectangulares', name:'Caja rectangular de cablecanal PVC 5x10cm'},
   {cat:'Cajas rectangulares', name:'Caja rectangular metálica 5x10cm'},
   {cat:'Cajas rectangulares', name:'Caja rectangular metálica doble 10x10cm'},
@@ -464,27 +473,69 @@ const MATERIAL_CATALOG = [
   {cat:'Otras protecciones', name:'Fusible tipo NH / cuchilla'},
   {cat:'Otras protecciones', name:'Base portafusible'},
 
-  // ═══ CONDUCTORES: UNIPOLAR (IRAM 2183) ═══
-  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 1,5mm² - Fase (marrón/negro/rojo) (por metro)'},
-  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 1,5mm² - Neutro (celeste) (por metro)'},
-  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 1,5mm² - Tierra (verde-amarillo) (por metro)'},
-  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 1,5mm² - Fase (rollo x100m)'},
-  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 2,5mm² - Fase (marrón/negro/rojo) (por metro)'},
-  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 2,5mm² - Neutro (celeste) (por metro)'},
-  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 2,5mm² - Tierra (verde-amarillo) (por metro)'},
-  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 2,5mm² - Fase (rollo x100m)'},
-  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 4mm² - Fase (por metro)'},
-  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 4mm² - Neutro (por metro)'},
-  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 4mm² - Tierra (verde-amarillo) (por metro)'},
-  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 4mm² - Fase (rollo x100m)'},
-  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 6mm² - Fase (por metro)'},
-  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 6mm² - Neutro (por metro)'},
-  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 6mm² - Tierra (verde-amarillo) (por metro)'},
-  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 10mm² - Fase (por metro)'},
-  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 10mm² - Neutro (por metro)'},
-  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 10mm² - Tierra (verde-amarillo) (por metro)'},
-  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 16mm² - Fase (por metro)'},
-  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 25mm² - Fase (por metro)'},
+  // ═══ CONDUCTORES UNIPOLARES: FASE MARRÓN (IRAM 2183) ═══
+  {cat:'Unipolar - Fase marrón', name:'Cable unipolar IRAM 2183 1,5mm² marrón (por metro)'},
+  {cat:'Unipolar - Fase marrón', name:'Cable unipolar IRAM 2183 1,5mm² marrón (por 100mts)'},
+  {cat:'Unipolar - Fase marrón', name:'Cable unipolar IRAM 2183 2,5mm² marrón (por metro)'},
+  {cat:'Unipolar - Fase marrón', name:'Cable unipolar IRAM 2183 2,5mm² marrón (por 100mts)'},
+  {cat:'Unipolar - Fase marrón', name:'Cable unipolar IRAM 2183 4mm² marrón (por metro)'},
+  {cat:'Unipolar - Fase marrón', name:'Cable unipolar IRAM 2183 4mm² marrón (por 100mts)'},
+  {cat:'Unipolar - Fase marrón', name:'Cable unipolar IRAM 2183 6mm² marrón (por metro)'},
+  {cat:'Unipolar - Fase marrón', name:'Cable unipolar IRAM 2183 6mm² marrón (por 100mts)'},
+  {cat:'Unipolar - Fase marrón', name:'Cable unipolar IRAM 2183 10mm² marrón (por metro)'},
+  {cat:'Unipolar - Fase marrón', name:'Cable unipolar IRAM 2183 10mm² marrón (por 100mts)'},
+  {cat:'Unipolar - Fase marrón', name:'Cable unipolar IRAM 2183 16mm² marrón (por metro)'},
+  {cat:'Unipolar - Fase marrón', name:'Cable unipolar IRAM 2183 25mm² marrón (por metro)'},
+
+  // ═══ CONDUCTORES UNIPOLARES: FASE NEGRO (IRAM 2183) ═══
+  {cat:'Unipolar - Fase negro', name:'Cable unipolar IRAM 2183 1,5mm² negro (por metro)'},
+  {cat:'Unipolar - Fase negro', name:'Cable unipolar IRAM 2183 1,5mm² negro (por 100mts)'},
+  {cat:'Unipolar - Fase negro', name:'Cable unipolar IRAM 2183 2,5mm² negro (por metro)'},
+  {cat:'Unipolar - Fase negro', name:'Cable unipolar IRAM 2183 2,5mm² negro (por 100mts)'},
+  {cat:'Unipolar - Fase negro', name:'Cable unipolar IRAM 2183 4mm² negro (por metro)'},
+  {cat:'Unipolar - Fase negro', name:'Cable unipolar IRAM 2183 4mm² negro (por 100mts)'},
+  {cat:'Unipolar - Fase negro', name:'Cable unipolar IRAM 2183 6mm² negro (por metro)'},
+  {cat:'Unipolar - Fase negro', name:'Cable unipolar IRAM 2183 6mm² negro (por 100mts)'},
+  {cat:'Unipolar - Fase negro', name:'Cable unipolar IRAM 2183 10mm² negro (por metro)'},
+  {cat:'Unipolar - Fase negro', name:'Cable unipolar IRAM 2183 10mm² negro (por 100mts)'},
+  {cat:'Unipolar - Fase negro', name:'Cable unipolar IRAM 2183 16mm² negro (por metro)'},
+  {cat:'Unipolar - Fase negro', name:'Cable unipolar IRAM 2183 25mm² negro (por metro)'},
+
+  // ═══ CONDUCTORES UNIPOLARES: FASE ROJO (IRAM 2183) ═══
+  {cat:'Unipolar - Fase rojo', name:'Cable unipolar IRAM 2183 1,5mm² rojo (por metro)'},
+  {cat:'Unipolar - Fase rojo', name:'Cable unipolar IRAM 2183 1,5mm² rojo (por 100mts)'},
+  {cat:'Unipolar - Fase rojo', name:'Cable unipolar IRAM 2183 2,5mm² rojo (por metro)'},
+  {cat:'Unipolar - Fase rojo', name:'Cable unipolar IRAM 2183 2,5mm² rojo (por 100mts)'},
+  {cat:'Unipolar - Fase rojo', name:'Cable unipolar IRAM 2183 4mm² rojo (por metro)'},
+  {cat:'Unipolar - Fase rojo', name:'Cable unipolar IRAM 2183 4mm² rojo (por 100mts)'},
+  {cat:'Unipolar - Fase rojo', name:'Cable unipolar IRAM 2183 6mm² rojo (por metro)'},
+  {cat:'Unipolar - Fase rojo', name:'Cable unipolar IRAM 2183 6mm² rojo (por 100mts)'},
+  {cat:'Unipolar - Fase rojo', name:'Cable unipolar IRAM 2183 10mm² rojo (por metro)'},
+  {cat:'Unipolar - Fase rojo', name:'Cable unipolar IRAM 2183 10mm² rojo (por 100mts)'},
+  {cat:'Unipolar - Fase rojo', name:'Cable unipolar IRAM 2183 16mm² rojo (por metro)'},
+  {cat:'Unipolar - Fase rojo', name:'Cable unipolar IRAM 2183 25mm² rojo (por metro)'},
+
+  // ═══ CONDUCTORES UNIPOLARES: NEUTRO CELESTE (IRAM 2183) ═══
+  {cat:'Unipolar - Neutro celeste', name:'Cable unipolar IRAM 2183 1,5mm² celeste (por metro)'},
+  {cat:'Unipolar - Neutro celeste', name:'Cable unipolar IRAM 2183 1,5mm² celeste (por 100mts)'},
+  {cat:'Unipolar - Neutro celeste', name:'Cable unipolar IRAM 2183 2,5mm² celeste (por metro)'},
+  {cat:'Unipolar - Neutro celeste', name:'Cable unipolar IRAM 2183 2,5mm² celeste (por 100mts)'},
+  {cat:'Unipolar - Neutro celeste', name:'Cable unipolar IRAM 2183 4mm² celeste (por metro)'},
+  {cat:'Unipolar - Neutro celeste', name:'Cable unipolar IRAM 2183 4mm² celeste (por 100mts)'},
+  {cat:'Unipolar - Neutro celeste', name:'Cable unipolar IRAM 2183 6mm² celeste (por metro)'},
+  {cat:'Unipolar - Neutro celeste', name:'Cable unipolar IRAM 2183 6mm² celeste (por 100mts)'},
+  {cat:'Unipolar - Neutro celeste', name:'Cable unipolar IRAM 2183 10mm² celeste (por metro)'},
+  {cat:'Unipolar - Neutro celeste', name:'Cable unipolar IRAM 2183 10mm² celeste (por 100mts)'},
+  {cat:'Unipolar - Neutro celeste', name:'Cable unipolar IRAM 2183 16mm² celeste (por metro)'},
+
+  // ═══ CONDUCTORES UNIPOLARES: TIERRA VERDE-AMARILLO (IRAM 2183) ═══
+  {cat:'Unipolar - Tierra verde-amarillo', name:'Cable unipolar IRAM 2183 1,5mm² verde-amarillo (por metro)'},
+  {cat:'Unipolar - Tierra verde-amarillo', name:'Cable unipolar IRAM 2183 2,5mm² verde-amarillo (por metro)'},
+  {cat:'Unipolar - Tierra verde-amarillo', name:'Cable unipolar IRAM 2183 4mm² verde-amarillo (por metro)'},
+  {cat:'Unipolar - Tierra verde-amarillo', name:'Cable unipolar IRAM 2183 6mm² verde-amarillo (por metro)'},
+  {cat:'Unipolar - Tierra verde-amarillo', name:'Cable unipolar IRAM 2183 10mm² verde-amarillo (por metro)'},
+  {cat:'Unipolar - Tierra verde-amarillo', name:'Cable unipolar IRAM 2183 16mm² verde-amarillo (por metro)'},
+  {cat:'Unipolar - Tierra verde-amarillo', name:'Cable unipolar IRAM 2183 25mm² verde-amarillo (por metro)'},
 
   // ═══ CONDUCTORES: CABLE SUBTERRÁNEO ═══
   {cat:'Cable subterráneo', name:'Cable subterráneo unipolar 4mm²'},
@@ -492,6 +543,8 @@ const MATERIAL_CATALOG = [
   {cat:'Cable subterráneo', name:'Cable subterráneo unipolar 10mm²'},
   {cat:'Cable subterráneo', name:'Cable subterráneo unipolar 16mm²'},
   {cat:'Cable subterráneo', name:'Cable subterráneo unipolar 25mm²'},
+  {cat:'Cable subterráneo', name:'Cable subterráneo unipolar 35mm²'},
+  {cat:'Cable subterráneo', name:'Cable subterráneo unipolar 50mm²'},
   {cat:'Cable subterráneo', name:'Cable subterráneo bipolar 2x2,5mm²'},
   {cat:'Cable subterráneo', name:'Cable subterráneo bipolar 2x4mm²'},
   {cat:'Cable subterráneo', name:'Cable subterráneo bipolar 2x6mm²'},
@@ -503,12 +556,35 @@ const MATERIAL_CATALOG = [
   {cat:'Cable subterráneo', name:'Cable subterráneo tetrapolar 4x6mm²'},
   {cat:'Cable subterráneo', name:'Cable subterráneo tetrapolar 4x10mm²'},
 
-  // ═══ CONDUCTORES: CABLE TIPO TALLER ═══
+  // ═══ CONDUCTORES: CABLE TIPO TALLER - BIPOLAR (2x) ═══
   {cat:'Cable tipo taller', name:'Cable tipo taller bipolar 2x1mm²'},
   {cat:'Cable tipo taller', name:'Cable tipo taller bipolar 2x1,5mm²'},
   {cat:'Cable tipo taller', name:'Cable tipo taller bipolar 2x2,5mm²'},
+  {cat:'Cable tipo taller', name:'Cable tipo taller bipolar 2x6mm²'},
+  {cat:'Cable tipo taller', name:'Cable tipo taller bipolar 2x10mm²'},
+  {cat:'Cable tipo taller', name:'Cable tipo taller bipolar 2x16mm²'},
+  {cat:'Cable tipo taller', name:'Cable tipo taller bipolar 2x25mm²'},
+
+  // ═══ CONDUCTORES: CABLE TIPO TALLER - TRIPOLAR (3x) ═══
   {cat:'Cable tipo taller', name:'Cable tipo taller tripolar 3x1,5mm²'},
   {cat:'Cable tipo taller', name:'Cable tipo taller tripolar 3x2,5mm²'},
+  {cat:'Cable tipo taller', name:'Cable tipo taller tripolar 3x4mm²'},
+  {cat:'Cable tipo taller', name:'Cable tipo taller tripolar 3x6mm²'},
+  {cat:'Cable tipo taller', name:'Cable tipo taller tripolar 3x10mm²'},
+  {cat:'Cable tipo taller', name:'Cable tipo taller tripolar 3x16mm²'},
+  {cat:'Cable tipo taller', name:'Cable tipo taller tripolar 3x25mm²'},
+  {cat:'Cable tipo taller', name:'Cable tipo taller tripolar 3x35mm²'},
+  {cat:'Cable tipo taller', name:'Cable tipo taller tripolar 3x50mm²'},
+
+  // ═══ CONDUCTORES: CABLE TIPO TALLER - TETRAPOLAR (4x) ═══
+  {cat:'Cable tipo taller', name:'Cable tipo taller tetrapolar 4x1,5mm²'},
+  {cat:'Cable tipo taller', name:'Cable tipo taller tetrapolar 4x2,5mm²'},
+  {cat:'Cable tipo taller', name:'Cable tipo taller tetrapolar 4x6mm²'},
+  {cat:'Cable tipo taller', name:'Cable tipo taller tetrapolar 4x10mm²'},
+  {cat:'Cable tipo taller', name:'Cable tipo taller tetrapolar 4x16mm²'},
+  {cat:'Cable tipo taller', name:'Cable tipo taller tetrapolar 4x25mm²'},
+  {cat:'Cable tipo taller', name:'Cable tipo taller tetrapolar 4x35mm²'},
+  {cat:'Cable tipo taller', name:'Cable tipo taller tetrapolar 4x50mm²'},
 
   // ═══ TERMINALES Y PUNTERAS ═══
   {cat:'Terminales y punteras', name:'Terminal tipo puntera (tubular) 0,5mm²'},
@@ -859,6 +935,12 @@ function changeQty(i, d) {
   if (budget[i].qty <= 0) budget.splice(i,1);
   saveCurrentState(); renderBudget(); updateTotal();
 }
+function setQty(i, val) {
+  const n = Math.max(1, parseInt(val, 10) || 1);
+  if (!budget[i]) return;
+  budget[i].qty = n;
+  saveCurrentState(); renderBudget(); updateTotal();
+}
 function removeItem(i) {
   budget.splice(i,1);
   saveCurrentState(); renderBudget(); updateTotal();
@@ -887,7 +969,7 @@ function renderBudget() {
         </div>
         <div class="qty-wrap">
           <div class="qbtn" onclick="changeQty(${i},-1)">−</div>
-          <div class="qval">${b.qty}</div>
+          <input type="number" class="qval-input" value="${b.qty}" min="1" onchange="setQty(${i}, this.value)" onclick="this.select()"/>
           <div class="qbtn" onclick="changeQty(${i},1)">+</div>
         </div>
         <div class="rmbtn" onclick="removeItem(${i})">✕</div>
@@ -932,6 +1014,11 @@ function changeMatQty(i, delta) {
   m.qty = Math.max(1, (m.qty || 1) + delta);
   saveCurrentState(); renderMats(); renderBudget();
 }
+function setMatQty(i, val) {
+  const m = materials[i]; if (!m) return;
+  m.qty = Math.max(1, parseInt(val, 10) || 1);
+  saveCurrentState(); renderMats(); renderBudget();
+}
 function renderMats() {
   const el = document.getElementById('mat-list');
   if (!materials.length) { el.innerHTML='<div class="empty">Sin materiales todavía.</div>'; return; }
@@ -941,7 +1028,7 @@ function renderMats() {
       <span class="mat-nm">${m.name}</span>
       <div class="qty-wrap">
         <div class="qbtn" onclick="changeMatQty(${i},-1)">−</div>
-        <div class="qval">${m.qty || 1}</div>
+        <input type="number" class="qval-input" value="${m.qty || 1}" min="1" onchange="setMatQty(${i}, this.value)" onclick="this.select()"/>
         <div class="qbtn" onclick="changeMatQty(${i},1)">+</div>
       </div>
       <span class="mat-del" onclick="deleteMat(${i})">✕</span>
