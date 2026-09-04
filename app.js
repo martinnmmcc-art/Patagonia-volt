@@ -207,121 +207,147 @@ const BUILTIN = [
 //  CATÁLOGO DE MATERIALES (sin precio, solo descripción — uso residencial AR)
 // ══════════════════════════════════════════════════════════
 const MATERIAL_CATALOG = [
-  // Caños y accesorios PVC
-  {cat:'Caños y accesorios PVC', name:'Caño PVC rígido 16mm (5/8") x 3m'},
-  {cat:'Caños y accesorios PVC', name:'Caño PVC rígido 20mm (3/4") x 3m'},
-  {cat:'Caños y accesorios PVC', name:'Caño PVC rígido 25mm (1") x 3m'},
-  {cat:'Caños y accesorios PVC', name:'Caño PVC rígido 32mm (1 1/4") x 3m'},
-  {cat:'Caños y accesorios PVC', name:'Caño PVC rígido 38mm (1 1/2") x 3m'},
-  {cat:'Caños y accesorios PVC', name:'Curva PVC 90° 20mm'},
-  {cat:'Caños y accesorios PVC', name:'Curva PVC 90° 25mm'},
-  {cat:'Caños y accesorios PVC', name:'Codo PVC 20mm'},
-  {cat:'Caños y accesorios PVC', name:'Unión PVC (cupla) 16mm'},
-  {cat:'Caños y accesorios PVC', name:'Unión PVC (cupla) 20mm'},
-  {cat:'Caños y accesorios PVC', name:'Unión PVC (cupla) 25mm'},
-  {cat:'Caños y accesorios PVC', name:'Boquilla PVC 16mm'},
-  {cat:'Caños y accesorios PVC', name:'Boquilla PVC 20mm'},
-  {cat:'Caños y accesorios PVC', name:'Boquilla PVC 25mm'},
-  {cat:'Caños y accesorios PVC', name:'Conector caño-caja PVC 20mm'},
-  {cat:'Caños y accesorios PVC', name:'Grampa PVC simple 16mm'},
-  {cat:'Caños y accesorios PVC', name:'Grampa PVC simple 20mm'},
-  {cat:'Caños y accesorios PVC', name:'Grampa PVC simple 25mm'},
-  {cat:'Caños y accesorios PVC', name:'Grampa PVC simple 32mm'},
-  {cat:'Caños y accesorios PVC', name:'Grampa PVC simple 38mm'},
-  {cat:'Caños y accesorios PVC', name:'Grampa PVC con fijación (tarugo/tornillo) 16mm'},
-  {cat:'Caños y accesorios PVC', name:'Grampa PVC con fijación (tarugo/tornillo) 20mm'},
-  {cat:'Caños y accesorios PVC', name:'Grampa PVC con fijación (tarugo/tornillo) 25mm'},
-  {cat:'Caños y accesorios PVC', name:'Grampa PVC con fijación (tarugo/tornillo) 32mm'},
-  {cat:'Caños y accesorios PVC', name:'Grampa PVC con fijación (tarugo/tornillo) 38mm'},
-  {cat:'Caños y accesorios PVC', name:'Pegamento para PVC (pomo)'},
-  {cat:'Caños y accesorios PVC', name:'Cinta de teflón'},
+  // ═══ CAÑOS PVC (rígido, solo mm) ═══
+  {cat:'Caños PVC', name:'Caño PVC rígido 16mm x 3m'},
+  {cat:'Caños PVC', name:'Caño PVC rígido 20mm x 3m'},
+  {cat:'Caños PVC', name:'Caño PVC rígido 25mm x 3m'},
+  {cat:'Caños PVC', name:'Caño PVC rígido 32mm x 3m'},
+  {cat:'Caños PVC', name:'Caño PVC rígido 38mm x 3m'},
+  {cat:'Caños PVC', name:'Caño PVC rígido 50mm x 3m'},
 
-  // Caños corrugados
-  {cat:'Caños corrugados', name:'Corrugado liviano 16mm (rollo)'},
-  {cat:'Caños corrugados', name:'Corrugado liviano 20mm (rollo)'},
-  {cat:'Caños corrugados', name:'Corrugado liviano 25mm (rollo)'},
-  {cat:'Caños corrugados', name:'Corrugado liviano 32mm (rollo)'},
-  {cat:'Caños corrugados', name:'Corrugado semipesado 16mm (rollo)'},
-  {cat:'Caños corrugados', name:'Corrugado semipesado 20mm (rollo)'},
-  {cat:'Caños corrugados', name:'Corrugado semipesado 25mm (rollo)'},
-  {cat:'Caños corrugados', name:'Corrugado semipesado 32mm (rollo)'},
-  {cat:'Caños corrugados', name:'Corrugado reforzado (pesado) 20mm (rollo)'},
-  {cat:'Caños corrugados', name:'Corrugado reforzado (pesado) 25mm (rollo)'},
-  {cat:'Caños corrugados', name:'Corrugado reforzado (pesado) 32mm (rollo)'},
-  {cat:'Caños corrugados', name:'Corrugado reforzado (pesado) 38mm (rollo)'},
-  {cat:'Caños corrugados', name:'Boquilla para corrugado 20mm'},
-  {cat:'Caños corrugados', name:'Boquilla para corrugado 25mm'},
-  {cat:'Caños corrugados', name:'Conector corrugado-caja'},
-  {cat:'Caños corrugados', name:'Sonda pasacables (fiscal) 20mm'},
+  // ═══ ACCESORIOS PVC (curvas, uniones, conectores) ═══
+  {cat:'Accesorios PVC', name:'Curva PVC 90° 16mm'},
+  {cat:'Accesorios PVC', name:'Curva PVC 90° 20mm'},
+  {cat:'Accesorios PVC', name:'Curva PVC 90° 25mm'},
+  {cat:'Accesorios PVC', name:'Curva PVC 90° 32mm'},
+  {cat:'Accesorios PVC', name:'Curva PVC 90° 38mm'},
+  {cat:'Accesorios PVC', name:'Codo PVC 16mm'},
+  {cat:'Accesorios PVC', name:'Codo PVC 20mm'},
+  {cat:'Accesorios PVC', name:'Codo PVC 25mm'},
+  {cat:'Accesorios PVC', name:'Unión (cupla) PVC 16mm'},
+  {cat:'Accesorios PVC', name:'Unión (cupla) PVC 20mm'},
+  {cat:'Accesorios PVC', name:'Unión (cupla) PVC 25mm'},
+  {cat:'Accesorios PVC', name:'Unión (cupla) PVC 32mm'},
+  {cat:'Accesorios PVC', name:'Unión (cupla) PVC 38mm'},
+  {cat:'Accesorios PVC', name:'Conector caño-caja PVC 16mm'},
+  {cat:'Accesorios PVC', name:'Conector caño-caja PVC 20mm'},
+  {cat:'Accesorios PVC', name:'Conector caño-caja PVC 25mm'},
+  {cat:'Accesorios PVC', name:'Conector caño-caja PVC 32mm'},
+  {cat:'Accesorios PVC', name:'Pegamento para PVC (pomo)'},
 
-  // Cajas rectangulares
-  {cat:'Cajas rectangulares', name:'Caja rectangular PVC 5x10cm'},
-  {cat:'Cajas rectangulares', name:'Caja rectangular PVC doble 10x10cm'},
+  // ═══ GRAMPAS PVC (con traba, no de tornillo/tarugo) ═══
+  {cat:'Grampas PVC', name:'Grampa PVC con traba 16mm'},
+  {cat:'Grampas PVC', name:'Grampa PVC con traba 20mm'},
+  {cat:'Grampas PVC', name:'Grampa PVC con traba 25mm'},
+  {cat:'Grampas PVC', name:'Grampa PVC con traba 32mm'},
+  {cat:'Grampas PVC', name:'Grampa PVC con traba 38mm'},
+
+  // ═══ CAÑOS CORRUGADOS (en pulgadas) ═══
+  {cat:'Caños corrugados', name:'Corrugado liviano 3/8" (rollo)'},
+  {cat:'Caños corrugados', name:'Corrugado liviano 1/2" (rollo)'},
+  {cat:'Caños corrugados', name:'Corrugado liviano 3/4" (rollo)'},
+  {cat:'Caños corrugados', name:'Corrugado liviano 1" (rollo)'},
+  {cat:'Caños corrugados', name:'Corrugado semipesado 1/2" (rollo)'},
+  {cat:'Caños corrugados', name:'Corrugado semipesado 3/4" (rollo)'},
+  {cat:'Caños corrugados', name:'Corrugado semipesado 1" (rollo)'},
+  {cat:'Caños corrugados', name:'Corrugado semipesado 1 1/4" (rollo)'},
+  {cat:'Caños corrugados', name:'Corrugado reforzado (pesado) 3/4" (rollo)'},
+  {cat:'Caños corrugados', name:'Corrugado reforzado (pesado) 1" (rollo)'},
+  {cat:'Caños corrugados', name:'Corrugado reforzado (pesado) 1 1/4" (rollo)'},
+  {cat:'Caños corrugados', name:'Corrugado reforzado (pesado) 1 1/2" (rollo)'},
+  {cat:'Caños corrugados', name:'Conector recto para corrugado 3/8"'},
+  {cat:'Caños corrugados', name:'Conector recto para corrugado 1/2"'},
+  {cat:'Caños corrugados', name:'Conector recto para corrugado 3/4"'},
+  {cat:'Caños corrugados', name:'Conector recto para corrugado 1"'},
+  {cat:'Caños corrugados', name:'Sonda pasacables (fiscal) 3/4"'},
+
+  // ═══ CAJAS RECTANGULARES ═══
+  {cat:'Cajas rectangulares', name:'Caja rectangular de aplicar PVC 5x10cm'},
+  {cat:'Cajas rectangulares', name:'Caja rectangular de aplicar PVC doble 10x10cm'},
+  {cat:'Cajas rectangulares', name:'Caja rectangular de cablecanal PVC 5x10cm'},
   {cat:'Cajas rectangulares', name:'Caja rectangular metálica 5x10cm'},
   {cat:'Cajas rectangulares', name:'Caja rectangular metálica doble 10x10cm'},
   {cat:'Cajas rectangulares', name:'Tapa ciega para caja rectangular'},
 
-  // Cajas octogonales
+  // ═══ CAJAS OCTOGONALES ═══
   {cat:'Cajas octogonales', name:'Caja octogonal PVC chica (55mm)'},
   {cat:'Cajas octogonales', name:'Caja octogonal PVC grande (100mm)'},
   {cat:'Cajas octogonales', name:'Caja octogonal metálica chica'},
   {cat:'Cajas octogonales', name:'Caja octogonal metálica grande'},
   {cat:'Cajas octogonales', name:'Tapa ciega para caja octogonal'},
 
-  // Cajas estanco (IP65/IP55)
+  // ═══ CAJAS REDONDAS ═══
+  {cat:'Cajas redondas', name:'Caja redonda de aplicar PVC chica'},
+  {cat:'Cajas redondas', name:'Caja redonda de aplicar PVC grande'},
+  {cat:'Cajas redondas', name:'Caja redonda estanco PVC (IP65)'},
+
+  // ═══ CAJAS ESTANCO (IP65) ═══
+  {cat:'Cajas estanco', name:'Caja estanco 80x80x55mm (IP65)'},
   {cat:'Cajas estanco', name:'Caja estanco 100x100x50mm (IP65)'},
+  {cat:'Cajas estanco', name:'Caja estanco 120x80x55mm (IP65)'},
+  {cat:'Cajas estanco', name:'Caja estanco 150x110x70mm (IP65)'},
   {cat:'Cajas estanco', name:'Caja estanco 150x150x70mm (IP65)'},
+  {cat:'Cajas estanco', name:'Caja estanco 190x140x70mm (IP65)'},
+  {cat:'Cajas estanco', name:'Caja estanco 200x120x75mm (IP65)'},
   {cat:'Cajas estanco', name:'Caja estanco 200x200x90mm (IP65)'},
   {cat:'Cajas estanco', name:'Caja estanco 250x200x100mm (IP65)'},
+  {cat:'Cajas estanco', name:'Caja estanco 300x200x120mm (IP65)'},
   {cat:'Cajas estanco', name:'Caja estanco 300x300x120mm (IP65)'},
   {cat:'Cajas estanco', name:'Caja estanco 400x300x150mm (IP65)'},
+  {cat:'Cajas estanco', name:'Caja estanco 400x400x160mm (IP65)'},
+  {cat:'Cajas estanco', name:'Caja estanco 500x400x200mm (IP65)'},
 
-  // Prensacables
-  {cat:'Prensacables', name:'Prensacable PG7 (3-6,5mm)'},
-  {cat:'Prensacables', name:'Prensacable PG9 (4-8mm)'},
-  {cat:'Prensacables', name:'Prensacable PG11 (5-10mm)'},
-  {cat:'Prensacables', name:'Prensacable PG13,5 (6-12mm)'},
-  {cat:'Prensacables', name:'Prensacable PG16 (10-14mm)'},
-  {cat:'Prensacables', name:'Prensacable PG21 (13-18mm)'},
-  {cat:'Prensacables', name:'Prensacable PG29 (18-25mm)'},
-
-  // Puesta a tierra
-  {cat:'Puesta a tierra', name:'Jabalina copperweld 1m'},
-  {cat:'Puesta a tierra', name:'Jabalina copperweld 1,5m'},
-  {cat:'Puesta a tierra', name:'Jabalina copperweld 2m'},
-  {cat:'Puesta a tierra', name:'Jabalina copperweld 2,4m'},
+  // ═══ PUESTA A TIERRA ═══
+  {cat:'Puesta a tierra', name:'Jabalina 16mm x 1m (según AEA 90364)'},
+  {cat:'Puesta a tierra', name:'Jabalina 16mm x 1,5m (según AEA 90364)'},
+  {cat:'Puesta a tierra', name:'Jabalina 16mm x 2m (según AEA 90364)'},
+  {cat:'Puesta a tierra', name:'Jabalina 16mm x 2,4m (según AEA 90364)'},
   {cat:'Puesta a tierra', name:'Grampa bimetálica para jabalina'},
   {cat:'Puesta a tierra', name:'Caja de inspección PVC para jabalina'},
-  {cat:'Puesta a tierra', name:'Cable desnudo p/PAT 16mm²'},
-  {cat:'Puesta a tierra', name:'Cable desnudo p/PAT 25mm²'},
-  {cat:'Puesta a tierra', name:'Soldadura exotérmica (cartucho)'},
+  {cat:'Puesta a tierra', name:'Cable unipolar verde-amarillo (PAT) 4mm²'},
+  {cat:'Puesta a tierra', name:'Cable unipolar verde-amarillo (PAT) 6mm²'},
+  {cat:'Puesta a tierra', name:'Cable unipolar verde-amarillo (PAT) 10mm²'},
+  {cat:'Puesta a tierra', name:'Cable unipolar verde-amarillo (PAT) 16mm²'},
+  {cat:'Puesta a tierra', name:'Cable unipolar verde-amarillo (PAT) 25mm²'},
   {cat:'Puesta a tierra', name:'Bornera PAT 7 contactos (riel DIN)'},
   {cat:'Puesta a tierra', name:'Bornera PAT 12 contactos (riel DIN)'},
 
-  // Tableros
+  // ═══ TABLEROS ═══
+  {cat:'Tableros', name:'Tablero de embutir 1x4 módulos'},
   {cat:'Tableros', name:'Tablero de embutir 1x8 módulos'},
   {cat:'Tableros', name:'Tablero de embutir 1x12 módulos'},
+  {cat:'Tableros', name:'Tablero de embutir 1x16 módulos'},
   {cat:'Tableros', name:'Tablero de embutir 1x18 módulos'},
   {cat:'Tableros', name:'Tablero de embutir 1x24 módulos'},
+  {cat:'Tableros', name:'Tablero de embutir 1x32 módulos'},
   {cat:'Tableros', name:'Tablero de embutir 1x36 módulos'},
+  {cat:'Tableros', name:'Tablero de embutir 1x48 módulos'},
+  {cat:'Tableros', name:'Tablero de aplicar 1x4 módulos'},
   {cat:'Tableros', name:'Tablero de aplicar 1x8 módulos'},
   {cat:'Tableros', name:'Tablero de aplicar 1x12 módulos'},
+  {cat:'Tableros', name:'Tablero de aplicar 1x16 módulos'},
   {cat:'Tableros', name:'Tablero de aplicar 1x18 módulos'},
   {cat:'Tableros', name:'Tablero de aplicar 1x24 módulos'},
+  {cat:'Tableros', name:'Tablero de aplicar 1x32 módulos'},
   {cat:'Tableros', name:'Tablero de aplicar 1x36 módulos'},
+  {cat:'Tableros', name:'Tablero de aplicar 1x48 módulos'},
   {cat:'Tableros', name:'Riel DIN 35mm'},
   {cat:'Tableros', name:'Peine de distribución monofásico (bipolar)'},
   {cat:'Tableros', name:'Peine de distribución trifásico (tetrapolar)'},
 
-  // Gabinetes
-  {cat:'Gabinetes', name:'Gabinete metálico IP54 (chico)'},
-  {cat:'Gabinetes', name:'Gabinete metálico IP54 (mediano)'},
-  {cat:'Gabinetes', name:'Gabinete metálico IP54 (grande)'},
-  {cat:'Gabinetes', name:'Gabinete de PVC IP65'},
-  {cat:'Gabinetes', name:'Gabinete para medidor (caja de toma)'},
-  {cat:'Gabinetes', name:'Placa de montaje para gabinete'},
+  // ═══ GABINETES ═══
+  {cat:'Gabinetes', name:'Gabinete metálico IP54 20x20x15cm con calado'},
+  {cat:'Gabinetes', name:'Gabinete metálico IP54 30x20x15cm con calado'},
+  {cat:'Gabinetes', name:'Gabinete metálico IP54 40x30x20cm con calado'},
+  {cat:'Gabinetes', name:'Gabinete metálico IP54 50x40x20cm con calado'},
+  {cat:'Gabinetes', name:'Gabinete metálico IP66 30x30x20cm con calado'},
+  {cat:'Gabinetes', name:'Gabinete metálico IP66 40x40x20cm con calado'},
+  {cat:'Gabinetes', name:'Gabinete de PVC IP65 20x20x14cm'},
+  {cat:'Gabinetes', name:'Gabinete de PVC IP66 30x25x15cm'},
+  {cat:'Gabinetes', name:'Gabinete para medidor (caja de toma) con calado'},
+  {cat:'Gabinetes', name:'Placa de montaje interior para gabinete'},
 
-  // Contactores y relés
+  // ═══ CONTACTORES Y RELÉS ═══
   {cat:'Contactores y relés', name:'Contactor 9A bobina 220V'},
   {cat:'Contactores y relés', name:'Contactor 9A bobina 24V'},
   {cat:'Contactores y relés', name:'Contactor 18A bobina 220V'},
@@ -339,69 +365,152 @@ const MATERIAL_CATALOG = [
   {cat:'Contactores y relés', name:'Base/zócalo para relé'},
   {cat:'Contactores y relés', name:'Relé auxiliar/interfase 24V'},
 
-  // Transformadores
+  // ═══ TRANSFORMADORES ═══
   {cat:'Transformadores', name:'Transformador de comando 220V/24V'},
   {cat:'Transformadores', name:'Transformador de comando 220V/12V'},
   {cat:'Transformadores', name:'Fuente conmutada (switching) 220V/24V'},
   {cat:'Transformadores', name:'Fuente conmutada (switching) 220V/12V'},
 
-  // Señalización y comando
-  {cat:'Señalización y comando', name:'Baliza / señalizador luminoso'},
-  {cat:'Señalización y comando', name:'Piloto/luz indicadora (verde/rojo)'},
-  {cat:'Señalización y comando', name:'Pulsador de comando (marcha/paro)'},
-  {cat:'Señalización y comando', name:'Selector de comando (2 o 3 posiciones)'},
-  {cat:'Señalización y comando', name:'Seta de emergencia'},
-  {cat:'Señalización y comando', name:'Buzzer/sirena de señalización'},
+  // ═══ PILOTOS (señalización luminosa) ═══
+  {cat:'Pilotos', name:'Piloto verde 22mm'},
+  {cat:'Pilotos', name:'Piloto rojo 22mm'},
+  {cat:'Pilotos', name:'Piloto amarillo 22mm'},
+  {cat:'Pilotos', name:'Piloto azul 22mm'},
+  {cat:'Pilotos', name:'Piloto blanco 22mm'},
+  {cat:'Pilotos', name:'Piloto verde 16mm'},
+  {cat:'Pilotos', name:'Piloto rojo 16mm'},
+  {cat:'Pilotos', name:'Piloto amarillo 16mm'},
 
-  // Protecciones
-  {cat:'Protecciones', name:'Térmica unipolar 10A curva C'},
-  {cat:'Protecciones', name:'Térmica unipolar 16A curva C'},
-  {cat:'Protecciones', name:'Térmica unipolar 20A curva C'},
-  {cat:'Protecciones', name:'Térmica unipolar 25A curva C'},
-  {cat:'Protecciones', name:'Térmica unipolar 32A curva C'},
-  {cat:'Protecciones', name:'Térmica unipolar 40A curva C'},
-  {cat:'Protecciones', name:'Térmica bipolar 10A curva C'},
-  {cat:'Protecciones', name:'Térmica bipolar 16A curva C'},
-  {cat:'Protecciones', name:'Térmica bipolar 20A curva C'},
-  {cat:'Protecciones', name:'Térmica bipolar 25A curva C'},
-  {cat:'Protecciones', name:'Térmica bipolar 32A curva C'},
-  {cat:'Protecciones', name:'Térmica bipolar 40A curva C'},
-  {cat:'Protecciones', name:'Térmica tripolar 16A curva C'},
-  {cat:'Protecciones', name:'Térmica tripolar 20A curva C'},
-  {cat:'Protecciones', name:'Térmica tripolar 25A curva C'},
-  {cat:'Protecciones', name:'Térmica tripolar 32A curva C'},
-  {cat:'Protecciones', name:'Térmica tripolar 40A curva C'},
-  {cat:'Protecciones', name:'Térmica tetrapolar 16A curva C'},
-  {cat:'Protecciones', name:'Térmica tetrapolar 20A curva C'},
-  {cat:'Protecciones', name:'Térmica tetrapolar 25A curva C'},
-  {cat:'Protecciones', name:'Térmica tetrapolar 32A curva C'},
-  {cat:'Protecciones', name:'Térmica tetrapolar 40A curva C'},
-  {cat:'Protecciones', name:'Térmica tetrapolar 63A curva C'},
-  {cat:'Protecciones', name:'Disyuntor diferencial bipolar 25A 30mA'},
-  {cat:'Protecciones', name:'Disyuntor diferencial bipolar 40A 30mA'},
-  {cat:'Protecciones', name:'Disyuntor diferencial bipolar 63A 30mA'},
-  {cat:'Protecciones', name:'Disyuntor diferencial tetrapolar 25A 30mA'},
-  {cat:'Protecciones', name:'Disyuntor diferencial tetrapolar 40A 30mA'},
-  {cat:'Protecciones', name:'Disyuntor diferencial tetrapolar 63A 30mA'},
-  {cat:'Protecciones', name:'Protector contra sobretensión (DPS)'},
-  {cat:'Protecciones', name:'Fusible tipo NH / cuchilla'},
-  {cat:'Protecciones', name:'Base portafusible'},
+  // ═══ PULSADORES Y COMANDO ═══
+  {cat:'Pulsadores y comando', name:'Pulsador de marcha (verde)'},
+  {cat:'Pulsadores y comando', name:'Pulsador de parada (rojo)'},
+  {cat:'Pulsadores y comando', name:'Pulsador marcha/parada (doble, verde y rojo)'},
+  {cat:'Pulsadores y comando', name:'Seta de emergencia'},
+  {cat:'Pulsadores y comando', name:'Selector de comando 2 posiciones'},
+  {cat:'Pulsadores y comando', name:'Selector de comando 3 posiciones'},
+  {cat:'Pulsadores y comando', name:'Buzzer/sirena de señalización'},
 
-  // Conductores
-  {cat:'Conductores', name:'Cable unipolar 1,5mm² (por metro)'},
-  {cat:'Conductores', name:'Cable unipolar 1,5mm² (rollo x100m)'},
-  {cat:'Conductores', name:'Cable unipolar 2,5mm² (por metro)'},
-  {cat:'Conductores', name:'Cable unipolar 2,5mm² (rollo x100m)'},
-  {cat:'Conductores', name:'Cable unipolar 4mm² (por metro)'},
-  {cat:'Conductores', name:'Cable unipolar 4mm² (rollo x100m)'},
-  {cat:'Conductores', name:'Cable unipolar 6mm² (por metro)'},
-  {cat:'Conductores', name:'Cable unipolar 6mm² (rollo x100m)'},
-  {cat:'Conductores', name:'Cable unipolar 10mm² (por metro)'},
-  {cat:'Conductores', name:'Cable unipolar 10mm² (rollo x100m)'},
-  {cat:'Conductores', name:'Cable subterráneo (tetrapolar)'},
-  {cat:'Conductores', name:'Cable tipo taller (bipolar)'},
+  // ═══ PROTECCIONES: TÉRMICAS ═══
+  {cat:'Térmicas', name:'Térmica unipolar 10A curva B'},
+  {cat:'Térmicas', name:'Térmica unipolar 16A curva B'},
+  {cat:'Térmicas', name:'Térmica unipolar 20A curva B'},
+  {cat:'Térmicas', name:'Térmica unipolar 25A curva B'},
+  {cat:'Térmicas', name:'Térmica unipolar 32A curva B'},
+  {cat:'Térmicas', name:'Térmica unipolar 10A curva C'},
+  {cat:'Térmicas', name:'Térmica unipolar 16A curva C'},
+  {cat:'Térmicas', name:'Térmica unipolar 20A curva C'},
+  {cat:'Térmicas', name:'Térmica unipolar 25A curva C'},
+  {cat:'Térmicas', name:'Térmica unipolar 32A curva C'},
+  {cat:'Térmicas', name:'Térmica unipolar 40A curva C'},
+  {cat:'Térmicas', name:'Térmica unipolar 10A curva D'},
+  {cat:'Térmicas', name:'Térmica unipolar 16A curva D'},
+  {cat:'Térmicas', name:'Térmica unipolar 20A curva D'},
+  {cat:'Térmicas', name:'Térmica bipolar 10A curva B'},
+  {cat:'Térmicas', name:'Térmica bipolar 16A curva B'},
+  {cat:'Térmicas', name:'Térmica bipolar 20A curva B'},
+  {cat:'Térmicas', name:'Térmica bipolar 25A curva B'},
+  {cat:'Térmicas', name:'Térmica bipolar 32A curva B'},
+  {cat:'Térmicas', name:'Térmica bipolar 10A curva C'},
+  {cat:'Térmicas', name:'Térmica bipolar 16A curva C'},
+  {cat:'Térmicas', name:'Térmica bipolar 20A curva C'},
+  {cat:'Térmicas', name:'Térmica bipolar 25A curva C'},
+  {cat:'Térmicas', name:'Térmica bipolar 32A curva C'},
+  {cat:'Térmicas', name:'Térmica bipolar 40A curva C'},
+  {cat:'Térmicas', name:'Térmica bipolar 16A curva D'},
+  {cat:'Térmicas', name:'Térmica bipolar 20A curva D'},
+  {cat:'Térmicas', name:'Térmica bipolar 25A curva D'},
+  {cat:'Térmicas', name:'Térmica tripolar 16A curva C'},
+  {cat:'Térmicas', name:'Térmica tripolar 20A curva C'},
+  {cat:'Térmicas', name:'Térmica tripolar 25A curva C'},
+  {cat:'Térmicas', name:'Térmica tripolar 32A curva C'},
+  {cat:'Térmicas', name:'Térmica tripolar 40A curva C'},
+  {cat:'Térmicas', name:'Térmica tripolar 20A curva D'},
+  {cat:'Térmicas', name:'Térmica tripolar 25A curva D'},
+  {cat:'Térmicas', name:'Térmica tripolar 32A curva D'},
+  {cat:'Térmicas', name:'Térmica tetrapolar 16A curva C'},
+  {cat:'Térmicas', name:'Térmica tetrapolar 20A curva C'},
+  {cat:'Térmicas', name:'Térmica tetrapolar 25A curva C'},
+  {cat:'Térmicas', name:'Térmica tetrapolar 32A curva C'},
+  {cat:'Térmicas', name:'Térmica tetrapolar 40A curva C'},
+  {cat:'Térmicas', name:'Térmica tetrapolar 63A curva C'},
+  {cat:'Térmicas', name:'Térmica tetrapolar 20A curva D'},
+  {cat:'Térmicas', name:'Térmica tetrapolar 25A curva D'},
+  {cat:'Térmicas', name:'Térmica tetrapolar 32A curva D'},
 
-  // Terminales y punteras
+  // ═══ PROTECCIONES: DIFERENCIALES ═══
+  {cat:'Diferenciales', name:'Disyuntor diferencial bipolar 25A 10mA'},
+  {cat:'Diferenciales', name:'Disyuntor diferencial bipolar 40A 10mA'},
+  {cat:'Diferenciales', name:'Disyuntor diferencial bipolar 25A 30mA'},
+  {cat:'Diferenciales', name:'Disyuntor diferencial bipolar 40A 30mA'},
+  {cat:'Diferenciales', name:'Disyuntor diferencial bipolar 63A 30mA'},
+  {cat:'Diferenciales', name:'Disyuntor diferencial bipolar 25A 100mA'},
+  {cat:'Diferenciales', name:'Disyuntor diferencial bipolar 40A 100mA'},
+  {cat:'Diferenciales', name:'Disyuntor diferencial bipolar 63A 100mA'},
+  {cat:'Diferenciales', name:'Disyuntor diferencial tetrapolar 25A 30mA'},
+  {cat:'Diferenciales', name:'Disyuntor diferencial tetrapolar 40A 30mA'},
+  {cat:'Diferenciales', name:'Disyuntor diferencial tetrapolar 63A 30mA'},
+  {cat:'Diferenciales', name:'Disyuntor diferencial tetrapolar 25A 100mA'},
+  {cat:'Diferenciales', name:'Disyuntor diferencial tetrapolar 40A 100mA'},
+  {cat:'Diferenciales', name:'Disyuntor diferencial tetrapolar 63A 100mA'},
+
+  // ═══ PROTECCIONES: OTRAS ═══
+  {cat:'Otras protecciones', name:'Protector de tensión común bipolar 20A'},
+  {cat:'Otras protecciones', name:'Protector de tensión común tetrapolar 20A'},
+  {cat:'Otras protecciones', name:'Protector de tensión digital (con display) bipolar 20A'},
+  {cat:'Otras protecciones', name:'Protector de tensión digital (con display) bipolar 32A'},
+  {cat:'Otras protecciones', name:'Protector de tensión digital (con display) tetrapolar 20A'},
+  {cat:'Otras protecciones', name:'Protector de tensión digital (con display) tetrapolar 32A'},
+  {cat:'Otras protecciones', name:'Protector contra sobretensión DPS clase II'},
+  {cat:'Otras protecciones', name:'Fusible tipo NH / cuchilla'},
+  {cat:'Otras protecciones', name:'Base portafusible'},
+
+  // ═══ CONDUCTORES: UNIPOLAR (IRAM 2183) ═══
+  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 1,5mm² - Fase (marrón/negro/rojo) (por metro)'},
+  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 1,5mm² - Neutro (celeste) (por metro)'},
+  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 1,5mm² - Tierra (verde-amarillo) (por metro)'},
+  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 1,5mm² - Fase (rollo x100m)'},
+  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 2,5mm² - Fase (marrón/negro/rojo) (por metro)'},
+  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 2,5mm² - Neutro (celeste) (por metro)'},
+  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 2,5mm² - Tierra (verde-amarillo) (por metro)'},
+  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 2,5mm² - Fase (rollo x100m)'},
+  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 4mm² - Fase (por metro)'},
+  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 4mm² - Neutro (por metro)'},
+  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 4mm² - Tierra (verde-amarillo) (por metro)'},
+  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 4mm² - Fase (rollo x100m)'},
+  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 6mm² - Fase (por metro)'},
+  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 6mm² - Neutro (por metro)'},
+  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 6mm² - Tierra (verde-amarillo) (por metro)'},
+  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 10mm² - Fase (por metro)'},
+  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 10mm² - Neutro (por metro)'},
+  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 10mm² - Tierra (verde-amarillo) (por metro)'},
+  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 16mm² - Fase (por metro)'},
+  {cat:'Conductores unipolares', name:'Cable unipolar IRAM 2183 25mm² - Fase (por metro)'},
+
+  // ═══ CONDUCTORES: CABLE SUBTERRÁNEO ═══
+  {cat:'Cable subterráneo', name:'Cable subterráneo unipolar 4mm²'},
+  {cat:'Cable subterráneo', name:'Cable subterráneo unipolar 6mm²'},
+  {cat:'Cable subterráneo', name:'Cable subterráneo unipolar 10mm²'},
+  {cat:'Cable subterráneo', name:'Cable subterráneo unipolar 16mm²'},
+  {cat:'Cable subterráneo', name:'Cable subterráneo unipolar 25mm²'},
+  {cat:'Cable subterráneo', name:'Cable subterráneo bipolar 2x2,5mm²'},
+  {cat:'Cable subterráneo', name:'Cable subterráneo bipolar 2x4mm²'},
+  {cat:'Cable subterráneo', name:'Cable subterráneo bipolar 2x6mm²'},
+  {cat:'Cable subterráneo', name:'Cable subterráneo tripolar 3x2,5mm²'},
+  {cat:'Cable subterráneo', name:'Cable subterráneo tripolar 3x4mm²'},
+  {cat:'Cable subterráneo', name:'Cable subterráneo tripolar 3x6mm²'},
+  {cat:'Cable subterráneo', name:'Cable subterráneo tetrapolar 4x2,5mm²'},
+  {cat:'Cable subterráneo', name:'Cable subterráneo tetrapolar 4x4mm²'},
+  {cat:'Cable subterráneo', name:'Cable subterráneo tetrapolar 4x6mm²'},
+  {cat:'Cable subterráneo', name:'Cable subterráneo tetrapolar 4x10mm²'},
+
+  // ═══ CONDUCTORES: CABLE TIPO TALLER ═══
+  {cat:'Cable tipo taller', name:'Cable tipo taller bipolar 2x1mm²'},
+  {cat:'Cable tipo taller', name:'Cable tipo taller bipolar 2x1,5mm²'},
+  {cat:'Cable tipo taller', name:'Cable tipo taller bipolar 2x2,5mm²'},
+  {cat:'Cable tipo taller', name:'Cable tipo taller tripolar 3x1,5mm²'},
+  {cat:'Cable tipo taller', name:'Cable tipo taller tripolar 3x2,5mm²'},
+
+  // ═══ TERMINALES Y PUNTERAS ═══
   {cat:'Terminales y punteras', name:'Terminal tipo puntera (tubular) 0,5mm²'},
   {cat:'Terminales y punteras', name:'Terminal tipo puntera (tubular) 1mm²'},
   {cat:'Terminales y punteras', name:'Terminal tipo puntera (tubular) 1,5mm²'},
@@ -420,29 +529,82 @@ const MATERIAL_CATALOG = [
   {cat:'Terminales y punteras', name:'Terminal ojal 16mm²'},
   {cat:'Terminales y punteras', name:'Terminal ojal 25mm²'},
   {cat:'Terminales y punteras', name:'Terminal ojal 35mm²'},
+  {cat:'Terminales y punteras', name:'Terminal a compresión'},
 
-  // Accesorios y terminación
+  // ═══ MÓDULOS SUELTOS ═══
+  {cat:'Módulos sueltos', name:'Módulo punto'},
+  {cat:'Módulos sueltos', name:'Módulo toma 10A'},
+  {cat:'Módulos sueltos', name:'Módulo toma 10A bipolar a tierra (binorma)'},
+  {cat:'Módulos sueltos', name:'Módulo toma 20A'},
+  {cat:'Módulos sueltos', name:'Módulo ciego'},
+  {cat:'Módulos sueltos', name:'Módulo combinada'},
+  {cat:'Módulos sueltos', name:'Bastidor 2 módulos'},
+  {cat:'Módulos sueltos', name:'Tapa bastidor 2 módulos'},
+  {cat:'Módulos sueltos', name:'Bastidor 3 módulos'},
+  {cat:'Módulos sueltos', name:'Tapa bastidor 3 módulos'},
+  {cat:'Módulos sueltos', name:'Bastidor y tapa exterior estanco 2 módulos'},
+  {cat:'Módulos sueltos', name:'Bastidor y tapa exterior estanco 3 módulos'},
+
+  // ═══ CONJUNTOS ═══
+  {cat:'Conjuntos', name:'Conjunto 1 punto'},
+  {cat:'Conjuntos', name:'Conjunto 2 puntos (doble)'},
+  {cat:'Conjuntos', name:'Conjunto 3 puntos (triple)'},
+  {cat:'Conjuntos', name:'Conjunto 1 toma'},
+  {cat:'Conjuntos', name:'Conjunto 2 tomas (doble)'},
+  {cat:'Conjuntos', name:'Conjunto 3 tomas (triple)'},
+  {cat:'Conjuntos', name:'Conjunto combinación (simple)'},
+  {cat:'Conjuntos', name:'Conjunto combinación doble'},
+  {cat:'Conjuntos', name:'Conjunto combinación triple'},
+  {cat:'Conjuntos', name:'Conjunto combinación + 1 módulo punto'},
+  {cat:'Conjuntos', name:'Conjunto combinación + 2 módulos punto'},
+  {cat:'Conjuntos', name:'Conjunto combinación + 1 módulo toma'},
+  {cat:'Conjuntos', name:'Conjunto combinación + 2 módulos toma'},
+  {cat:'Conjuntos', name:'Conjunto 1 punto + 1 toma'},
+  {cat:'Conjuntos', name:'Conjunto 1 punto + 2 tomas'},
+  {cat:'Conjuntos', name:'Conjunto 2 puntos + 1 toma'},
+  {cat:'Conjuntos', name:'Conjunto punto + toma + tecla (combinación)'},
+
+  // ═══ TARUGOS Y TORNILLOS ═══
+  {cat:'Tarugos y tornillos', name:'Tarugo 6mm sin tope'},
+  {cat:'Tarugos y tornillos', name:'Tarugo 6mm con tope'},
+  {cat:'Tarugos y tornillos', name:'Tarugo 8mm sin tope'},
+  {cat:'Tarugos y tornillos', name:'Tarugo 8mm con tope'},
+  {cat:'Tarugos y tornillos', name:'Tarugo 10mm sin tope'},
+  {cat:'Tarugos y tornillos', name:'Tarugo 10mm con tope'},
+  {cat:'Tarugos y tornillos', name:'Tornillo tipo aguja 6x1"'},
+  {cat:'Tarugos y tornillos', name:'Tornillo tipo aguja 8x1"'},
+  {cat:'Tarugos y tornillos', name:'Tornillo común 6x1"'},
+  {cat:'Tarugos y tornillos', name:'Tornillo común 8x1"'},
+  {cat:'Tarugos y tornillos', name:'Tornillo común 8x1 1/2"'},
+
+  // ═══ PRENSACABLES ═══
+  {cat:'Prensacables', name:'Prensacable PG7 (3-6,5mm)'},
+  {cat:'Prensacables', name:'Prensacable PG9 (4-8mm)'},
+  {cat:'Prensacables', name:'Prensacable PG11 (5-10mm)'},
+  {cat:'Prensacables', name:'Prensacable PG13,5 (6-12mm)'},
+  {cat:'Prensacables', name:'Prensacable PG16 (10-14mm)'},
+  {cat:'Prensacables', name:'Prensacable PG21 (13-18mm)'},
+  {cat:'Prensacables', name:'Prensacable PG29 (18-25mm)'},
+
+  // ═══ ACCESORIOS Y TERMINACIÓN ═══
   {cat:'Accesorios y terminación', name:'Tomacorriente simple con tapa'},
   {cat:'Accesorios y terminación', name:'Tomacorriente doble con tapa'},
   {cat:'Accesorios y terminación', name:'Interruptor de luz simple'},
   {cat:'Accesorios y terminación', name:'Interruptor combinación (9 puntos)'},
-  {cat:'Accesorios y terminación', name:'Módulo/tecla ciega'},
   {cat:'Accesorios y terminación', name:'Ficha/enchufe macho'},
   {cat:'Accesorios y terminación', name:'Ficha/enchufe hembra'},
   {cat:'Accesorios y terminación', name:'Portalámparas'},
-  {cat:'Accesorios y terminación', name:'Cinta aisladora'},
-  {cat:'Accesorios y terminación', name:'Precinto plástico'},
-  {cat:'Accesorios y terminación', name:'Terminal a compresión'},
+  {cat:'Accesorios y terminación', name:'Cinta aisladora negra x 5m'},
+  {cat:'Accesorios y terminación', name:'Cinta aisladora negra x 10m'},
+  {cat:'Accesorios y terminación', name:'Cinta aisladora negra x 20m'},
+  {cat:'Accesorios y terminación', name:'Cinta aisladora de colores x 5m'},
+  {cat:'Accesorios y terminación', name:'Cinta aisladora de colores x 10m'},
+  {cat:'Accesorios y terminación', name:'Cinta aisladora de colores x 20m'},
+  {cat:'Accesorios y terminación', name:'Precinto plástico 100mm'},
+  {cat:'Accesorios y terminación', name:'Precinto plástico 150mm'},
+  {cat:'Accesorios y terminación', name:'Precinto plástico 200mm'},
+  {cat:'Accesorios y terminación', name:'Precinto plástico 300mm'},
   {cat:'Accesorios y terminación', name:'Bandeja portacable metálica (tramo)'},
-
-  // Conjuntos (módulos combinados)
-  {cat:'Conjuntos', name:'Conjunto 1 punto'},
-  {cat:'Conjuntos', name:'Conjunto 1 toma'},
-  {cat:'Conjuntos', name:'Conjunto 1 punto + 1 toma'},
-  {cat:'Conjuntos', name:'Conjunto 2 puntos'},
-  {cat:'Conjuntos', name:'Conjunto 2 tomas'},
-  {cat:'Conjuntos', name:'Conjunto combinación (3 puntos)'},
-  {cat:'Conjuntos', name:'Conjunto punto + toma + tecla'},
 ];
 
 // ══════════════════════════════════════════════════════════
@@ -737,7 +899,7 @@ function renderBudget() {
     materials.forEach(m => {
       html += `<div class="mat-item${m.checked?' ck':''}">
         <input type="checkbox" disabled ${m.checked?'checked':''}/>
-        <span class="mat-nm">${m.name}</span>
+        <span class="mat-nm">${m.name}${(m.qty||1)>1 ? ' × ' + (m.qty||1) : ''}</span>
       </div>`;
     });
   }
@@ -757,12 +919,19 @@ function clearBudget() {
 function addMat() {
   const inp = document.getElementById('mat-input');
   const v = inp.value.trim(); if(!v) return;
-  materials.push({name:v, checked:false});
+  const existing = materials.find(m => m.name.toLowerCase() === v.toLowerCase());
+  if (existing) { existing.qty = (existing.qty || 1) + 1; }
+  else { materials.push({name:v, qty:1, checked:false}); }
   saveCurrentState(); inp.value=''; renderMats(); renderBudget();
   toast('Material agregado');
 }
 function toggleMat(i) { materials[i].checked=!materials[i].checked; saveCurrentState(); renderMats(); renderBudget(); }
 function deleteMat(i) { materials.splice(i,1); saveCurrentState(); renderMats(); renderBudget(); }
+function changeMatQty(i, delta) {
+  const m = materials[i]; if (!m) return;
+  m.qty = Math.max(1, (m.qty || 1) + delta);
+  saveCurrentState(); renderMats(); renderBudget();
+}
 function renderMats() {
   const el = document.getElementById('mat-list');
   if (!materials.length) { el.innerHTML='<div class="empty">Sin materiales todavía.</div>'; return; }
@@ -770,6 +939,11 @@ function renderMats() {
     <div class="mat-item${m.checked?' ck':''}">
       <input type="checkbox" onchange="toggleMat(${i})" ${m.checked?'checked':''}/>
       <span class="mat-nm">${m.name}</span>
+      <div class="qty-wrap">
+        <div class="qbtn" onclick="changeMatQty(${i},-1)">−</div>
+        <div class="qval">${m.qty || 1}</div>
+        <div class="qbtn" onclick="changeMatQty(${i},1)">+</div>
+      </div>
       <span class="mat-del" onclick="deleteMat(${i})">✕</span>
     </div>`).join('');
 }
@@ -815,7 +989,9 @@ function renderMatCatalog() {
 }
 
 function addMatFromCatalog(name) {
-  materials.push({name, checked:false});
+  const existing = materials.find(m => m.name === name);
+  if (existing) { existing.qty = (existing.qty || 1) + 1; }
+  else { materials.push({name, qty:1, checked:false}); }
   saveCurrentState(); renderMats(); renderBudget();
   toast('➕ ' + name.substring(0,38));
 }
@@ -892,7 +1068,7 @@ function viewHistEntry(id) {
   if (entry.materials && entry.materials.length) {
     html += `<div class="sh">Materiales</div>`;
     entry.materials.forEach(m => {
-      html += `<div style="font-size:13px;padding:4px 0;color:var(--muted);">${m.checked?'☑':'☐'} ${m.name}</div>`;
+      html += `<div style="font-size:13px;padding:4px 0;color:var(--muted);">${m.checked?'☑':'☐'} ${m.name}${(m.qty||1)>1 ? ' × ' + (m.qty||1) : ''}</div>`;
     });
   }
   document.getElementById('hm-body').innerHTML = html;
@@ -1621,7 +1797,7 @@ function generateWA() {
   if (settings.showMats && materials.length) {
     matsHTML = `<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#7a8099;margin:15px 0 5px;font-family:'Barlow Condensed',sans-serif;">Materiales a comprar</div>`;
     materials.forEach(m => {
-      matsHTML += `<div style="background:#1e2230;border:1px solid #2a2f3e;border-radius:7px;padding:7px 13px;margin-bottom:3px;font-size:12px;font-family:'Barlow',sans-serif;color:${m.checked?'#7a8099':'#e8eaf0'};${m.checked?'text-decoration:line-through;':''}">${m.checked?'☑':'☐'} ${m.name}</div>`;
+      matsHTML += `<div style="background:#1e2230;border:1px solid #2a2f3e;border-radius:7px;padding:7px 13px;margin-bottom:3px;font-size:12px;font-family:'Barlow',sans-serif;color:${m.checked?'#7a8099':'#e8eaf0'};${m.checked?'text-decoration:line-through;':''}">${m.checked?'☑':'☐'} ${m.name}${(m.qty||1)>1 ? ' × ' + (m.qty||1) : ''}</div>`;
     });
   }
 
@@ -1703,13 +1879,34 @@ function downloadWA() {
 }
 
 // ══════════════════════════════════════════════════════════
-//  SERVICE WORKER REGISTRATION
+//  SERVICE WORKER REGISTRATION (con auto-actualización)
 // ══════════════════════════════════════════════════════════
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(() => console.log('SW registrado'))
-      .catch(e => console.log('SW error:', e));
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      console.log('SW registrado');
+
+      // Revisar si hay una versión nueva cada vez que:
+      // 1) el celular recupera señal de internet
+      window.addEventListener('online', () => reg.update().catch(()=>{}));
+      // 2) la app vuelve a primer plano (la abrís de nuevo, cambiás de app y volvés)
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') reg.update().catch(()=>{});
+      });
+      // 3) igual, cada 10 minutos mientras está abierta (por si se queda con señal intermitente)
+      setInterval(() => reg.update().catch(()=>{}), 10 * 60 * 1000);
+
+    }).catch(e => console.log('SW error:', e));
+
+    // Cuando el navegador termina de instalar una versión nueva y la activa,
+    // recargar la página sola para mostrarla — sin que el usuario tenga que hacer nada.
+    let pvReloading = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (pvReloading) return;
+      pvReloading = true;
+      toast('🔄 Actualizando a la última versión…');
+      setTimeout(() => window.location.reload(), 600);
+    });
   });
 }
 
