@@ -1,15 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap');
 
 :root {
-  --bg:      #0d0f14;
-  --surface: #161921;
-  --s2:      #1e2230;
-  --border:  #2a2f3e;
+  --bg:      #0e1512;
+  --surface: #16211c;
+  --s2:      #1c2b23;
+  --border:  #2e4038;
   --accent:  #f5c518;
-  --text:    #e8eaf0;
-  --muted:   #7a8099;
-  --danger:  #e05555;
-  --green:   #4caf7d;
+  --text:    #f0ede4;
+  --muted:   #9a9e8e;
+  --danger:  #e0654f;
+  --green:   #5a8f6b;
   --r:       12px;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -199,4 +199,4 @@ input.cfg:focus { outline:none; border-color:var(--accent); }
 .empty { text-align:center; color:var(--muted); padding:36px 18px; font-size:14px; }
 
 /* ── HIDDEN RENDER ── */
-#wa-src { position:fixed; left:-9999px; top:0; width:700px; font-family:'Barlow Condensed',sans-serif; color:#e8eaf0; pointer-events:none; }
+#wa-src { position:fixed; left:-9999px; top:0; width:700px; font-family:'Barlow Condensed',sans-serif; color:#f0ede4; pointer-events:none; }

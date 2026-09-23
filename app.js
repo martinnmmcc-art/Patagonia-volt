@@ -894,7 +894,7 @@ let _tt;
 function toast(msg, err) {
   const el = document.getElementById('toast');
   el.textContent = msg;
-  el.style.background = err ? '#e05555' : '#4caf7d';
+  el.style.background = err ? '#e0654f' : '#5a8f6b';
   el.classList.add('show');
   clearTimeout(_tt);
   _tt = setTimeout(() => el.classList.remove('show'), 2400);
@@ -1112,8 +1112,10 @@ function addMatFromCatalog(name) {
 // ══════════════════════════════════════════════════════════
 //  HISTORIAL
 // ══════════════════════════════════════════════════════════
-function saveBudgetToHistory() {
-  if (!budget.length) { toast('Agregá tareas antes de guardar','error'); return; }
+// Guarda el presupuesto actual en el Historial. silent=true no muestra cartelito
+// (se usa cuando esto pasa automáticamente, por ejemplo al generar la imagen de WhatsApp).
+function pushCurrentBudgetToHistory(silent) {
+  if (!budget.length) { if (!silent) toast('Agregá tareas antes de guardar','error'); return; }
   const client = document.getElementById('client-name').value.trim() || 'Sin nombre';
   const entry = {
     id:       Date.now(),
@@ -1129,8 +1131,9 @@ function saveBudgetToHistory() {
   history_.unshift(entry);
   lsSet('pv_history', JSON.stringify(history_));
   renderHistory();
-  toast(`✅ Guardado: ${client}`);
+  if (!silent) toast(`✅ Guardado: ${client}`);
 }
+function saveBudgetToHistory() { pushCurrentBudgetToHistory(false); }
 
 function setStatus(id, status) {
   const entry = history_.find(h=>h.id===id);
@@ -1587,29 +1590,29 @@ function downloadClientHistory() {
     const medTxt = medicionesToText(v.mediciones);
     const circTxt = circuitsToText(v.circuitos);
     return `
-    <div style="background:#1e2230;border:1px solid #2a2f3e;border-radius:9px;padding:14px 17px;margin-bottom:9px;">
+    <div style="background:#1c2b23;border:1px solid #2e4038;border-radius:9px;padding:14px 17px;margin-bottom:9px;">
       <div style="font-size:15px;color:#f5c518;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;">${v.date || ''}</div>
-      ${v.motivo ? `<div style="font-size:17px;color:#e8eaf0;margin-top:6px;font-family:'Barlow',sans-serif;line-height:1.4;"><b>Hecho:</b> ${v.motivo}</div>` : ''}
+      ${v.motivo ? `<div style="font-size:17px;color:#f0ede4;margin-top:6px;font-family:'Barlow',sans-serif;line-height:1.4;"><b>Hecho:</b> ${v.motivo}</div>` : ''}
       ${v.pendiente ? `<div style="font-size:17px;color:#f5c518;margin-top:5px;font-family:'Barlow',sans-serif;line-height:1.4;"><b>Pendiente:</b> ${v.pendiente}</div>` : ''}
-      ${medTxt ? `<div style="font-size:15px;color:#9aa0b5;margin-top:5px;font-family:'Barlow',sans-serif;line-height:1.4;"><b>Mediciones:</b> ${medTxt}</div>` : ''}
-      ${circTxt ? `<div style="font-size:15px;color:#9aa0b5;margin-top:5px;font-family:'Barlow',sans-serif;line-height:1.4;"><b>Circuitos:</b> ${circTxt}</div>` : ''}
-      ${v.obs ? `<div style="font-size:15px;color:#9aa0b5;margin-top:5px;font-family:'Barlow',sans-serif;line-height:1.4;">${v.obs}</div>` : ''}
+      ${medTxt ? `<div style="font-size:15px;color:#9a9e8e;margin-top:5px;font-family:'Barlow',sans-serif;line-height:1.4;"><b>Mediciones:</b> ${medTxt}</div>` : ''}
+      ${circTxt ? `<div style="font-size:15px;color:#9a9e8e;margin-top:5px;font-family:'Barlow',sans-serif;line-height:1.4;"><b>Circuitos:</b> ${circTxt}</div>` : ''}
+      ${v.obs ? `<div style="font-size:15px;color:#9a9e8e;margin-top:5px;font-family:'Barlow',sans-serif;line-height:1.4;">${v.obs}</div>` : ''}
     </div>`;
   }).join('');
 
   document.getElementById('visit-hist-src').innerHTML = `
-    <div style="background:#0d0f14;padding:40px;width:860px;font-family:'Barlow Condensed',sans-serif;">
+    <div style="background:#0e1512;padding:40px;width:860px;font-family:'Barlow Condensed',sans-serif;">
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;padding-bottom:18px;border-bottom:3px solid #f5c518;">
         <img src="${LOGO_SQUARE}" style="width:64px;height:64px;border-radius:12px;flex-shrink:0;"/>
         <div style="flex:1;">
           <div style="font-size:34px;font-weight:800;letter-spacing:1px;color:#f5c518;line-height:1;">PATAGONIA VOLT</div>
-          <div style="font-size:13px;color:#9aa0b5;letter-spacing:3px;text-transform:uppercase;margin-top:3px;">Historial de Visitas</div>
+          <div style="font-size:13px;color:#9a9e8e;letter-spacing:3px;text-transform:uppercase;margin-top:3px;">Historial de Visitas</div>
         </div>
       </div>
-      <div style="background:#14161f;border:1px solid #f5c518;border-radius:9px;padding:12px 17px;margin-bottom:18px;font-family:'Barlow',sans-serif;">
-        <div style="font-size:13px;color:#9aa0b5;text-transform:uppercase;letter-spacing:1px;">Cliente</div>
-        <div style="font-size:21px;font-weight:700;color:#e8eaf0;">${c.nombre}</div>
-        <div style="font-size:14px;color:#9aa0b5;">${[c.direccion, c.telefono].filter(Boolean).join(' · ')}</div>
+      <div style="background:#131d18;border:1px solid #f5c518;border-radius:9px;padding:12px 17px;margin-bottom:18px;font-family:'Barlow',sans-serif;">
+        <div style="font-size:13px;color:#9a9e8e;text-transform:uppercase;letter-spacing:1px;">Cliente</div>
+        <div style="font-size:21px;font-weight:700;color:#f0ede4;">${c.nombre}</div>
+        <div style="font-size:14px;color:#9a9e8e;">${[c.direccion, c.telefono].filter(Boolean).join(' · ')}</div>
       </div>
       ${rowsHTML}
     </div>`;
@@ -1617,7 +1620,7 @@ function downloadClientHistory() {
   toast('Generando imagen…');
   const histSrcEl = document.getElementById('visit-hist-src');
   pvWaitImages(histSrcEl).then(() => html2canvas(histSrcEl, {
-      scale:2, backgroundColor:'#0d0f14', logging:false, useCORS:true
+      scale:2, backgroundColor:'#0e1512', logging:false, useCORS:true
     })).then(canvas => {
       _lastImageFilename = `historial-${c.nombre.replace(/[^a-z0-9]+/gi,'-').toLowerCase()}.png`;
       document.getElementById('wa-img').src = canvas.toDataURL('image/png');
@@ -1869,6 +1872,7 @@ function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 // ══════════════════════════════════════════════════════════
 function generateWA() {
   if (!budget.length) { toast('Agregá tareas primero','error'); return; }
+  pushCurrentBudgetToHistory(true); // se guarda solo en el Historial, sin que tengas que acordarte de tocar "Guardar"
   const client  = document.getElementById('client-name').value.trim();
   const today   = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
   const expiry  = (() => {
@@ -1889,16 +1893,16 @@ function generateWA() {
 
   let itemsHTML = '';
   for (const [cat, items] of Object.entries(grp)) {
-    itemsHTML += `<div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#9aa0b5;margin:20px 0 7px;font-family:'Barlow Condensed',sans-serif;">${cat}</div>`;
+    itemsHTML += `<div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#9a9e8e;margin:20px 0 7px;font-family:'Barlow Condensed',sans-serif;">${cat}</div>`;
     items.forEach(({b,t}) => {
       const sub = t.price*b.qty;
       const desc = settings.includeDesc ? getTaskDesc(t) : '';
       itemsHTML += `
-        <div style="background:#1e2230;border:1px solid #2a2f3e;border-radius:9px;padding:13px 17px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
+        <div style="background:#1c2b23;border:1px solid #2e4038;border-radius:9px;padding:13px 17px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
           <div style="flex:1;min-width:0;">
-            <div style="font-size:18px;font-weight:600;font-family:'Barlow',sans-serif;color:#e8eaf0;line-height:1.3;">${t.name}</div>
-            <div style="font-size:15px;color:#9aa0b5;font-family:'Barlow',sans-serif;margin-top:2px;">${settings.hideUnit ? `Cant: ${b.qty}` : `${fmt(t.price)} × ${b.qty}`}</div>
-            ${desc ? `<div style="font-size:14px;color:#9aa0b5;font-family:'Barlow',sans-serif;line-height:1.45;margin-top:6px;">📝 ${desc}</div>` : ''}
+            <div style="font-size:18px;font-weight:600;font-family:'Barlow',sans-serif;color:#f0ede4;line-height:1.3;">${t.name}</div>
+            <div style="font-size:15px;color:#9a9e8e;font-family:'Barlow',sans-serif;margin-top:2px;">${settings.hideUnit ? `Cant: ${b.qty}` : `${fmt(t.price)} × ${b.qty}`}</div>
+            ${desc ? `<div style="font-size:14px;color:#9a9e8e;font-family:'Barlow',sans-serif;line-height:1.45;margin-top:6px;">📝 ${desc}</div>` : ''}
           </div>
           <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:#f5c518;white-space:nowrap;margin-left:14px;">${fmt(sub)}</div>
         </div>`;
@@ -1907,65 +1911,65 @@ function generateWA() {
 
   let matsHTML = '';
   if (settings.showMats && materials.length) {
-    matsHTML = `<div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#9aa0b5;margin:20px 0 7px;font-family:'Barlow Condensed',sans-serif;">Materiales a comprar</div>`;
+    matsHTML = `<div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#9a9e8e;margin:20px 0 7px;font-family:'Barlow Condensed',sans-serif;">Materiales a comprar</div>`;
     materials.forEach(m => {
-      matsHTML += `<div style="background:#1e2230;border:1px solid #2a2f3e;border-radius:9px;padding:11px 17px;margin-bottom:5px;font-size:16px;font-family:'Barlow',sans-serif;color:${m.checked?'#7a8099':'#e8eaf0'};${m.checked?'text-decoration:line-through;':''}">${m.checked?'☑':'☐'} ${m.name}${(m.qty||1)>1 ? ' × ' + (m.qty||1) : ''}</div>`;
+      matsHTML += `<div style="background:#1c2b23;border:1px solid #2e4038;border-radius:9px;padding:11px 17px;margin-bottom:5px;font-size:16px;font-family:'Barlow',sans-serif;color:${m.checked?'#9a9e8e':'#f0ede4'};${m.checked?'text-decoration:line-through;':''}">${m.checked?'☑':'☐'} ${m.name}${(m.qty||1)>1 ? ' × ' + (m.qty||1) : ''}</div>`;
     });
   }
 
   const contactHTML = (userCfg.nombre || userCfg.tel || userCfg.email) ? `
-    <div style="background:#1e2230;border:1px solid #2a2f3e;border-radius:9px;padding:15px 18px;margin-top:20px;font-family:'Barlow',sans-serif;line-height:1.8;">
-      ${userCfg.nombre ? `<div style="font-weight:700;color:#e8eaf0;font-size:18px;">${userCfg.nombre}</div>` : ''}
-      ${userCfg.tel    ? `<div style="font-size:16px;color:#9aa0b5;">📞 ${userCfg.tel}</div>` : ''}
-      ${userCfg.email  ? `<div style="font-size:16px;color:#9aa0b5;">✉ ${userCfg.email}</div>` : ''}
+    <div style="background:#1c2b23;border:1px solid #2e4038;border-radius:9px;padding:15px 18px;margin-top:20px;font-family:'Barlow',sans-serif;line-height:1.8;">
+      ${userCfg.nombre ? `<div style="font-weight:700;color:#f0ede4;font-size:18px;">${userCfg.nombre}</div>` : ''}
+      ${userCfg.tel    ? `<div style="font-size:16px;color:#9a9e8e;">📞 ${userCfg.tel}</div>` : ''}
+      ${userCfg.email  ? `<div style="font-size:16px;color:#9a9e8e;">✉ ${userCfg.email}</div>` : ''}
     </div>` : '';
 
   const clientHTML = client
-    ? `<div style="background:#14161f;border:1px solid #f5c518;border-radius:9px;padding:12px 17px;margin-bottom:18px;font-family:'Barlow',sans-serif;">
-         <div style="font-size:13px;color:#9aa0b5;text-transform:uppercase;letter-spacing:1px;">Cliente / Obra</div>
-         <div style="font-size:21px;font-weight:700;color:#e8eaf0;">${client}</div>
+    ? `<div style="background:#131d18;border:1px solid #f5c518;border-radius:9px;padding:12px 17px;margin-bottom:18px;font-family:'Barlow',sans-serif;">
+         <div style="font-size:13px;color:#9a9e8e;text-transform:uppercase;letter-spacing:1px;">Cliente / Obra</div>
+         <div style="font-size:21px;font-weight:700;color:#f0ede4;">${client}</div>
        </div>`
     : '';
 
   document.getElementById('wa-src').innerHTML = `
-    <div style="background:#0d0f14;padding:40px;width:860px;font-family:'Barlow Condensed',sans-serif;">
+    <div style="background:#0e1512;padding:40px;width:860px;font-family:'Barlow Condensed',sans-serif;">
       <!-- Header -->
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;padding-bottom:18px;border-bottom:3px solid #f5c518;">
         <img src="${LOGO_SQUARE}" style="width:64px;height:64px;border-radius:12px;flex-shrink:0;"/>
         <div style="flex:1;">
           <div style="font-size:34px;font-weight:800;letter-spacing:1px;color:#f5c518;line-height:1;">PATAGONIA VOLT</div>
-          <div style="font-size:13px;color:#9aa0b5;letter-spacing:3px;text-transform:uppercase;margin-top:3px;">Instalaciones Eléctricas · Presupuesto</div>
+          <div style="font-size:13px;color:#9a9e8e;letter-spacing:3px;text-transform:uppercase;margin-top:3px;">Instalaciones Eléctricas · Presupuesto</div>
         </div>
         <div style="text-align:right;">
-          <div style="font-size:14px;color:#9aa0b5;">Fecha: ${today}</div>
+          <div style="font-size:14px;color:#9a9e8e;">Fecha: ${today}</div>
           <div style="font-size:14px;color:#f5c518;font-weight:700;margin-top:4px;">✅ Válido por 7 días</div>
-          <div style="font-size:13px;color:#9aa0b5;">Vence: ${expiry}</div>
+          <div style="font-size:13px;color:#9a9e8e;">Vence: ${expiry}</div>
         </div>
       </div>
       ${clientHTML}
       ${itemsHTML}
       ${matsHTML}
       <!-- Total -->
-      <div style="background:#14161f;border:2px solid #f5c518;border-radius:11px;padding:18px 22px;margin-top:22px;">
+      <div style="background:#131d18;border:2px solid #f5c518;border-radius:11px;padding:18px 22px;margin-top:22px;">
         ${pct > 0 ? `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #2a2f3e;">
-          <div style="font-size:14px;color:#9aa0b5;text-transform:uppercase;letter-spacing:2px;">Subtotal</div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;color:#9aa0b5;text-decoration:line-through;">${fmt(sub)}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #2e4038;">
+          <div style="font-size:14px;color:#9a9e8e;text-transform:uppercase;letter-spacing:2px;">Subtotal</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;color:#9a9e8e;text-decoration:line-through;">${fmt(sub)}</div>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #2a2f3e;">
-          <div style="font-size:14px;color:#4caf7d;text-transform:uppercase;letter-spacing:2px;">Descuento ${pct}%</div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:#4caf7d;">− ${fmt(saving)}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #2e4038;">
+          <div style="font-size:14px;color:#5a8f6b;text-transform:uppercase;letter-spacing:2px;">Descuento ${pct}%</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:#5a8f6b;">− ${fmt(saving)}</div>
         </div>` : ''}
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <div>
-            <div style="font-size:14px;color:#9aa0b5;text-transform:uppercase;letter-spacing:2px;">Total Mano de Obra</div>
-            <div style="font-size:13px;color:#5a5f70;margin-top:3px;">No incluye materiales</div>
+            <div style="font-size:14px;color:#9a9e8e;text-transform:uppercase;letter-spacing:2px;">Total Mano de Obra</div>
+            <div style="font-size:13px;color:#6b7060;margin-top:3px;">No incluye materiales</div>
           </div>
           <div style="font-size:44px;font-weight:800;color:#f5c518;">${fmt(total)}</div>
         </div>
       </div>
       ${contactHTML}
-      <div style="margin-top:20px;text-align:center;font-size:13px;color:#5a5f70;letter-spacing:1px;font-family:'Barlow',sans-serif;">
+      <div style="margin-top:20px;text-align:center;font-size:13px;color:#6b7060;letter-spacing:1px;font-family:'Barlow',sans-serif;">
         Valores de referencia · Electro Instalador Mar-Abr 2026 · No incluye materiales
       </div>
     </div>`;
@@ -1973,7 +1977,7 @@ function generateWA() {
   toast('Generando imagen…');
   const waSrcEl = document.getElementById('wa-src');
   pvWaitImages(waSrcEl).then(() => html2canvas(waSrcEl, {
-      scale:2, backgroundColor:'#0d0f14', logging:false, useCORS:true
+      scale:2, backgroundColor:'#0e1512', logging:false, useCORS:true
     })).then(canvas => {
       _lastImageFilename = 'presupuesto-patagonia-volt.png';
       document.getElementById('wa-img').src = canvas.toDataURL('image/png');
@@ -1997,15 +2001,17 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').then(reg => {
       console.log('SW registrado');
 
-      // Revisar si hay una versión nueva cada vez que:
+      // Revisar si hay una versión nueva del código, Y de paso traer los datos
+      // más recientes de Supabase (por si se cargó algo desde otro dispositivo,
+      // o se recuperó/corrigió algo del lado del servidor), cada vez que:
       // 1) el celular recupera señal de internet
-      window.addEventListener('online', () => reg.update().catch(()=>{}));
+      window.addEventListener('online', () => { reg.update().catch(()=>{}); syncPullFromSupabase(); });
       // 2) la app vuelve a primer plano (la abrís de nuevo, cambiás de app y volvés)
       document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') reg.update().catch(()=>{});
+        if (document.visibilityState === 'visible') { reg.update().catch(()=>{}); syncPullFromSupabase(); }
       });
       // 3) igual, cada 10 minutos mientras está abierta (por si se queda con señal intermitente)
-      setInterval(() => reg.update().catch(()=>{}), 10 * 60 * 1000);
+      setInterval(() => { reg.update().catch(()=>{}); syncPullFromSupabase(); }, 10 * 60 * 1000);
 
     }).catch(e => console.log('SW error:', e));
 
