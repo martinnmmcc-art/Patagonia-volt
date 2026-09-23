@@ -1,16 +1,36 @@
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap');
 
 :root {
-  --bg:      #0e1512;
-  --surface: #16211c;
-  --s2:      #1c2b23;
-  --border:  #2e4038;
-  --accent:  #f5c518;
-  --text:    #f0ede4;
-  --muted:   #9a9e8e;
-  --danger:  #e0654f;
-  --green:   #5a8f6b;
-  --r:       12px;
+  --bg:        #0e1512;
+  --surface:   #16211c;
+  --s2:        #1c2b23;
+  --border:    #2e4038;
+  --accent:    #f5c518;   /* amarillo del rayo del logo */
+  --on-accent: #0e1512;   /* texto sobre botones de acento */
+  --text:      #f0ede4;
+  --muted:     #9a9e8e;
+  --danger:    #e0654f;
+  --danger-bg: #3a1f1a;
+  --green:     #5a8f6b;
+  --ok-bg:     #1a3a28;
+  --r:         12px;
+  color-scheme: dark;
+}
+/* ── MODO CLARO: crema y verde bosque del logo, con contraste AA para lectura ── */
+:root[data-theme="light"] {
+  --bg:        #f6f2e8;   /* crema del fondo del logo */
+  --surface:   #fffdf7;
+  --s2:        #ede7d8;
+  --border:    #d3c9b3;
+  --accent:    #1e5a3f;   /* verde bosque (el amarillo no se lee sobre crema) */
+  --on-accent: #ffffff;
+  --text:      #1b2a22;   /* verde casi negro de las montañas */
+  --muted:     #5b6657;
+  --danger:    #b3432e;
+  --danger-bg: #f8e3dd;
+  --green:     #2f6b47;
+  --ok-bg:     #e1efe4;
+  color-scheme: light;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -87,7 +107,7 @@ header {
   border-radius: 20px; padding: 3px 9px; font-size: 11px; color: var(--muted);
   cursor: pointer; margin: 2px; transition: all .15s;
 }
-.cat-badge.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
+.cat-badge.active { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 700; }
 
 /* ── TASK LIST ── */
 .task-list { display: flex; flex-direction: column; gap: 5px; padding-bottom: 300px; }
@@ -125,7 +145,7 @@ header {
   padding: 9px 11px; color: var(--text); font-family:'Barlow',sans-serif; font-size:14px;
 }
 .mat-row input:focus { outline: none; border-color: var(--accent); }
-.btn-add { background:var(--accent); color:#000; border:none; border-radius:8px; padding:9px 14px; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:14px; cursor:pointer; }
+.btn-add { background:var(--accent); color:var(--on-accent); border:none; border-radius:8px; padding:9px 14px; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:14px; cursor:pointer; }
 .mat-item { display:flex; align-items:center; gap:9px; padding:9px 11px; background:var(--s2); border:1px solid var(--border); border-radius:8px; margin-bottom:5px; }
 .mat-item input[type=checkbox] { width:17px; height:17px; accent-color:var(--accent); cursor:pointer; flex-shrink:0; }
 .mat-nm { flex:1; font-size:14px; }
@@ -148,8 +168,8 @@ header {
   letter-spacing:.5px; text-transform:uppercase; cursor:pointer; border:none;
 }
 .sb-pend { background:var(--s2); color:var(--muted); border:1px solid var(--border); }
-.sb-ok   { background:#1a3a28; color:var(--green); border:1px solid var(--green); }
-.sb-no   { background:#3a1a1a; color:var(--danger); border:1px solid var(--danger); }
+.sb-ok   { background:var(--ok-bg); color:var(--green); border:1px solid var(--green); }
+.sb-no   { background:var(--danger-bg); color:var(--danger); border:1px solid var(--danger); }
 .hist-actions { display:flex; gap:6px; margin-top:8px; }
 .hist-mini-btn { background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:7px; padding:5px 10px; font-size:12px; cursor:pointer; font-family:'Barlow',sans-serif; }
 
@@ -168,7 +188,7 @@ header {
 .total-lbl { font-family:'Barlow Condensed',sans-serif; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
 .total-val { font-family:'Barlow Condensed',sans-serif; font-size:26px; font-weight:800; color:var(--accent); }
 .t-actions { display:flex; gap:7px; flex-shrink:0; }
-.btn-p { background:var(--accent); color:#000; border:none; border-radius:8px; padding:9px 13px; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:13px; cursor:pointer; white-space:nowrap; }
+.btn-p { background:var(--accent); color:var(--on-accent); border:none; border-radius:8px; padding:9px 13px; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:13px; cursor:pointer; white-space:nowrap; }
 .btn-s { background:var(--s2); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:9px 11px; font-family:'Barlow Condensed',sans-serif; font-weight:600; font-size:12px; cursor:pointer; }
 
 /* ── CONFIG ── */
@@ -178,7 +198,7 @@ input.cfg { width:100%; background:var(--s2); border:1px solid var(--border); bo
 input.cfg:focus { outline:none; border-color:var(--accent); }
 .cfg-lbl { font-size:11px; color:var(--muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:1px; }
 .btn-full { width:100%; }
-.btn-danger { background:#3a1a1a; color:var(--danger); border:1px solid var(--danger); border-radius:8px; padding:9px; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:13px; cursor:pointer; }
+.btn-danger { background:var(--danger-bg); color:var(--danger); border:1px solid var(--danger); border-radius:8px; padding:9px; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:13px; cursor:pointer; }
 
 /* ── SECTION HEADING ── */
 .sh { font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:var(--muted); margin:13px 0 5px; }
@@ -200,3 +220,11 @@ input.cfg:focus { outline:none; border-color:var(--accent); }
 
 /* ── HIDDEN RENDER ── */
 #wa-src { position:fixed; left:-9999px; top:0; width:700px; font-family:'Barlow Condensed',sans-serif; color:#f0ede4; pointer-events:none; }
+
+/* ── ESTADO DE SINCRONIZACIÓN ── */
+.sync-bar { display:flex; align-items:center; justify-content:space-between; gap:8px; background:var(--s2); border:1px solid var(--border); border-radius:10px; padding:8px 11px; margin-bottom:10px; font-size:12px; color:var(--muted); }
+.sync-bar b { color:var(--text); font-weight:600; }
+.sync-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; background:var(--muted); vertical-align:middle; }
+.sync-dot.ok { background:var(--green); }
+.sync-dot.off { background:var(--danger); }
+.sync-dot.busy { background:var(--accent); }

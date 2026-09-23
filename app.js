@@ -720,6 +720,9 @@ function init() {
   const svs = ls('pv_visits');
   visits = svs ? JSON.parse(svs) : [];
 
+  const sdel = ls('pv_deleted');
+  deletedIds = sdel ? JSON.parse(sdel) : [];
+
   const scl = ls('pv_clients');
   clients = scl ? JSON.parse(scl) : [];
   migrateVisitsToClients();
@@ -754,48 +757,242 @@ function init() {
 const SUPABASE_URL = 'https://kmkprbnwcbavonfnyput.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtta3ByYm53Y2Jhdm9uZm55cHV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzODUyMjgsImV4cCI6MjEwMDk2MTIyOH0.A-d1FquQftEcXheF7uTnEHJ-Z1UULb5VSIqq9e1cR8c';
 
-let initialSyncDone = false; // hasta que esto sea true, no se sube nada a Supabase (evita pisar la nube con datos locales viejos/vacíos)
+// ══════════════════════════════════════════════════════════
+//  SINCRONIZACIÓN CON SUPABASE — combina, nunca reemplaza
+// ──────────────────────────────────────────────────────────
+//  Reglas:
+//  1) Nunca se sube nada hasta haber traído la nube con ÉXITO al menos una vez.
+//  2) Presupuestos, clientes y visitas se COMBINAN por id (lo del celular + lo de la nube).
+//     Nada desaparece salvo que lo borres vos a propósito (queda anotado en deletedIds).
+//  3) Antes de cada subida se vuelve a leer la nube y se combina (leer → combinar → escribir),
+//     así dos dispositivos o un cambio hecho desde el servidor nunca se pisan.
+//  4) Además, el servidor guarda un respaldo automático de cada versión anterior.
+// ══════════════════════════════════════════════════════════
+let syncReady   = false;   // true recién cuando se trajo la nube con éxito
+let syncBusy    = false;
+let pushBusy    = false;
+let pushAgain   = false;
+let lastSyncAt  = null;
+let deletedIds  = [];      // ids borrados a propósito (para que no "resuciten" al combinar)
+const IS_BOT = /HeadlessChrome|bot|crawler|spider|Lighthouse|vercel/i.test(navigator.userAgent || '');
 
-async function syncPullFromSupabase() {
+function markDeleted(id) {
+  const k = String(id);
+  if (!deletedIds.includes(k)) { deletedIds.push(k); lsSetSilent('pv_deleted', JSON.stringify(deletedIds)); }
+}
+
+function esDateKey(d) { // "dd/mm/aaaa" o "aaaa-mm-dd" -> número aaaammdd para ordenar
+  if (!d) return 0;
+  let m = String(d).match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (m) return Number(m[3] + m[2] + m[1]);
+  m = String(d).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return Number(m[1] + m[2] + m[3]);
+  return 0;
+}
+
+// Combina dos listas por id. Empate de versión => gana la nube (es la copia oficial).
+function mergeById(localArr, remoteArr, deleted) {
+  const del = new Set((deleted || []).map(String));
+  const map = new Map();
+  (localArr || []).forEach(it => { if (it && it.id != null && !del.has(String(it.id))) map.set(String(it.id), it); });
+  (remoteArr || []).forEach(it => {
+    if (!it || it.id == null || del.has(String(it.id))) return;
+    const k = String(it.id), prev = map.get(k);
+    if (!prev || (it.updatedAt || 0) >= (prev.updatedAt || 0)) map.set(k, it);
+  });
+  return Array.from(map.values());
+}
+const byDateDesc = (a, b) => (esDateKey(b.date) - esDateKey(a.date)) || (Number(b.id) - Number(a.id));
+
+function buildPayload() {
+  return {
+    tasks,
+    current: JSON.parse(ls('pv_current') || '{}'),
+    settings,
+    userCfg,
+    history_,
+    visits,
+    clients,
+    deletedIds,
+    prices_updated_at: ls('pv_prices_updated_at') || null,
+    taskDescOverride
+  };
+}
+
+// Mezcla lo que vino de la nube con lo local. Devuelve:
+//  localChanged  -> llegó algo nuevo de la nube (hay que redibujar)
+//  remoteDiffers -> el celular tiene algo que la nube no (hay que subir)
+function localHasExtra(localArr, remoteArr) {
+  const rm = new Map((remoteArr || []).map(x => [String(x.id), x]));
+  return (localArr || []).some(x => {
+    const r = rm.get(String(x.id));
+    return !r || (x.updatedAt || 0) > (r.updatedAt || 0);
+  });
+}
+
+function applyMerged(remote) {
+  remote = remote || {};
+  const before = JSON.stringify([history_, clients, visits, tasks, deletedIds, taskDescOverride, userCfg]);
+
+  // ¿El celular tiene algo que la nube todavía no? (se calcula ANTES de combinar)
+  const remoteDel = new Set((remote.deletedIds || []).map(String));
+  const remoteIds = new Set([...(remote.history_ || []), ...(remote.clients || []), ...(remote.visits || [])].map(x => String(x.id)));
+  const remoteTaskIds = new Set((remote.tasks || []).map(t => String(t.id)));
+  const rcfg = remote.userCfg || {};
+  const needUpload =
+    localHasExtra(history_, remote.history_) ||
+    localHasExtra(clients,  remote.clients)  ||
+    localHasExtra(visits,   remote.visits)   ||
+    (deletedIds || []).some(id => !remoteDel.has(String(id)) && remoteIds.has(String(id))) ||
+    (deletedIds || []).some(id => !remoteDel.has(String(id))) ||
+    (tasks || []).some(t => !remoteTaskIds.has(String(t.id))) ||
+    ((ls('pv_prices_updated_at') || '') > (remote.prices_updated_at || '')) ||
+    Object.keys(taskDescOverride || {}).some(k => (remote.taskDescOverride || {})[k] !== taskDescOverride[k]) ||
+    ['nombre','tel','email'].some(k => userCfg && userCfg[k] && userCfg[k] !== rcfg[k]);
+
+  deletedIds = Array.from(new Set([...(deletedIds || []), ...((remote.deletedIds) || []).map(String)]));
+
+  history_ = mergeById(history_, remote.history_, deletedIds).sort(byDateDesc);
+  clients  = mergeById(clients,  remote.clients,  deletedIds).sort((a, b) => Number(b.id) - Number(a.id));
+  visits   = mergeById(visits,   remote.visits,   deletedIds).sort(byDateDesc);
+
+  // Tareas/precios: gana el lado con la actualización de precios más reciente; se suman las tareas que falten.
+  if (Array.isArray(remote.tasks) && remote.tasks.length) {
+    const localPU = ls('pv_prices_updated_at') || '';
+    const remotePU = remote.prices_updated_at || '';
+    const localNewer = localPU && localPU > remotePU;
+    const base = localNewer ? tasks : remote.tasks;
+    const other = localNewer ? remote.tasks : tasks;
+    const ids = new Set(base.map(t => String(t.id)));
+    tasks = base.concat(other.filter(t => !ids.has(String(t.id))));
+    if (!localNewer && remotePU) lsSetSilent('pv_prices_updated_at', remotePU);
+  }
+
+  // Descripciones editadas: se combinan (lo local manda si existe).
+  taskDescOverride = { ...(remote.taskDescOverride || {}), ...(taskDescOverride || {}) };
+
+  // Mis datos: se completa lo que falte en el celular con lo de la nube.
+  const rc = remote.userCfg || {};
+  userCfg = {
+    nombre: (userCfg && userCfg.nombre) || rc.nombre || '',
+    tel:    (userCfg && userCfg.tel)    || rc.tel    || '',
+    email:  (userCfg && userCfg.email)  || rc.email  || ''
+  };
+
+  // Opciones de vista: si este celular nunca las tocó, toma las de la nube.
+  if (!ls('pv_settings') && remote.settings) settings = { ...DEFAULT_SETTINGS, ...remote.settings };
+
+  // Presupuesto en curso: si en el celular está vacío, se recupera el de la nube.
+  if (!budget.length && remote.current && Array.isArray(remote.current.budget) && remote.current.budget.length) {
+    budget    = remote.current.budget;
+    materials = remote.current.materials || [];
+    document.getElementById('client-name').value    = remote.current.client   || '';
+    document.getElementById('discount-input').value = remote.current.discount || '';
+    lsSetSilent('pv_current', JSON.stringify(remote.current));
+  }
+
+  // Guardar todo en el celular (sin disparar otra subida)
+  lsSetSilent('pv_history',  JSON.stringify(history_));
+  lsSetSilent('pv_clients',  JSON.stringify(clients));
+  lsSetSilent('pv_visits',   JSON.stringify(visits));
+  lsSetSilent('pv_tasks',    JSON.stringify(tasks));
+  lsSetSilent('pv_deleted',  JSON.stringify(deletedIds));
+  lsSetSilent('pv_taskdesc_override', JSON.stringify(taskDescOverride));
+  lsSetSilent('pv_config',   JSON.stringify(userCfg));
+
+  const after = JSON.stringify([history_, clients, visits, tasks, deletedIds, taskDescOverride, userCfg]);
+  return { localChanged: before !== after, remoteDiffers: needUpload };
+}
+
+function renderAfterSync() {
+  applySettings(); renderCats(); renderTasks(); renderBudget(); renderMats();
+  renderHistory(); renderClientPicker();
+  if (activeClientId) { renderClientVisitList(); renderClientBudgetList(); }
+  updateTotal(); loadCfgUI(); updateDBStats();
+}
+
+function setSyncState(state, extra) {
+  const dot = document.getElementById('sync-dot');
+  const txt = document.getElementById('sync-text');
+  if (!dot || !txt) return;
+  dot.className = 'sync-dot ' + (state === 'ok' ? 'ok' : state === 'busy' ? 'busy' : state === 'off' ? 'off' : '');
+  if (state === 'busy') txt.innerHTML = 'Sincronizando…';
+  else if (state === 'ok') txt.innerHTML = `Guardado en la nube · <b>${lastSyncAt.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})}</b>`;
+  else if (state === 'off') txt.innerHTML = extra || 'Sin conexión · guardado en el celular, se sube solo al volver la señal';
+}
+
+async function fetchRemotePayload() {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/pv_data?id=eq.workspace&select=payload`, {
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+    cache: 'no-store'
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const rows = await res.json();
+  return (rows && rows[0] && rows[0].payload) || {};
+}
+
+async function syncPullFromSupabase(showToast) {
+  if (syncBusy) return;
+  syncBusy = true; setSyncState('busy');
   try {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/pv_data?id=eq.workspace&select=payload`,
-      { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
-    );
-    if (!res.ok) return;
-    const rows = await res.json();
-    const remote = rows && rows[0] && rows[0].payload;
-    if (!remote || typeof remote !== 'object' || !Object.keys(remote).length) return;
-
-    if (Array.isArray(remote.tasks) && remote.tasks.length) {
-      tasks = remote.tasks; lsSetSilent('pv_tasks', JSON.stringify(tasks));
-    }
-    if (remote.current) {
-      budget    = remote.current.budget    || [];
-      materials = remote.current.materials || [];
-      document.getElementById('client-name').value    = remote.current.client   || '';
-      document.getElementById('discount-input').value = remote.current.discount || '';
-      lsSetSilent('pv_current', JSON.stringify(remote.current));
-    }
-    if (remote.settings) { settings = { ...DEFAULT_SETTINGS, ...remote.settings }; lsSetSilent('pv_settings', JSON.stringify(settings)); }
-    if (remote.userCfg)  { userCfg  = remote.userCfg;  lsSetSilent('pv_config', JSON.stringify(userCfg)); }
-    if (Array.isArray(remote.history_)) { history_ = remote.history_; lsSetSilent('pv_history', JSON.stringify(history_)); }
-    if (Array.isArray(remote.visits)) { visits = remote.visits; lsSetSilent('pv_visits', JSON.stringify(visits)); }
-    if (Array.isArray(remote.clients)) { clients = remote.clients; lsSetSilent('pv_clients', JSON.stringify(clients)); }
-    if (remote.prices_updated_at) lsSetSilent('pv_prices_updated_at', remote.prices_updated_at);
-    if (remote.taskDescOverride) { taskDescOverride = remote.taskDescOverride; lsSetSilent('pv_taskdesc_override', JSON.stringify(taskDescOverride)); }
-
-    applySettings(); renderCats(); renderTasks(); renderBudget();
-    renderMats(); renderHistory(); renderClientPicker(); if (activeClientId) renderClientVisitList(); updateTotal(); loadCfgUI(); updateDBStats();
-    toast('☁️ Sincronizado con la nube');
+    const remote = await fetchRemotePayload();
+    const r = applyMerged(remote);
+    syncReady = true;
+    lastSyncAt = new Date();
+    setSyncState('ok');
+    if (r.localChanged) { renderAfterSync(); toast('☁️ Datos actualizados desde la nube'); }
+    else if (showToast) toast('☁️ Todo al día');
+    if (r.remoteDiffers) schedulePush(true); // el celular tenía algo que la nube no: subirlo
   } catch (e) {
-    // Sin conexión o error de red: seguimos con lo que ya hay en el celular.
+    setSyncState('off');
+    if (showToast) toast('Sin conexión con la nube', true);
   } finally {
-    // Recién ahora es seguro empezar a subir cambios: ya trajimos (o intentamos traer)
-    // lo último de la nube, así que un push no puede pisar datos que todavía no vimos.
-    initialSyncDone = true;
+    syncBusy = false;
   }
 }
+
+function manualSync() { syncPullFromSupabase(true); }
+
+let _pushTimer;
+function schedulePush(now) {
+  if (IS_BOT) return;
+  clearTimeout(_pushTimer);
+  if (!syncReady) return; // se va a subir solo apenas se logre traer la nube (ver syncPullFromSupabase)
+  _pushTimer = setTimeout(pushStateToSupabase, now ? 50 : 900);
+}
+
+async function pushStateToSupabase() {
+  if (IS_BOT || !syncReady) return;
+  if (pushBusy) { pushAgain = true; return; }
+  pushBusy = true; setSyncState('busy');
+  try {
+    // Leer → combinar → escribir: nunca pisar algo que se guardó en la nube mientras tanto.
+    const remote = await fetchRemotePayload();
+    const r = applyMerged(remote);
+    if (r.localChanged) renderAfterSync();
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/pv_data?id=eq.workspace`, {
+      method: 'PATCH',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal'
+      },
+      body: JSON.stringify({ payload: buildPayload(), updated_at: new Date().toISOString() })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    lastSyncAt = new Date();
+    setSyncState('ok');
+  } catch (e) {
+    setSyncState('off'); // queda guardado en el celular; se reintenta al volver la señal
+  } finally {
+    pushBusy = false;
+    if (pushAgain) { pushAgain = false; schedulePush(); }
+  }
+}
+
+window.addEventListener('online', () => syncPullFromSupabase());
+window.addEventListener('offline', () => setSyncState('off'));
 
 // Espera a que todas las <img> dentro de un contenedor terminen de cargar/decodificar
 // antes de sacarle una captura con html2canvas — si no, a veces la imagen (el logo)
@@ -813,40 +1010,6 @@ function pvWaitImages(container) {
   }));
 }
 
-let _pushTimer;
-function schedulePush() {
-  if (!initialSyncDone) return; // todavía no sincronizamos con la nube al abrir: no subir nada todavía
-  clearTimeout(_pushTimer);
-  _pushTimer = setTimeout(pushStateToSupabase, 900);
-}
-
-async function pushStateToSupabase() {
-  try {
-    const payload = {
-      tasks,
-      current: JSON.parse(ls('pv_current') || '{}'),
-      settings,
-      userCfg,
-      history_,
-      visits,
-      clients,
-      prices_updated_at: ls('pv_prices_updated_at') || null,
-      taskDescOverride
-    };
-    await fetch(`${SUPABASE_URL}/rest/v1/pv_data?id=eq.workspace`, {
-      method: 'PATCH',
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=minimal'
-      },
-      body: JSON.stringify({ payload, updated_at: new Date().toISOString() })
-    });
-  } catch (e) {
-    // Sin conexión: el cambio queda guardado local y se sincroniza en el próximo intento.
-  }
-}
 
 // localStorage helpers
 function ls(k)      { try { return localStorage.getItem(k); } catch(e){ return null; } }
@@ -1139,6 +1302,7 @@ function setStatus(id, status) {
   const entry = history_.find(h=>h.id===id);
   if (!entry) return;
   entry.status = status;
+  entry.updatedAt = Date.now();
   lsSet('pv_history', JSON.stringify(history_));
   renderHistory();
   toast(status==='aceptado' ? '🎉 ¡Presupuesto aceptado!' : status==='rechazado' ? '❌ Marcado como rechazado' : 'Estado actualizado');
@@ -1146,6 +1310,7 @@ function setStatus(id, status) {
 
 function deleteHistEntry(id) {
   if (!confirm('¿Eliminar este presupuesto del historial?')) return;
+  markDeleted(id);
   history_ = history_.filter(h=>h.id!==id);
   lsSet('pv_history', JSON.stringify(history_));
   renderHistory();
@@ -1154,6 +1319,7 @@ function deleteHistEntry(id) {
 function clearHistory() {
   if (!history_.length) return;
   if (!confirm('¿Borrar todo el historial? Esta acción no se puede deshacer.')) return;
+  history_.forEach(h => markDeleted(h.id));
   history_=[];
   lsSet('pv_history', JSON.stringify(history_));
   renderHistory();
@@ -1411,6 +1577,7 @@ function saveClientEdit() {
   c.nombre = nombre;
   c.direccion = document.getElementById('edit-client-direccion').value.trim();
   c.telefono = document.getElementById('edit-client-telefono').value.trim();
+  c.updatedAt = Date.now();
   lsSet('pv_clients', JSON.stringify(clients));
   editingClient = false;
   renderClientHeader();
@@ -1420,6 +1587,7 @@ function saveClientEdit() {
 function deleteClient() {
   if (!activeClientId) return;
   if (!confirm('¿Eliminar este cliente? Sus visitas y presupuestos vinculados no se borran, pero quedan sin cliente asignado.')) return;
+  markDeleted(activeClientId);
   clients = clients.filter(x => x.id !== activeClientId);
   lsSet('pv_clients', JSON.stringify(clients));
   closeClientDetail();
@@ -1442,7 +1610,7 @@ function saveVisit() {
 
   if (editingVisitId) {
     const v = visits.find(x => x.id === editingVisitId);
-    if (v) { v.date = date; v.motivo = motivo; v.pendiente = pendiente; v.mediciones = mediciones; v.obs = obs; v.circuitos = circuitos; }
+    if (v) { v.date = date; v.motivo = motivo; v.pendiente = pendiente; v.mediciones = mediciones; v.obs = obs; v.circuitos = circuitos; v.updatedAt = Date.now(); }
     editingVisitId = null;
     document.getElementById('visit-form-title').textContent = 'Nueva visita';
     document.getElementById('visit-save-btn').textContent = '💾 Guardar visita';
@@ -1492,6 +1660,7 @@ function cancelEditVisit() {
   document.getElementById('visit-cancel-edit').style.display = 'none';
 }
 function deleteVisit(id) {
+  markDeleted(id);
   visits = visits.filter(v => v.id !== id);
   lsSet('pv_visits', JSON.stringify(visits));
   if (editingVisitId === id) cancelEditVisit();
@@ -1541,6 +1710,7 @@ function renderClientBudgetList() {
 function unlinkClientBudget(id) {
   const h = history_.find(x => x.id === id); if (!h) return;
   delete h.clientId;
+  h.updatedAt = Date.now();
   lsSet('pv_history', JSON.stringify(history_));
   renderClientBudgetList();
 }
@@ -1570,7 +1740,7 @@ function renderClientVisitList() {
         </div>
       </div>
       ${v.motivo ? `<div style="margin-top:6px;font-size:13px;"><b>Hecho:</b> ${v.motivo}</div>` : ''}
-      ${v.pendiente ? `<div style="margin-top:5px;font-size:13px;color:#f5c518;"><b>⏳ Pendiente:</b> ${v.pendiente}</div>` : ''}
+      ${v.pendiente ? `<div style="margin-top:5px;font-size:13px;color:var(--accent);font-weight:600;"><b>⏳ Pendiente:</b> ${v.pendiente}</div>` : ''}
       ${medTxt ? `<div style="margin-top:5px;font-size:12px;color:var(--muted);"><b>Mediciones:</b> ${medTxt}</div>` : ''}
       ${circTxt ? `<div style="margin-top:5px;font-size:12px;color:var(--muted);"><b>Circuitos:</b> ${circTxt}</div>` : ''}
       ${v.obs ? `<div style="margin-top:5px;font-size:12px;color:var(--muted);">${v.obs}</div>` : ''}
@@ -1666,7 +1836,18 @@ function toggleSw(swId, key) {
   lsSet('pv_settings', JSON.stringify(settings));
   renderBudget();
 }
+function toggleTheme() {
+  const light = document.documentElement.getAttribute('data-theme') !== 'light';
+  if (light) document.documentElement.setAttribute('data-theme', 'light');
+  else document.documentElement.removeAttribute('data-theme');
+  try { localStorage.setItem('pv_theme', light ? 'light' : 'dark'); } catch (e) {}
+  const mt = document.getElementById('meta-theme');
+  if (mt) mt.setAttribute('content', light ? '#f6f2e8' : '#0e1512');
+  applySettings();
+}
 function applySettings() {
+  const swt = document.getElementById('sw-theme');
+  if (swt) swt.classList.toggle('on', document.documentElement.getAttribute('data-theme') === 'light');
   document.getElementById('sw-hide').classList.toggle('on', settings.hideUnit);
   document.getElementById('sw-mats').classList.toggle('on', settings.showMats);
   document.getElementById('sw-desc').classList.toggle('on', settings.includeDesc);
@@ -1710,7 +1891,7 @@ function saveTaskDescOverride() {
 function resetTaskDescOverride() {
   if (selectedDescTaskId == null) return;
   const t = tasks.find(x => x.id === selectedDescTaskId); if (!t) return;
-  delete taskDescOverride[t.name];
+  taskDescOverride[t.name] = '';
   lsSet('pv_taskdesc_override', JSON.stringify(taskDescOverride));
   document.getElementById('desc-task-text').value = getTaskDesc(t);
   renderDescTaskList();

@@ -3,7 +3,18 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-<meta name="theme-color" content="#0d0f14"/>
+<meta name="theme-color" id="meta-theme" content="#0e1512"/>
+<script>
+  (function(){
+    try {
+      var t = localStorage.getItem('pv_theme');
+      if (t === 'light') {
+        document.documentElement.setAttribute('data-theme','light');
+        document.getElementById('meta-theme').setAttribute('content','#f6f2e8');
+      }
+    } catch(e) {}
+  })();
+</script>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
@@ -224,6 +235,10 @@
 
 <!-- PAGE: HISTORIAL -->
 <div class="page" id="page-historial">
+  <div class="sync-bar">
+    <span><span class="sync-dot" id="sync-dot"></span><span id="sync-text">Conectando con la nube…</span></span>
+    <button class="hbtn" onclick="manualSync()">☁️ Sincronizar</button>
+  </div>
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
     <span style="font-size:13px;color:var(--muted);" id="hist-count"></span>
     <button class="hbtn" onclick="clearHistory()" style="color:var(--danger);">🗑 Borrar todo</button>
@@ -233,6 +248,13 @@
 
 <!-- PAGE: CONFIG -->
 <div class="page" id="page-config">
+  <div class="card">
+    <div class="card-title">Apariencia</div>
+    <div class="sw-row">
+      <span class="sw-lbl">☀️ Modo claro</span>
+      <div class="switch" id="sw-theme" onclick="toggleTheme()"></div>
+    </div>
+  </div>
   <div class="card">
     <div class="card-title">Mis Datos (opcionales)</div>
     <div class="cfg-lbl">Nombre / Empresa</div>
