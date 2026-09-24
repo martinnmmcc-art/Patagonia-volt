@@ -7,7 +7,7 @@ const LOGO_SQUARE = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAUD
 let tasks     = [];
 let budget    = [];
 let materials = [];
-const DEFAULT_SETTINGS = { hideUnit: false, showMats: true, includeDesc: true };
+const DEFAULT_SETTINGS = { hideUnit: false, showMats: true, includeDesc: true, matsSeparate: false };
 let settings  = { ...DEFAULT_SETTINGS };
 const DEFAULT_TASK_DESC = {
   // Redacción propia, basada en la Reglamentación AEA 90364 (Asociación Electrotécnica Argentina)
@@ -1794,9 +1794,11 @@ function downloadClientHistory() {
   pvWaitImages(histSrcEl).then(() => html2canvas(histSrcEl, {
       scale:2, backgroundColor:'#0e1512', logging:false, useCORS:true
     })).then(canvas => {
-      _lastImageFilename = `historial-${c.nombre.replace(/[^a-z0-9]+/gi,'-').toLowerCase()}.png`;
-      document.getElementById('wa-img').src = canvas.toDataURL('image/png');
-      document.getElementById('wa-modal').classList.remove('hidden');
+      showWAImages([{
+        label: 'Historial de visitas',
+        filename: `historial-${c.nombre.replace(/[^a-z0-9]+/gi,'-').toLowerCase()}.png`,
+        dataUrl: canvas.toDataURL('image/png')
+      }], false);
     }).catch(() => toast('Error al generar imagen', true));
 }
 
@@ -2051,11 +2053,76 @@ async function updatePricesFromWeb() {
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
 // ══════════════════════════════════════════════════════════
-//  WHATSAPP IMAGE
+//  IMÁGENES PARA WHATSAPP
+//  Presupuesto y materiales pueden ir en la misma imagen o en dos
+//  imágenes separadas (settings.matsSeparate), para que las listas
+//  largas no achiquen todo.
 // ══════════════════════════════════════════════════════════
-function generateWA() {
-  if (!budget.length) { toast('Agregá tareas primero','error'); return; }
-  pushCurrentBudgetToHistory(true); // se guarda solo en el Historial, sin que tengas que acordarte de tocar "Guardar"
+const WA_F  = "font-family:'Barlow',sans-serif;";
+const WA_FC = "font-family:'Barlow Condensed',sans-serif;";
+
+function waSecTitle(t) {
+  return `<div style="${WA_FC}font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#f5c518;margin:22px 0 8px;">${t}</div>`;
+}
+
+function waHeader(subtitle, dateLine) {
+  return `
+      <div style="display:flex;align-items:center;gap:14px;">
+        <img src="${LOGO_SQUARE}" style="width:60px;height:60px;border-radius:12px;flex-shrink:0;"/>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:32px;font-weight:800;letter-spacing:1px;color:#f5c518;line-height:1;">PATAGONIA VOLT</div>
+          <div style="font-size:13px;color:#b8bcab;letter-spacing:2px;text-transform:uppercase;margin-top:4px;">${subtitle}</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin:14px 0 16px;padding:10px 0;border-top:3px solid #f5c518;border-bottom:1px solid #2e4038;${WA_F}">
+        ${dateLine}
+      </div>`;
+}
+
+function waClient(client) {
+  return client
+    ? `<div style="background:#131d18;border:1px solid #f5c518;border-radius:10px;padding:12px 16px;margin-bottom:6px;${WA_F}">
+         <div style="font-size:13px;color:#b8bcab;text-transform:uppercase;letter-spacing:1.5px;">Cliente / Obra</div>
+         <div style="font-size:24px;font-weight:700;color:#f0ede4;line-height:1.25;">${client}</div>
+       </div>`
+    : '';
+}
+
+function waContact() {
+  if (!(userCfg.nombre || userCfg.tel || userCfg.email)) return '';
+  return `
+    <div style="background:#1c2b23;border:1px solid #2e4038;border-radius:10px;padding:14px 16px;margin-top:18px;${WA_F}line-height:1.7;">
+      ${userCfg.nombre ? `<div style="font-weight:700;color:#f0ede4;font-size:20px;">${userCfg.nombre}</div>` : ''}
+      ${userCfg.tel    ? `<div style="font-size:18px;color:#d8d5cb;">📞 ${userCfg.tel}</div>` : ''}
+      ${userCfg.email  ? `<div style="font-size:17px;color:#d8d5cb;">✉ ${userCfg.email}</div>` : ''}
+    </div>`;
+}
+
+function waFooter(text) {
+  return `<div style="margin-top:18px;text-align:center;${WA_F}font-size:12px;color:#8a8e7e;">${text}</div>`;
+}
+
+function waWrap(inner) {
+  return `<div style="background:#0e1512;padding:26px 22px;width:540px;box-sizing:border-box;${WA_FC}">${inner}</div>`;
+}
+
+// Lista de materiales. big=true cuando va en su propia imagen (letra más grande).
+function waMaterialsList(big) {
+  const nameSize = big ? 19 : 17, qtySize = big ? 22 : 20, pad = big ? 12 : 10;
+  let html = `<div style="background:#1c2b23;border:1px solid #2e4038;border-radius:10px;padding:4px 16px;">`;
+  materials.forEach((m, i) => {
+    const q = m.qty || 1;
+    html += `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:${pad}px 0;${i < materials.length-1 ? 'border-bottom:1px solid #2e4038;' : ''}">
+          <div style="${WA_F}font-size:${nameSize}px;line-height:1.3;color:${m.checked?'#8a8e7e':'#f0ede4'};${m.checked?'text-decoration:line-through;':''}flex:1;min-width:0;">${m.name}</div>
+          <div style="${WA_FC}font-size:${qtySize}px;font-weight:700;color:#f5c518;white-space:nowrap;">× ${q}</div>
+        </div>`;
+  });
+  return html + `</div>`;
+}
+
+// Arma el/los HTML de las imágenes. Devuelve [{label, filename, html}]
+function buildWAImages() {
   const client  = document.getElementById('client-name').value.trim();
   const today   = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
   const expiry  = (() => {
@@ -2066,6 +2133,9 @@ function generateWA() {
   const pct     = getDiscountPct();
   const saving  = sub * pct / 100;
   const total   = sub - saving;
+  const hasMats = settings.showMats && materials.length > 0;
+  const separate = hasMats && settings.matsSeparate;
+  const slug = (client || 'presupuesto').replace(/[^a-z0-9]+/gi,'-').toLowerCase();
 
   const grp = {};
   budget.forEach(b => {
@@ -2074,115 +2144,170 @@ function generateWA() {
     grp[t.cat].push({b,t});
   });
 
-  // ── Imagen pensada para el celular: 540px de ancho x2 = 1080px (ancho de pantalla de un teléfono).
-  //    Letras grandes en proporción para que se lean sin hacer zoom en WhatsApp.
-  const F = "font-family:'Barlow',sans-serif;";
-  const FC = "font-family:'Barlow Condensed',sans-serif;";
-  const secTitle = t => `<div style="${FC}font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#f5c518;margin:22px 0 8px;">${t}</div>`;
-
   let itemsHTML = '';
   for (const [cat, items] of Object.entries(grp)) {
-    itemsHTML += secTitle(cat);
+    itemsHTML += waSecTitle(cat);
     items.forEach(({b,t}) => {
-      const sub = t.price*b.qty;
+      const st = t.price*b.qty;
       const desc = settings.includeDesc ? getTaskDesc(t) : '';
       itemsHTML += `
         <div style="background:#1c2b23;border:1px solid #2e4038;border-radius:10px;padding:14px 16px;margin-bottom:8px;">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
-            <div style="${F}font-size:20px;font-weight:700;color:#f0ede4;line-height:1.25;flex:1;min-width:0;">${t.name}</div>
-            <div style="${FC}font-size:24px;font-weight:700;color:#f5c518;white-space:nowrap;">${fmt(sub)}</div>
+            <div style="${WA_F}font-size:20px;font-weight:700;color:#f0ede4;line-height:1.25;flex:1;min-width:0;">${t.name}</div>
+            <div style="${WA_FC}font-size:24px;font-weight:700;color:#f5c518;white-space:nowrap;">${fmt(st)}</div>
           </div>
-          <div style="${F}font-size:16px;color:#b8bcab;margin-top:4px;">${settings.hideUnit ? `Cantidad: ${b.qty}` : `${fmt(t.price)} × ${b.qty}`}</div>
-          ${desc ? `<div style="${F}font-size:14.5px;color:#a9ad9c;line-height:1.45;margin-top:8px;padding-top:8px;border-top:1px solid #2e4038;">${desc}</div>` : ''}
+          <div style="${WA_F}font-size:16px;color:#b8bcab;margin-top:4px;">${settings.hideUnit ? `Cantidad: ${b.qty}` : `${fmt(t.price)} × ${b.qty}`}</div>
+          ${desc ? `<div style="${WA_F}font-size:14.5px;color:#a9ad9c;line-height:1.45;margin-top:8px;padding-top:8px;border-top:1px solid #2e4038;">${desc}</div>` : ''}
         </div>`;
     });
   }
 
-  let matsHTML = '';
-  if (settings.showMats && materials.length) {
-    matsHTML = secTitle(`Materiales a comprar (${materials.length})`);
-    matsHTML += `<div style="background:#1c2b23;border:1px solid #2e4038;border-radius:10px;padding:4px 16px;">`;
-    materials.forEach((m, i) => {
-      const q = m.qty || 1;
-      matsHTML += `
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;${i < materials.length-1 ? 'border-bottom:1px solid #2e4038;' : ''}">
-          <div style="${F}font-size:17px;line-height:1.3;color:${m.checked?'#8a8e7e':'#f0ede4'};${m.checked?'text-decoration:line-through;':''}flex:1;min-width:0;">${m.name}</div>
-          <div style="${FC}font-size:20px;font-weight:700;color:#f5c518;white-space:nowrap;">× ${q}</div>
-        </div>`;
-    });
-    matsHTML += `</div>`;
-  }
-
-  const contactHTML = (userCfg.nombre || userCfg.tel || userCfg.email) ? `
-    <div style="background:#1c2b23;border:1px solid #2e4038;border-radius:10px;padding:14px 16px;margin-top:18px;${F}line-height:1.7;">
-      ${userCfg.nombre ? `<div style="font-weight:700;color:#f0ede4;font-size:20px;">${userCfg.nombre}</div>` : ''}
-      ${userCfg.tel    ? `<div style="font-size:18px;color:#d8d5cb;">📞 ${userCfg.tel}</div>` : ''}
-      ${userCfg.email  ? `<div style="font-size:17px;color:#d8d5cb;">✉ ${userCfg.email}</div>` : ''}
-    </div>` : '';
-
-  const clientHTML = client
-    ? `<div style="background:#131d18;border:1px solid #f5c518;border-radius:10px;padding:12px 16px;margin-bottom:6px;${F}">
-         <div style="font-size:13px;color:#b8bcab;text-transform:uppercase;letter-spacing:1.5px;">Cliente / Obra</div>
-         <div style="font-size:24px;font-weight:700;color:#f0ede4;line-height:1.25;">${client}</div>
-       </div>`
-    : '';
-
-  document.getElementById('wa-src').innerHTML = `
-    <div style="background:#0e1512;padding:26px 22px;width:540px;box-sizing:border-box;${FC}">
-      <!-- Encabezado -->
-      <div style="display:flex;align-items:center;gap:14px;">
-        <img src="${LOGO_SQUARE}" style="width:60px;height:60px;border-radius:12px;flex-shrink:0;"/>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:32px;font-weight:800;letter-spacing:1px;color:#f5c518;line-height:1;">PATAGONIA VOLT</div>
-          <div style="font-size:13px;color:#b8bcab;letter-spacing:2px;text-transform:uppercase;margin-top:4px;">Instalaciones eléctricas · Presupuesto</div>
-        </div>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin:14px 0 16px;padding:10px 0;border-top:3px solid #f5c518;border-bottom:1px solid #2e4038;${F}">
-        <div style="font-size:15px;color:#d8d5cb;">Fecha: <b>${today}</b></div>
-        <div style="font-size:15px;color:#f5c518;font-weight:700;">✅ Válido hasta ${expiry}</div>
-      </div>
-      ${clientHTML}
-      ${itemsHTML}
-      ${matsHTML}
-      <!-- Total -->
+  const totalHTML = `
       <div style="background:#131d18;border:2px solid #f5c518;border-radius:12px;padding:16px 18px;margin-top:22px;">
         ${pct > 0 ? `
         <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid #2e4038;">
-          <div style="${F}font-size:16px;color:#b8bcab;text-transform:uppercase;letter-spacing:1.5px;">Subtotal</div>
-          <div style="${FC}font-size:24px;color:#b8bcab;text-decoration:line-through;">${fmt(sub)}</div>
+          <div style="${WA_F}font-size:16px;color:#b8bcab;text-transform:uppercase;letter-spacing:1.5px;">Subtotal</div>
+          <div style="${WA_FC}font-size:24px;color:#b8bcab;text-decoration:line-through;">${fmt(sub)}</div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid #2e4038;">
-          <div style="${F}font-size:16px;color:#7fbf93;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;">Descuento ${pct}%</div>
-          <div style="${FC}font-size:24px;font-weight:700;color:#7fbf93;">− ${fmt(saving)}</div>
+          <div style="${WA_F}font-size:16px;color:#7fbf93;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;">Descuento ${pct}%</div>
+          <div style="${WA_FC}font-size:24px;font-weight:700;color:#7fbf93;">− ${fmt(saving)}</div>
         </div>` : ''}
-        <div style="${F}font-size:16px;color:#d8d5cb;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;">Total mano de obra</div>
-        <div style="${FC}font-size:48px;font-weight:800;color:#f5c518;line-height:1.1;text-align:right;">${fmt(total)}</div>
-        <div style="${F}font-size:14px;color:#a9ad9c;text-align:right;">No incluye materiales</div>
-      </div>
-      ${contactHTML}
-      <div style="margin-top:18px;text-align:center;${F}font-size:12px;color:#8a8e7e;">
-        Valores de referencia · Electro Instalador · No incluye materiales
-      </div>
-    </div>`;
+        <div style="${WA_F}font-size:16px;color:#d8d5cb;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;">Total mano de obra</div>
+        <div style="${WA_FC}font-size:48px;font-weight:800;color:#f5c518;line-height:1.1;text-align:right;">${fmt(total)}</div>
+        <div style="${WA_F}font-size:14px;color:#a9ad9c;text-align:right;">No incluye materiales</div>
+      </div>`;
 
-  toast('Generando imagen…');
-  const waSrcEl = document.getElementById('wa-src');
-  pvWaitImages(waSrcEl).then(() => html2canvas(waSrcEl, {
-      scale:2, backgroundColor:'#0e1512', logging:false, useCORS:true
-    })).then(canvas => {
-      _lastImageFilename = 'presupuesto-patagonia-volt.png';
-      document.getElementById('wa-img').src = canvas.toDataURL('image/png');
-      document.getElementById('wa-modal').classList.remove('hidden');
-    }).catch(() => toast('Error al generar imagen','error'));
+  const dateBudget = `
+        <div style="font-size:15px;color:#d8d5cb;">Fecha: <b>${today}</b></div>
+        <div style="font-size:15px;color:#f5c518;font-weight:700;">✅ Válido hasta ${expiry}</div>`;
+
+  // Aviso en la imagen del presupuesto cuando los materiales van aparte
+  const matsNote = separate ? `
+      <div style="margin-top:14px;padding:12px 16px;border:1px dashed #f5c518;border-radius:10px;${WA_F}font-size:16px;color:#f0ede4;text-align:center;">
+        📋 La lista de materiales (${materials.length} ítems) va en la imagen siguiente
+      </div>` : '';
+
+  const budgetInner =
+    waHeader('Instalaciones eléctricas · Presupuesto', dateBudget) +
+    waClient(client) +
+    itemsHTML +
+    (hasMats && !separate ? waSecTitle(`Materiales a comprar (${materials.length})`) + waMaterialsList(false) : '') +
+    totalHTML + matsNote + waContact() +
+    waFooter('Valores de referencia · Electro Instalador · No incluye materiales');
+
+  const images = [{
+    label: separate ? '1 de 2 · Presupuesto' : 'Presupuesto',
+    filename: `presupuesto-${slug}.png`,
+    html: waWrap(budgetInner)
+  }];
+
+  if (separate) {
+    const totalUnits = materials.reduce((s, m) => s + (m.qty || 1), 0);
+    const dateMats = `
+        <div style="font-size:15px;color:#d8d5cb;">Fecha: <b>${today}</b></div>
+        <div style="font-size:15px;color:#f5c518;font-weight:700;">${materials.length} ítems · ${totalUnits} unidades</div>`;
+    const matsInner =
+      waHeader('Lista de materiales', dateMats) +
+      waClient(client) +
+      waSecTitle('Materiales a comprar') +
+      waMaterialsList(true) +
+      waContact() +
+      waFooter('Lista de materiales para la obra · Precios según proveedor');
+    images.push({ label: '2 de 2 · Materiales', filename: `materiales-${slug}.png`, html: waWrap(matsInner) });
+  }
+  return images;
 }
 
-function downloadWA() {
-  const img = document.getElementById('wa-img');
-  if (!img.src || img.src===window.location.href) return;
-  const a=document.createElement('a'); a.href=img.src;
-  a.download = _lastImageFilename || 'presupuesto-patagonia-volt.png'; a.click();
+// Convierte un HTML en imagen PNG (dataURL) usando el contenedor oculto #wa-src
+async function waRender(html) {
+  const el = document.getElementById('wa-src');
+  el.innerHTML = html;
+  await pvWaitImages(el);
+  const canvas = await html2canvas(el, { scale:2, backgroundColor:'#0e1512', logging:false, useCORS:true });
+  return canvas.toDataURL('image/png');
+}
+
+let waImages = []; // [{label, filename, dataUrl}] de la ventana abierta
+
+// Muestra una o más imágenes en la ventana, cada una con Descargar / Compartir
+function showWAImages(list, showMatsToggle) {
+  waImages = list;
+  const cont = document.getElementById('wa-images');
+  cont.innerHTML = list.map((im, i) => `
+    <div class="wa-block">
+      ${list.length > 1 ? `<div class="wa-label">${im.label}</div>` : ''}
+      <img class="modal-img" src="${im.dataUrl}" alt="${im.label}"/>
+      <div class="wa-btns">
+        <button class="btn-s" onclick="downloadWAImage(${i})">⬇ Descargar</button>
+        <button class="btn-p" onclick="shareWAImage(${i})">📤 Compartir</button>
+      </div>
+    </div>`).join('');
+  const row = document.getElementById('wa-mats-row');
+  row.style.display = showMatsToggle ? 'flex' : 'none';
+  document.getElementById('sw-mats-sep').classList.toggle('on', !!settings.matsSeparate);
+  document.getElementById('wa-modal').classList.remove('hidden');
+}
+
+async function renderAndShowWA() {
+  toast('Generando imagen…');
+  try {
+    const defs = buildWAImages();
+    const out = [];
+    for (const d of defs) out.push({ label: d.label, filename: d.filename, dataUrl: await waRender(d.html) });
+    showWAImages(out, settings.showMats && materials.length > 0);
+    if (out.length > 1) toast('✅ 2 imágenes listas: presupuesto y materiales');
+  } catch (e) {
+    toast('Error al generar imagen', true);
+  }
+}
+
+function generateWA() {
+  if (!budget.length) { toast('Agregá tareas primero','error'); return; }
+  pushCurrentBudgetToHistory(true); // se guarda solo en el Historial (una sola vez)
+  renderAndShowWA();
+}
+
+// Interruptor "Materiales en imagen aparte": regenera sin volver a guardar en el Historial
+function toggleMatsSeparate() {
+  settings.matsSeparate = !settings.matsSeparate;
+  lsSet('pv_settings', JSON.stringify(settings));
+  renderAndShowWA();
+}
+
+function waDataUrlToFile(dataUrl, filename) {
+  const [meta, b64] = dataUrl.split(',');
+  const bin = atob(b64);
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new File([arr], filename, { type: 'image/png' });
+}
+
+function downloadWAImage(i) {
+  const im = waImages[i]; if (!im) return;
+  const a = document.createElement('a');
+  a.href = im.dataUrl; a.download = im.filename; a.click();
   toast('✅ Imagen descargada');
 }
+
+// Compartir: abre el menú del celular (WhatsApp, etc.). Si no se puede, descarga.
+async function shareWAImage(i) {
+  const im = waImages[i]; if (!im) return;
+  try {
+    const file = waDataUrlToFile(im.dataUrl, im.filename);
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: 'Patagonia Volt' });
+      return;
+    }
+  } catch (e) {
+    if (e && e.name === 'AbortError') return; // el usuario cerró el menú
+  }
+  downloadWAImage(i);
+}
+
+// Compatibilidad con el botón viejo (descarga la primera imagen)
+function downloadWA() { downloadWAImage(0); }
+
 
 // ══════════════════════════════════════════════════════════
 //  SERVICE WORKER REGISTRATION (con auto-actualización)

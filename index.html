@@ -317,10 +317,13 @@
 <div class="overlay hidden" id="wa-modal">
   <div class="modal">
     <div class="modal-title">📸 Imagen para WhatsApp</div>
-    <img id="wa-img" class="modal-img" src="" alt="Presupuesto"/>
+    <div class="sw-row" id="wa-mats-row" style="display:none;margin-bottom:10px;">
+      <span class="sw-lbl">📋 Materiales en imagen aparte</span>
+      <div class="switch" id="sw-mats-sep" onclick="toggleMatsSeparate()"></div>
+    </div>
+    <div id="wa-images"></div>
     <div class="modal-actions">
-      <button class="btn-s" onclick="closeModal('wa-modal')">Cerrar</button>
-      <button class="btn-p" onclick="downloadWA()">⬇ Descargar</button>
+      <button class="btn-s" onclick="closeModal('wa-modal')" style="flex:1;">Cerrar</button>
     </div>
   </div>
 </div>
