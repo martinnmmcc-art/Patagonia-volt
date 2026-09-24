@@ -1,10 +1,15 @@
-// Patagonia Volt — Service Worker
-// v4: separa los archivos "core" (index.html, app.js, style.css) — que siempre se piden
-// primero por red para traer la última versión — de los recursos estáticos (íconos, fuentes,
-// librerías externas) que sí se sirven desde caché primero porque casi nunca cambian.
-// Esto evita que el celular quede pegado a una versión vieja después de actualizar la app.
+// Patagonia Volt — Service Worker v5
+//
+// REGLA DE ORO: el service worker SOLO guarda archivos de la app (código, íconos,
+// fuentes, librerías). NUNCA toca pedidos a la base de datos (Supabase) ni a ninguna
+// otra API: esos siempre van directo a internet. (En la v4 la lectura de la base de
+// datos quedaba guardada en caché y la app leía datos viejos -> se pisaban presupuestos.)
+//
+// - Código de la app (index.html, app.js, style.css): red primero; sin señal -> copia guardada.
+// - Íconos, fuentes y librerías: caché primero (casi nunca cambian).
+// - Cambiar CACHE_NAME borra todas las copias viejas al activarse.
 
-const CACHE_NAME = 'patagonia-volt-v4';
+const CACHE_NAME = 'patagonia-volt-v5';
 
 const CORE_ASSETS = ['./', './index.html', './app.js', './style.css', './manifest.json'];
 const STATIC_ASSETS = [
@@ -14,59 +19,71 @@ const STATIC_ASSETS = [
   'https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap'
 ];
 
+// Únicos dominios externos que se pueden guardar en caché (recursos estáticos).
+const CACHEABLE_HOSTS = ['cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
+
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(CORE_ASSETS).then(() =>
+    caches.open(CACHE_NAME).then(cache =>
+      cache.addAll(CORE_ASSETS).then(() =>
         Promise.allSettled(STATIC_ASSETS.map(url => cache.add(url).catch(() => {})))
-      );
-    }).then(() => self.skipWaiting())
+      )
+    ).then(() => self.skipWaiting())
   );
 });
 
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)))
-    ).then(() => self.clients.claim())
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
-function isCoreRequest(request) {
+function isCoreRequest(request, url) {
   if (request.mode === 'navigate') return true;
-  return request.url.endsWith('/index.html') || request.url.endsWith('/app.js') || request.url.endsWith('/style.css');
+  if (url.origin !== self.location.origin) return false;
+  return /\/(index\.html|app\.js|style\.css)$/.test(url.pathname);
 }
 
 self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') return;
+  const request = event.request;
+  if (request.method !== 'GET') return;
 
-  if (isCoreRequest(event.request)) {
-    // Red primero: si hay conexión, siempre trae la versión más nueva del código de la app.
-    // Si no hay conexión, usa la última copia guardada (así la app sigue abriendo offline).
+  const url = new URL(request.url);
+  const sameOrigin = url.origin === self.location.origin;
+  const cacheableExternal = CACHEABLE_HOSTS.includes(url.hostname);
+
+  // Base de datos (Supabase) y cualquier otra API: NO se intercepta, va directo a internet.
+  if (!sameOrigin && !cacheableExternal) return;
+
+  if (isCoreRequest(request, url)) {
+    // Red primero: con señal siempre trae la última versión; sin señal usa la copia guardada.
     event.respondWith(
-      fetch(event.request).then(response => {
+      fetch(request).then(response => {
         if (response && response.status === 200) {
           const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
         }
         return response;
       }).catch(() =>
-        caches.match(event.request).then(cached => cached || caches.match('./index.html'))
+        caches.match(request).then(cached => cached || caches.match('./index.html'))
       )
     );
     return;
   }
 
-  // Caché primero para recursos estáticos (íconos, fuentes, librerías externas).
+  // Caché primero para íconos, fuentes y librerías.
   event.respondWith(
-    caches.match(event.request).then(cached => {
+    caches.match(request).then(cached => {
       if (cached) return cached;
-      return fetch(event.request).then(response => {
-        if (!response || response.status !== 200 || response.type === 'error') return response;
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+      return fetch(request).then(response => {
+        if (response && response.status === 200) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
+        }
         return response;
-      }).catch(() => {});
+      });
     })
   );
 });

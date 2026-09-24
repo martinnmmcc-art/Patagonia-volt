@@ -922,7 +922,8 @@ function setSyncState(state, extra) {
 }
 
 async function fetchRemotePayload() {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/pv_data?id=eq.workspace&select=payload`, {
+  // El parámetro _t (hora exacta) hace que ninguna caché pueda devolver una copia vieja.
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/pv_data?id=eq.workspace&select=payload&_t=${Date.now()}`, {
     headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
     cache: 'no-store'
   });

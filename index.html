@@ -37,9 +37,11 @@
       <span class="sub">Presupuestador Eléctrico</span>
     </div>
   </div>
-  <button class="hbtn js-update-price-btn" onclick="updatePricesFromWeb()">🔄 Precios</button>
-  <button class="hbtn" onclick="clearBudget()">🗑 Limpiar</button>
-  <button class="hbtn" onclick="saveBudgetToHistory()" style="background:var(--accent);color:#000;border-color:var(--accent);">💾 Guardar</button>
+  <div class="header-actions">
+    <button class="hbtn js-update-price-btn" onclick="updatePricesFromWeb()">🔄 Precios</button>
+    <button class="hbtn" onclick="clearBudget()">🗑 Limpiar</button>
+    <button class="hbtn hbtn-primary" onclick="saveBudgetToHistory()">💾 Guardar</button>
+  </div>
 </header>
 
 <!-- CLIENTE BAR -->
