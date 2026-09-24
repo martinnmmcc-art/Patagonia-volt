@@ -224,7 +224,8 @@ input.cfg:focus { outline:none; border-color:var(--accent); }
 .empty { text-align:center; color:var(--muted); padding:36px 18px; font-size:14px; }
 
 /* ── HIDDEN RENDER ── */
-#wa-src { position:fixed; left:-9999px; top:0; width:700px; font-family:'Barlow Condensed',sans-serif; color:#f0ede4; pointer-events:none; }
+/* Contenedores que se fotografían para WhatsApp: fuera de pantalla y del ancho de su contenido (540px) */
+#wa-src, #visit-hist-src { position:fixed; left:-9999px; top:0; width:540px; font-family:'Barlow Condensed',sans-serif; color:#f0ede4; pointer-events:none; }
 
 /* ── ESTADO DE SINCRONIZACIÓN ── */
 .sync-bar { display:flex; align-items:center; justify-content:space-between; gap:8px; background:var(--s2); border:1px solid var(--border); border-radius:10px; padding:8px 11px; margin-bottom:10px; font-size:12px; color:var(--muted); }

@@ -1762,29 +1762,29 @@ function downloadClientHistory() {
     const medTxt = medicionesToText(v.mediciones);
     const circTxt = circuitsToText(v.circuitos);
     return `
-    <div style="background:#1c2b23;border:1px solid #2e4038;border-radius:9px;padding:14px 17px;margin-bottom:9px;">
-      <div style="font-size:15px;color:#f5c518;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;">${v.date || ''}</div>
-      ${v.motivo ? `<div style="font-size:17px;color:#f0ede4;margin-top:6px;font-family:'Barlow',sans-serif;line-height:1.4;"><b>Hecho:</b> ${v.motivo}</div>` : ''}
-      ${v.pendiente ? `<div style="font-size:17px;color:#f5c518;margin-top:5px;font-family:'Barlow',sans-serif;line-height:1.4;"><b>Pendiente:</b> ${v.pendiente}</div>` : ''}
-      ${medTxt ? `<div style="font-size:15px;color:#9a9e8e;margin-top:5px;font-family:'Barlow',sans-serif;line-height:1.4;"><b>Mediciones:</b> ${medTxt}</div>` : ''}
-      ${circTxt ? `<div style="font-size:15px;color:#9a9e8e;margin-top:5px;font-family:'Barlow',sans-serif;line-height:1.4;"><b>Circuitos:</b> ${circTxt}</div>` : ''}
-      ${v.obs ? `<div style="font-size:15px;color:#9a9e8e;margin-top:5px;font-family:'Barlow',sans-serif;line-height:1.4;">${v.obs}</div>` : ''}
+    <div style="background:#1c2b23;border:1px solid #2e4038;border-radius:10px;padding:14px 16px;margin-bottom:9px;">
+      <div style="font-size:18px;color:#f5c518;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;">${v.date || ''}</div>
+      ${v.motivo ? `<div style="font-size:18px;color:#f0ede4;margin-top:6px;font-family:'Barlow',sans-serif;line-height:1.4;"><b>Hecho:</b> ${v.motivo}</div>` : ''}
+      ${v.pendiente ? `<div style="font-size:18px;color:#f5c518;margin-top:5px;font-family:'Barlow',sans-serif;line-height:1.4;"><b>Pendiente:</b> ${v.pendiente}</div>` : ''}
+      ${medTxt ? `<div style="font-size:16px;color:#c9c6bb;margin-top:5px;font-family:'Barlow',sans-serif;line-height:1.45;"><b>Mediciones:</b> ${medTxt}</div>` : ''}
+      ${circTxt ? `<div style="font-size:16px;color:#c9c6bb;margin-top:5px;font-family:'Barlow',sans-serif;line-height:1.45;"><b>Circuitos:</b> ${circTxt}</div>` : ''}
+      ${v.obs ? `<div style="font-size:16px;color:#c9c6bb;margin-top:5px;font-family:'Barlow',sans-serif;line-height:1.45;">${v.obs}</div>` : ''}
     </div>`;
   }).join('');
 
   document.getElementById('visit-hist-src').innerHTML = `
-    <div style="background:#0e1512;padding:40px;width:860px;font-family:'Barlow Condensed',sans-serif;">
-      <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;padding-bottom:18px;border-bottom:3px solid #f5c518;">
-        <img src="${LOGO_SQUARE}" style="width:64px;height:64px;border-radius:12px;flex-shrink:0;"/>
-        <div style="flex:1;">
-          <div style="font-size:34px;font-weight:800;letter-spacing:1px;color:#f5c518;line-height:1;">PATAGONIA VOLT</div>
-          <div style="font-size:13px;color:#9a9e8e;letter-spacing:3px;text-transform:uppercase;margin-top:3px;">Historial de Visitas</div>
+    <div style="background:#0e1512;padding:26px 22px;width:540px;box-sizing:border-box;font-family:'Barlow Condensed',sans-serif;">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;padding-bottom:14px;border-bottom:3px solid #f5c518;">
+        <img src="${LOGO_SQUARE}" style="width:60px;height:60px;border-radius:12px;flex-shrink:0;"/>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:32px;font-weight:800;letter-spacing:1px;color:#f5c518;line-height:1;">PATAGONIA VOLT</div>
+          <div style="font-size:13px;color:#b8bcab;letter-spacing:2px;text-transform:uppercase;margin-top:4px;">Historial de visitas</div>
         </div>
       </div>
-      <div style="background:#131d18;border:1px solid #f5c518;border-radius:9px;padding:12px 17px;margin-bottom:18px;font-family:'Barlow',sans-serif;">
-        <div style="font-size:13px;color:#9a9e8e;text-transform:uppercase;letter-spacing:1px;">Cliente</div>
-        <div style="font-size:21px;font-weight:700;color:#f0ede4;">${c.nombre}</div>
-        <div style="font-size:14px;color:#9a9e8e;">${[c.direccion, c.telefono].filter(Boolean).join(' · ')}</div>
+      <div style="background:#131d18;border:1px solid #f5c518;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-family:'Barlow',sans-serif;">
+        <div style="font-size:13px;color:#b8bcab;text-transform:uppercase;letter-spacing:1.5px;">Cliente</div>
+        <div style="font-size:24px;font-weight:700;color:#f0ede4;">${c.nombre}</div>
+        <div style="font-size:16px;color:#c9c6bb;">${[c.direccion, c.telefono].filter(Boolean).join(' · ')}</div>
       </div>
       ${rowsHTML}
     </div>`;
@@ -2074,86 +2074,94 @@ function generateWA() {
     grp[t.cat].push({b,t});
   });
 
+  // ── Imagen pensada para el celular: 540px de ancho x2 = 1080px (ancho de pantalla de un teléfono).
+  //    Letras grandes en proporción para que se lean sin hacer zoom en WhatsApp.
+  const F = "font-family:'Barlow',sans-serif;";
+  const FC = "font-family:'Barlow Condensed',sans-serif;";
+  const secTitle = t => `<div style="${FC}font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#f5c518;margin:22px 0 8px;">${t}</div>`;
+
   let itemsHTML = '';
   for (const [cat, items] of Object.entries(grp)) {
-    itemsHTML += `<div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#9a9e8e;margin:20px 0 7px;font-family:'Barlow Condensed',sans-serif;">${cat}</div>`;
+    itemsHTML += secTitle(cat);
     items.forEach(({b,t}) => {
       const sub = t.price*b.qty;
       const desc = settings.includeDesc ? getTaskDesc(t) : '';
       itemsHTML += `
-        <div style="background:#1c2b23;border:1px solid #2e4038;border-radius:9px;padding:13px 17px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:18px;font-weight:600;font-family:'Barlow',sans-serif;color:#f0ede4;line-height:1.3;">${t.name}</div>
-            <div style="font-size:15px;color:#9a9e8e;font-family:'Barlow',sans-serif;margin-top:2px;">${settings.hideUnit ? `Cant: ${b.qty}` : `${fmt(t.price)} × ${b.qty}`}</div>
-            ${desc ? `<div style="font-size:14px;color:#9a9e8e;font-family:'Barlow',sans-serif;line-height:1.45;margin-top:6px;">📝 ${desc}</div>` : ''}
+        <div style="background:#1c2b23;border:1px solid #2e4038;border-radius:10px;padding:14px 16px;margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+            <div style="${F}font-size:20px;font-weight:700;color:#f0ede4;line-height:1.25;flex:1;min-width:0;">${t.name}</div>
+            <div style="${FC}font-size:24px;font-weight:700;color:#f5c518;white-space:nowrap;">${fmt(sub)}</div>
           </div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:#f5c518;white-space:nowrap;margin-left:14px;">${fmt(sub)}</div>
+          <div style="${F}font-size:16px;color:#b8bcab;margin-top:4px;">${settings.hideUnit ? `Cantidad: ${b.qty}` : `${fmt(t.price)} × ${b.qty}`}</div>
+          ${desc ? `<div style="${F}font-size:14.5px;color:#a9ad9c;line-height:1.45;margin-top:8px;padding-top:8px;border-top:1px solid #2e4038;">${desc}</div>` : ''}
         </div>`;
     });
   }
 
   let matsHTML = '';
   if (settings.showMats && materials.length) {
-    matsHTML = `<div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#9a9e8e;margin:20px 0 7px;font-family:'Barlow Condensed',sans-serif;">Materiales a comprar</div>`;
-    materials.forEach(m => {
-      matsHTML += `<div style="background:#1c2b23;border:1px solid #2e4038;border-radius:9px;padding:11px 17px;margin-bottom:5px;font-size:16px;font-family:'Barlow',sans-serif;color:${m.checked?'#9a9e8e':'#f0ede4'};${m.checked?'text-decoration:line-through;':''}">${m.checked?'☑':'☐'} ${m.name}${(m.qty||1)>1 ? ' × ' + (m.qty||1) : ''}</div>`;
+    matsHTML = secTitle(`Materiales a comprar (${materials.length})`);
+    matsHTML += `<div style="background:#1c2b23;border:1px solid #2e4038;border-radius:10px;padding:4px 16px;">`;
+    materials.forEach((m, i) => {
+      const q = m.qty || 1;
+      matsHTML += `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;${i < materials.length-1 ? 'border-bottom:1px solid #2e4038;' : ''}">
+          <div style="${F}font-size:17px;line-height:1.3;color:${m.checked?'#8a8e7e':'#f0ede4'};${m.checked?'text-decoration:line-through;':''}flex:1;min-width:0;">${m.name}</div>
+          <div style="${FC}font-size:20px;font-weight:700;color:#f5c518;white-space:nowrap;">× ${q}</div>
+        </div>`;
     });
+    matsHTML += `</div>`;
   }
 
   const contactHTML = (userCfg.nombre || userCfg.tel || userCfg.email) ? `
-    <div style="background:#1c2b23;border:1px solid #2e4038;border-radius:9px;padding:15px 18px;margin-top:20px;font-family:'Barlow',sans-serif;line-height:1.8;">
-      ${userCfg.nombre ? `<div style="font-weight:700;color:#f0ede4;font-size:18px;">${userCfg.nombre}</div>` : ''}
-      ${userCfg.tel    ? `<div style="font-size:16px;color:#9a9e8e;">📞 ${userCfg.tel}</div>` : ''}
-      ${userCfg.email  ? `<div style="font-size:16px;color:#9a9e8e;">✉ ${userCfg.email}</div>` : ''}
+    <div style="background:#1c2b23;border:1px solid #2e4038;border-radius:10px;padding:14px 16px;margin-top:18px;${F}line-height:1.7;">
+      ${userCfg.nombre ? `<div style="font-weight:700;color:#f0ede4;font-size:20px;">${userCfg.nombre}</div>` : ''}
+      ${userCfg.tel    ? `<div style="font-size:18px;color:#d8d5cb;">📞 ${userCfg.tel}</div>` : ''}
+      ${userCfg.email  ? `<div style="font-size:17px;color:#d8d5cb;">✉ ${userCfg.email}</div>` : ''}
     </div>` : '';
 
   const clientHTML = client
-    ? `<div style="background:#131d18;border:1px solid #f5c518;border-radius:9px;padding:12px 17px;margin-bottom:18px;font-family:'Barlow',sans-serif;">
-         <div style="font-size:13px;color:#9a9e8e;text-transform:uppercase;letter-spacing:1px;">Cliente / Obra</div>
-         <div style="font-size:21px;font-weight:700;color:#f0ede4;">${client}</div>
+    ? `<div style="background:#131d18;border:1px solid #f5c518;border-radius:10px;padding:12px 16px;margin-bottom:6px;${F}">
+         <div style="font-size:13px;color:#b8bcab;text-transform:uppercase;letter-spacing:1.5px;">Cliente / Obra</div>
+         <div style="font-size:24px;font-weight:700;color:#f0ede4;line-height:1.25;">${client}</div>
        </div>`
     : '';
 
   document.getElementById('wa-src').innerHTML = `
-    <div style="background:#0e1512;padding:40px;width:860px;font-family:'Barlow Condensed',sans-serif;">
-      <!-- Header -->
-      <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;padding-bottom:18px;border-bottom:3px solid #f5c518;">
-        <img src="${LOGO_SQUARE}" style="width:64px;height:64px;border-radius:12px;flex-shrink:0;"/>
-        <div style="flex:1;">
-          <div style="font-size:34px;font-weight:800;letter-spacing:1px;color:#f5c518;line-height:1;">PATAGONIA VOLT</div>
-          <div style="font-size:13px;color:#9a9e8e;letter-spacing:3px;text-transform:uppercase;margin-top:3px;">Instalaciones Eléctricas · Presupuesto</div>
+    <div style="background:#0e1512;padding:26px 22px;width:540px;box-sizing:border-box;${FC}">
+      <!-- Encabezado -->
+      <div style="display:flex;align-items:center;gap:14px;">
+        <img src="${LOGO_SQUARE}" style="width:60px;height:60px;border-radius:12px;flex-shrink:0;"/>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:32px;font-weight:800;letter-spacing:1px;color:#f5c518;line-height:1;">PATAGONIA VOLT</div>
+          <div style="font-size:13px;color:#b8bcab;letter-spacing:2px;text-transform:uppercase;margin-top:4px;">Instalaciones eléctricas · Presupuesto</div>
         </div>
-        <div style="text-align:right;">
-          <div style="font-size:14px;color:#9a9e8e;">Fecha: ${today}</div>
-          <div style="font-size:14px;color:#f5c518;font-weight:700;margin-top:4px;">✅ Válido por 7 días</div>
-          <div style="font-size:13px;color:#9a9e8e;">Vence: ${expiry}</div>
-        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin:14px 0 16px;padding:10px 0;border-top:3px solid #f5c518;border-bottom:1px solid #2e4038;${F}">
+        <div style="font-size:15px;color:#d8d5cb;">Fecha: <b>${today}</b></div>
+        <div style="font-size:15px;color:#f5c518;font-weight:700;">✅ Válido hasta ${expiry}</div>
       </div>
       ${clientHTML}
       ${itemsHTML}
       ${matsHTML}
       <!-- Total -->
-      <div style="background:#131d18;border:2px solid #f5c518;border-radius:11px;padding:18px 22px;margin-top:22px;">
+      <div style="background:#131d18;border:2px solid #f5c518;border-radius:12px;padding:16px 18px;margin-top:22px;">
         ${pct > 0 ? `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #2e4038;">
-          <div style="font-size:14px;color:#9a9e8e;text-transform:uppercase;letter-spacing:2px;">Subtotal</div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;color:#9a9e8e;text-decoration:line-through;">${fmt(sub)}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid #2e4038;">
+          <div style="${F}font-size:16px;color:#b8bcab;text-transform:uppercase;letter-spacing:1.5px;">Subtotal</div>
+          <div style="${FC}font-size:24px;color:#b8bcab;text-decoration:line-through;">${fmt(sub)}</div>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #2e4038;">
-          <div style="font-size:14px;color:#5a8f6b;text-transform:uppercase;letter-spacing:2px;">Descuento ${pct}%</div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:#5a8f6b;">− ${fmt(saving)}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid #2e4038;">
+          <div style="${F}font-size:16px;color:#7fbf93;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;">Descuento ${pct}%</div>
+          <div style="${FC}font-size:24px;font-weight:700;color:#7fbf93;">− ${fmt(saving)}</div>
         </div>` : ''}
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div>
-            <div style="font-size:14px;color:#9a9e8e;text-transform:uppercase;letter-spacing:2px;">Total Mano de Obra</div>
-            <div style="font-size:13px;color:#6b7060;margin-top:3px;">No incluye materiales</div>
-          </div>
-          <div style="font-size:44px;font-weight:800;color:#f5c518;">${fmt(total)}</div>
-        </div>
+        <div style="${F}font-size:16px;color:#d8d5cb;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;">Total mano de obra</div>
+        <div style="${FC}font-size:48px;font-weight:800;color:#f5c518;line-height:1.1;text-align:right;">${fmt(total)}</div>
+        <div style="${F}font-size:14px;color:#a9ad9c;text-align:right;">No incluye materiales</div>
       </div>
       ${contactHTML}
-      <div style="margin-top:20px;text-align:center;font-size:13px;color:#6b7060;letter-spacing:1px;font-family:'Barlow',sans-serif;">
-        Valores de referencia · Electro Instalador Mar-Abr 2026 · No incluye materiales
+      <div style="margin-top:18px;text-align:center;${F}font-size:12px;color:#8a8e7e;">
+        Valores de referencia · Electro Instalador · No incluye materiales
       </div>
     </div>`;
 
