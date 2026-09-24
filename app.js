@@ -922,8 +922,9 @@ function setSyncState(state, extra) {
 }
 
 async function fetchRemotePayload() {
-  // El parámetro _t (hora exacta) hace que ninguna caché pueda devolver una copia vieja.
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/pv_data?id=eq.workspace&select=payload&_t=${Date.now()}`, {
+  // cache:'no-store' + el service worker v5 (que no toca la base de datos) garantizan datos frescos.
+  // OJO: no agregar parámetros extra a la URL: Supabase los toma como columnas y responde error 400.
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/pv_data?id=eq.workspace&select=payload`, {
     headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
     cache: 'no-store'
   });
