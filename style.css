@@ -240,3 +240,13 @@ input.cfg:focus { outline:none; border-color:var(--accent); }
 .wa-label { font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:15px; letter-spacing:1px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
 .wa-btns { display:flex; gap:8px; }
 .wa-btns button { flex:1; }
+
+/* ── PDF / IMPRESIÓN ── */
+#print-doc { display:none; }
+@page { size: A4; margin: 12mm; }
+@media print {
+  :root, :root[data-theme="light"] { color-scheme: light !important; }
+  html, body { background:#ffffff !important; padding:0 !important; min-height:0 !important; }
+  body > *:not(#print-doc) { display:none !important; }
+  #print-doc { display:block !important; color:#16201a; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+}

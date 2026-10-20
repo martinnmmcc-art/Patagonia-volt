@@ -7,7 +7,7 @@ const LOGO_SQUARE = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAUD
 let tasks     = [];
 let budget    = [];
 let materials = [];
-const DEFAULT_SETTINGS = { hideUnit: false, showMats: true, includeDesc: true, matsSeparate: false };
+const DEFAULT_SETTINGS = { hideUnit: false, showMats: true, includeDesc: true, matsSeparate: false, imgDark: false };
 let settings  = { ...DEFAULT_SETTINGS };
 const DEFAULT_TASK_DESC = {
   // Redacción propia, basada en la Reglamentación AEA 90364 (Asociación Electrotécnica Argentina)
@@ -37,7 +37,7 @@ const TASK_DESC_RULES = [
   [/acometida trif/i, 'Acometida domiciliaria trifásica (tres fases + neutro), para cargas mayores o cuando la distribuidora exige suministro trifásico. Mismas exigencias que la acometida monofásica en protección mecánica del conductor y separación de cañerías de gas/agua. El calibre se dimensiona según el tramo de potencia. No incluye materiales ni jabalina de puesta a tierra.'],
   [/subterráneo/i, 'Cableado subterráneo, directamente enterrado o entubado. Si no se alcanza la profundidad mínima de 0,70m, el conductor debe protegerse con caño recubierto por una capa de hormigón de al menos 8cm, y colocar una cámara de inspección cada 40m en tramos rectos (Anexo de la Reglamentación AEA 90364). La sección se dimensiona según la sección total del cable. No incluye materiales.'],
   [/re-?cableado/i, 'Retiro del cableado existente y tendido de conductores nuevos por la misma cañería, típico en reformas. Aplican las mismas exigencias de sección y separación de circuitos IUG/TUG que un cableado nuevo (AEA 90364-7-771). El precio baja según la cantidad de bocas. No incluye materiales.'],
-  [/^cableado/i, 'Tendido de conductores por cañería ya canalizada, hasta cada boca. Circuitos IUG (iluminación: 1,5mm², protección 10A, hasta 15 bocas) y TUG (tomas: 2,5mm², protección 16A, hasta 8 bocas) separados según AEA 90364-7-771, con colores normalizados: fase marrón/negro/rojo, neutro celeste, tierra verde-amarillo exclusivo (AEA 90364-5-514). El precio baja según la cantidad de bocas. No incluye materiales.'],
+  [/^cableado(?! pisoducto)/i, 'Tendido de conductores por cañería ya canalizada, hasta cada boca. Circuitos IUG (iluminación: 1,5mm², protección 10A, hasta 15 bocas) y TUG (tomas: 2,5mm², protección 16A, hasta 8 bocas) separados según AEA 90364-7-771, con colores normalizados: fase marrón/negro/rojo, neutro celeste, tierra verde-amarillo exclusivo (AEA 90364-5-514). El precio baja según la cantidad de bocas. No incluye materiales.'],
   [/canalización embutida metálica/i, 'Colocación de cañería metálica embutida en la pared, con sus cajas. La AEA exige un máximo de 3 curvas entre cajas o gabinetes (cláusula 771.12.3) y prohíbe la unión con cañerías de gas o agua (Anexo 771-C.3.2.2). El precio se cobra por boca. No incluye materiales.'],
   [/canalización embutida pvc/i, 'Colocación de cañería de PVC embutida en la pared, con sus cajas. Mismas exigencias de recorrido y separación que la canalización metálica (AEA 90364-7-771, cláusula 771.12.3). El precio se cobra por boca. No incluye materiales.'],
   [/canalización a la vista/i, 'Colocación de cañería (metálica o PVC) a la vista, sujeta con grampas o abrazaderas. La fijación depende de la longitud del tramo: mínimo 2 puntos si mide menos de 2m, 3 puntos o más si es mayor. El precio se cobra por boca. No incluye materiales.'],
@@ -72,11 +72,70 @@ const TASK_DESC_RULES = [
 
 let taskDescOverride = {}; // { 'nombre de tarea': 'texto editado a mano por el usuario' }
 
-function getTaskDesc(task) {
+// Texto en minúsculas y sin acentos (la página de precios trae categorías tipo "INSTALACIóN").
+function pvNorm(s) {
+  return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+}
+
+// Tareas que agrega "Actualizar precios" con la categoría y el nombre tal como figuran en la
+// página (ej. categoría "COLOCACIÓN DE TERMOMAGNÉTICA Y DIFERENCIAL", tarea "Circuito monofásico").
+// Cada regla (sobre "categoría + nombre", normalizado) apunta a la tarea equivalente de la app,
+// así usan la misma descripción (y la misma edición manual, si la hiciste en Configuración).
+const TASK_DESC_ALIASES = [
+  [/termomagnetica y diferencial.*monof/, 'Tablero', 'Termomagnética/diferencial monofásico'],
+  [/termomagnetica y diferencial.*trif/,  'Tablero', 'Termomagnética/diferencial trifásico'],
+  [/fijacion de gabinete/,                'Tablero', 'Fijación gabinete superficie 1-54 bocas'],
+  [/empotrado de gabinete/,               'Tablero', 'Empotrado gabinete mampostería 1-24 bocas'],
+  [/emergencias de lunes/,                'Mantenimiento', 'Emergencia L-V hasta 5 km (TM 4h)'],
+  [/emergencias sabado/,                  'Mantenimiento', 'Emergencia S/D/F hasta 5 km (TM 4h)'],
+  [/^instalacion en inmueble/,            'Proyecto Eléctrico', 'Proyecto hasta 25 bocas'],
+  [/^metalica \d+ ?mm/,                   'Bandeja', 'Bandeja metálica 300mm hasta 2m'],
+  [/^jabalina/,                           'Puesta a Tierra', 'Jabalina 1.5m + caja de inspección'],
+  [/^tablero monofasico .*kvar/,          'Corrección Potencia', 'Tablero monofásico hasta 2 kVAr'],
+  [/^tablero trifasico automatico/,       'Corrección Potencia', 'Tablero trifásico automático 50 kVAr 6 pasos'],
+  [/^tablero trifasico .*kvar/,           'Corrección Potencia', 'Tablero trifásico hasta 10 kVAr'],
+  [/^trifasicas .*kw/,                    'Acometidas', 'Acometida trifásica hasta 10 kW'],
+  [/^monofasicas? .*kw/,                  'Acometidas', 'Acometida monofásica hasta 10 kW'],
+  [/^subterraneo/,                        'Cableado', 'Subterráneo 1x4 a 4x16 mm²'],
+  [/^cableado pisoducto .*comunicacion/,  'Pisoducto', 'Cableado pisoducto comunicación'],
+  [/^cableado pisoducto .*energia/,       'Pisoducto', 'Cableado pisoducto energía'],
+  [/^cableado pisoducto .*tomas/,         'Pisoducto', 'Pisoducto instalación de tomas'],
+  [/^instalacion pisoducto/,              'Pisoducto', 'Pisoducto por metro'],
+  [/^cablecanal accesorios/,              'Cablecanal', 'Cablecanal 1-50 bocas'],
+  [/^con canalizacion /,                  'CCTV', 'CCTV BCR 3 cámaras con canalización'],
+  [/^en superficie /,                     'CCTV', 'CCTV BCR 3 cámaras en superficie'],
+  [/^artefacto tubo led .*2 tubos/,       'Luminarias', 'Artefacto tubo LED 2 tubos'],
+  [/^artefacto tubo led/,                 'Luminarias', 'Artefacto tubo LED simple'],
+  [/^(apliques|colgantes|farolas|alumbrado publico|luz de emergencia) /, 'Luminarias', null],
+  [/^(purificacion|ventilacion) /,        'Artefactos', null],
+];
+
+// Mano de obra por jornal/hora (categoría "ZONA A" de la página de precios).
+const TASK_DESC_MANO_OBRA = 'Valor de referencia de la mano de obra según la categoría del trabajador (ayudante, medio oficial, oficial u oficial especializado), para trabajos que se cobran por tiempo y no por boca o unidad. No incluye materiales.';
+
+function getTaskDesc(task, _depth) {
   if (!task) return '';
   if (taskDescOverride[task.name]) return taskDescOverride[task.name];
+  // 1) Reglas por nombre de la tarea
   for (const [re, text] of TASK_DESC_RULES) { if (re.test(task.name)) return text; }
-  return DEFAULT_TASK_DESC[task.cat] || '';
+  // 2) Descripción de la categoría (categorías propias de la app)
+  if (DEFAULT_TASK_DESC[task.cat]) return DEFAULT_TASK_DESC[task.cat];
+  // 3) Tareas traídas por "Actualizar precios": se buscan por categoría + nombre
+  const full = pvNorm(task.cat + ' ' + task.name);
+  if (!_depth) {
+    for (const [re, cat, name] of TASK_DESC_ALIASES) {
+      if (re.test(full)) {
+        const d = getTaskDesc({ cat, name: name || task.name }, 1);
+        if (d) return d;
+      }
+    }
+  }
+  if (/^zona [a-z]\b|electricista/.test(full)) return TASK_DESC_MANO_OBRA;
+  // 4) Última chance: reglas sobre "categoría + nombre" y categoría sin acentos/mayúsculas
+  for (const [re, text] of TASK_DESC_RULES) { if (re.test(task.cat + ' ' + task.name)) return text; }
+  const nc = pvNorm(task.cat);
+  for (const k of Object.keys(DEFAULT_TASK_DESC)) { if (pvNorm(k) === nc) return DEFAULT_TASK_DESC[k]; }
+  return '';
 }
 
 let userCfg   = { nombre: '', tel: '', email: '' };
@@ -1752,54 +1811,59 @@ function renderClientVisitList() {
 
 let _lastImageFilename = 'presupuesto-patagonia-volt.png';
 
-function downloadClientHistory() {
-  if (!activeClientId) return;
-  const c = clients.find(x => x.id === activeClientId); if (!c) return;
-  const list = visits.filter(v => v.clientId === activeClientId).sort((a,b) => (a.date||'').localeCompare(b.date||''));
-  if (!list.length) { toast('Este cliente todavía no tiene visitas registradas', true); return; }
-
-  const rowsHTML = list.map(v => {
+// Historial de visitas del cliente: arma el contenido con la paleta P
+function buildClientHistoryInner(c, list, P) {
+  const today = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const fmtDate = d => { const k = esDateKey(d); if (!k) return d || ''; const s = String(k); return `${s.slice(6,8)}/${s.slice(4,6)}/${s.slice(0,4)}`; };
+  const rows = list.map(v => {
     const medTxt = medicionesToText(v.mediciones);
     const circTxt = circuitsToText(v.circuitos);
     return `
-    <div style="background:#1c2b23;border:1px solid #2e4038;border-radius:10px;padding:14px 16px;margin-bottom:9px;">
-      <div style="font-size:18px;color:#f5c518;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;">${v.date || ''}</div>
-      ${v.motivo ? `<div style="font-size:18px;color:#f0ede4;margin-top:6px;font-family:'Barlow',sans-serif;line-height:1.4;"><b>Hecho:</b> ${v.motivo}</div>` : ''}
-      ${v.pendiente ? `<div style="font-size:18px;color:#f5c518;margin-top:5px;font-family:'Barlow',sans-serif;line-height:1.4;"><b>Pendiente:</b> ${v.pendiente}</div>` : ''}
-      ${medTxt ? `<div style="font-size:16px;color:#c9c6bb;margin-top:5px;font-family:'Barlow',sans-serif;line-height:1.45;"><b>Mediciones:</b> ${medTxt}</div>` : ''}
-      ${circTxt ? `<div style="font-size:16px;color:#c9c6bb;margin-top:5px;font-family:'Barlow',sans-serif;line-height:1.45;"><b>Circuitos:</b> ${circTxt}</div>` : ''}
-      ${v.obs ? `<div style="font-size:16px;color:#c9c6bb;margin-top:5px;font-family:'Barlow',sans-serif;line-height:1.45;">${v.obs}</div>` : ''}
+    <div style="background:${P.card};border:1px solid ${P.cardBorder};border-radius:10px;padding:14px 16px;margin-bottom:9px;${NOBREAK}">
+      <div style="${WA_FC}font-size:20px;color:${P.title};font-weight:700;letter-spacing:1px;">${fmtDate(v.date)}</div>
+      ${v.motivo ? `<div style="${WA_F}font-size:19px;color:${P.text};margin-top:6px;line-height:1.45;"><b>Hecho:</b> ${v.motivo}</div>` : ''}
+      ${v.pendiente ? `<div style="${WA_F}font-size:19px;color:${P.text};margin-top:6px;line-height:1.45;"><b style="color:${P.title};">⏳ Pendiente:</b> ${v.pendiente}</div>` : ''}
+      ${medTxt ? `<div style="${WA_F}font-size:17px;color:${P.sub};margin-top:6px;line-height:1.5;"><b>Mediciones:</b> ${medTxt}</div>` : ''}
+      ${circTxt ? `<div style="${WA_F}font-size:17px;color:${P.sub};margin-top:6px;line-height:1.5;"><b>Circuitos:</b> ${circTxt}</div>` : ''}
+      ${v.obs ? `<div style="${WA_F}font-size:17px;color:${P.sub};margin-top:6px;line-height:1.5;">${v.obs}</div>` : ''}
     </div>`;
   }).join('');
+  const dateLine = `
+        <div style="font-size:17px;color:${P.text};">Fecha: <b>${today}</b></div>
+        <div style="font-size:17px;color:${P.brand};font-weight:700;">${list.length} visita${list.length>1?'s':''}</div>`;
+  const clientBox = `
+      <div style="background:${P.clientBg};border:2px solid ${P.clientBorder};border-radius:10px;padding:12px 16px;margin-bottom:16px;${WA_F}${NOBREAK}">
+        <div style="font-size:14px;color:${P.sub};text-transform:uppercase;letter-spacing:1.5px;font-weight:600;">Cliente</div>
+        <div style="font-size:26px;font-weight:700;color:${P.text};">${c.nombre}</div>
+        ${[c.direccion, c.telefono].filter(Boolean).length ? `<div style="font-size:18px;color:${P.sub};">${[c.direccion, c.telefono].filter(Boolean).join(' · ')}</div>` : ''}
+      </div>`;
+  return waHeader('Historial de visitas', dateLine, P) + clientBox + rows + waContact(P) +
+         waFooter('Registro de trabajos y mediciones · Patagonia Volt', P);
+}
 
-  document.getElementById('visit-hist-src').innerHTML = `
-    <div style="background:#0e1512;padding:26px 22px;width:540px;box-sizing:border-box;font-family:'Barlow Condensed',sans-serif;">
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;padding-bottom:14px;border-bottom:3px solid #f5c518;">
-        <img src="${LOGO_SQUARE}" style="width:60px;height:60px;border-radius:12px;flex-shrink:0;"/>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:32px;font-weight:800;letter-spacing:1px;color:#f5c518;line-height:1;">PATAGONIA VOLT</div>
-          <div style="font-size:13px;color:#b8bcab;letter-spacing:2px;text-transform:uppercase;margin-top:4px;">Historial de visitas</div>
-        </div>
-      </div>
-      <div style="background:#131d18;border:1px solid #f5c518;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-family:'Barlow',sans-serif;">
-        <div style="font-size:13px;color:#b8bcab;text-transform:uppercase;letter-spacing:1.5px;">Cliente</div>
-        <div style="font-size:24px;font-weight:700;color:#f0ede4;">${c.nombre}</div>
-        <div style="font-size:16px;color:#c9c6bb;">${[c.direccion, c.telefono].filter(Boolean).join(' · ')}</div>
-      </div>
-      ${rowsHTML}
-    </div>`;
+function downloadClientHistory() {
+  if (!activeClientId) return;
+  const c = clients.find(x => x.id === activeClientId); if (!c) return;
+  const list = visits.filter(v => v.clientId === activeClientId).sort((a,b) => esDateKey(a.date) - esDateKey(b.date));
+  if (!list.length) { toast('Este cliente todavía no tiene visitas registradas', true); return; }
 
-  toast('Generando imagen…');
-  const histSrcEl = document.getElementById('visit-hist-src');
-  pvWaitImages(histSrcEl).then(() => html2canvas(histSrcEl, {
-      scale:2, backgroundColor:'#0e1512', logging:false, useCORS:true
-    })).then(canvas => {
+  const run = async () => {
+    waLastRender = run;
+    const P = waPal();
+    toast('Generando imagen…');
+    try {
+      // Se dibuja en #wa-src (fuera de las pestañas), así funciona desde cualquier pantalla
+      const dataUrl = await waRender(waWrap(buildClientHistoryInner(c, list, P), P));
       showWAImages([{
         label: 'Historial de visitas',
         filename: `historial-${c.nombre.replace(/[^a-z0-9]+/gi,'-').toLowerCase()}.png`,
-        dataUrl: canvas.toDataURL('image/png')
-      }], false);
-    }).catch(() => toast('Error al generar imagen', true));
+        dataUrl
+      }], false, () => ({ html: waWrap(buildClientHistoryInner(c, list, WA_LIGHT), WA_LIGHT, true), title: `Historial ${c.nombre}` }));
+    } catch (e) {
+      toast('Error al generar imagen', true);
+    }
+  };
+  run();
 }
 
 function renderHistory() {
@@ -2053,76 +2117,98 @@ async function updatePricesFromWeb() {
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
 // ══════════════════════════════════════════════════════════
-//  IMÁGENES PARA WHATSAPP
-//  Presupuesto y materiales pueden ir en la misma imagen o en dos
-//  imágenes separadas (settings.matsSeparate), para que las listas
-//  largas no achiquen todo.
+//  IMÁGENES Y PDF PARA EL CLIENTE
+//  - Estilo CLARO por defecto (fondo blanco, letra oscura y grande):
+//    es lo más legible, sobre todo para gente mayor.
+//  - Estilo oscuro opcional (settings.imgDark).
+//  - Materiales en la misma imagen o aparte (settings.matsSeparate).
+//  - PDF: documento A4 con texto real (no foto), no pierde calidad.
 // ══════════════════════════════════════════════════════════
 const WA_F  = "font-family:'Barlow',sans-serif;";
 const WA_FC = "font-family:'Barlow Condensed',sans-serif;";
 
-function waSecTitle(t) {
-  return `<div style="${WA_FC}font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#f5c518;margin:22px 0 8px;">${t}</div>`;
+const WA_LIGHT = {
+  bg:'#ffffff', card:'#f7f5ef', cardBorder:'#d9d3c3', text:'#16201a', sub:'#3d4640',
+  faint:'#5d655f', brand:'#1e5a3f', title:'#1e5a3f', price:'#14432d', rule:'#e2b100',
+  clientBg:'#eef4ef', clientBorder:'#1e5a3f', totalBg:'#eef4ef', totalBorder:'#1e5a3f',
+  total:'#14432d', discount:'#1d6b3c', strike:'#5d655f', checked:'#8a908b', note:'#1e5a3f'
+};
+const WA_DARK = {
+  bg:'#0e1512', card:'#1c2b23', cardBorder:'#2e4038', text:'#f0ede4', sub:'#d8d5cb',
+  faint:'#a9ad9c', brand:'#f5c518', title:'#f5c518', price:'#f5c518', rule:'#f5c518',
+  clientBg:'#131d18', clientBorder:'#f5c518', totalBg:'#131d18', totalBorder:'#f5c518',
+  total:'#f5c518', discount:'#7fbf93', strike:'#b8bcab', checked:'#8a8e7e', note:'#f5c518'
+};
+function waPal() { return settings.imgDark ? WA_DARK : WA_LIGHT; }
+
+// Para que ninguna fila quede cortada entre dos hojas del PDF
+const NOBREAK = 'break-inside:avoid;page-break-inside:avoid;';
+
+function waSecTitle(t, P) {
+  return `<div style="${WA_FC}font-size:17px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:${P.title};margin:24px 0 9px;break-after:avoid;page-break-after:avoid;">${t}</div>`;
 }
 
-function waHeader(subtitle, dateLine) {
+function waHeader(subtitle, dateLine, P) {
   return `
-      <div style="display:flex;align-items:center;gap:14px;">
-        <img src="${LOGO_SQUARE}" style="width:60px;height:60px;border-radius:12px;flex-shrink:0;"/>
+      <div style="display:flex;align-items:center;gap:14px;${NOBREAK}">
+        <img src="${LOGO_SQUARE}" style="width:64px;height:64px;border-radius:12px;flex-shrink:0;"/>
         <div style="flex:1;min-width:0;">
-          <div style="font-size:32px;font-weight:800;letter-spacing:1px;color:#f5c518;line-height:1;">PATAGONIA VOLT</div>
-          <div style="font-size:13px;color:#b8bcab;letter-spacing:2px;text-transform:uppercase;margin-top:4px;">${subtitle}</div>
+          <div style="font-size:34px;font-weight:800;letter-spacing:1px;color:${P.brand};line-height:1;">PATAGONIA VOLT</div>
+          <div style="${WA_F}font-size:14px;color:${P.sub};letter-spacing:1.5px;text-transform:uppercase;margin-top:5px;font-weight:600;">${subtitle}</div>
         </div>
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin:14px 0 16px;padding:10px 0;border-top:3px solid #f5c518;border-bottom:1px solid #2e4038;${WA_F}">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px 10px;margin:14px 0 16px;padding:11px 0;border-top:4px solid ${P.rule};border-bottom:1px solid ${P.cardBorder};${WA_F}">
         ${dateLine}
       </div>`;
 }
 
-function waClient(client) {
+function waClient(client, P) {
   return client
-    ? `<div style="background:#131d18;border:1px solid #f5c518;border-radius:10px;padding:12px 16px;margin-bottom:6px;${WA_F}">
-         <div style="font-size:13px;color:#b8bcab;text-transform:uppercase;letter-spacing:1.5px;">Cliente / Obra</div>
-         <div style="font-size:24px;font-weight:700;color:#f0ede4;line-height:1.25;">${client}</div>
+    ? `<div style="background:${P.clientBg};border:2px solid ${P.clientBorder};border-radius:10px;padding:12px 16px;margin-bottom:6px;${WA_F}${NOBREAK}">
+         <div style="font-size:14px;color:${P.sub};text-transform:uppercase;letter-spacing:1.5px;font-weight:600;">Cliente / Obra</div>
+         <div style="font-size:26px;font-weight:700;color:${P.text};line-height:1.25;">${client}</div>
        </div>`
     : '';
 }
 
-function waContact() {
+function waContact(P) {
   if (!(userCfg.nombre || userCfg.tel || userCfg.email)) return '';
   return `
-    <div style="background:#1c2b23;border:1px solid #2e4038;border-radius:10px;padding:14px 16px;margin-top:18px;${WA_F}line-height:1.7;">
-      ${userCfg.nombre ? `<div style="font-weight:700;color:#f0ede4;font-size:20px;">${userCfg.nombre}</div>` : ''}
-      ${userCfg.tel    ? `<div style="font-size:18px;color:#d8d5cb;">📞 ${userCfg.tel}</div>` : ''}
-      ${userCfg.email  ? `<div style="font-size:17px;color:#d8d5cb;">✉ ${userCfg.email}</div>` : ''}
+    <div style="background:${P.card};border:1px solid ${P.cardBorder};border-radius:10px;padding:14px 16px;margin-top:18px;${WA_F}line-height:1.7;${NOBREAK}">
+      ${userCfg.nombre ? `<div style="font-weight:700;color:${P.text};font-size:21px;">${userCfg.nombre}</div>` : ''}
+      ${userCfg.tel    ? `<div style="font-size:19px;color:${P.text};">📞 ${userCfg.tel}</div>` : ''}
+      ${userCfg.email  ? `<div style="font-size:18px;color:${P.text};">✉ ${userCfg.email}</div>` : ''}
     </div>`;
 }
 
-function waFooter(text) {
-  return `<div style="margin-top:18px;text-align:center;${WA_F}font-size:12px;color:#8a8e7e;">${text}</div>`;
+function waFooter(text, P) {
+  return `<div style="margin-top:18px;text-align:center;${WA_F}font-size:13px;color:${P.faint};">${text}</div>`;
 }
 
-function waWrap(inner) {
-  return `<div style="background:#0e1512;padding:26px 22px;width:540px;box-sizing:border-box;${WA_FC}">${inner}</div>`;
+// forPrint=true: ancho de hoja (100%) en vez de 540px fijo de la imagen
+function waWrap(inner, P, forPrint) {
+  return forPrint
+    ? `<div style="background:${P.bg};width:100%;box-sizing:border-box;padding:0 4px;${WA_FC}color:${P.text};">${inner}</div>`
+    : `<div style="background:${P.bg};padding:26px 22px;width:540px;box-sizing:border-box;${WA_FC}color:${P.text};">${inner}</div>`;
 }
 
-// Lista de materiales. big=true cuando va en su propia imagen (letra más grande).
-function waMaterialsList(big) {
-  const nameSize = big ? 19 : 17, qtySize = big ? 22 : 20, pad = big ? 12 : 10;
-  let html = `<div style="background:#1c2b23;border:1px solid #2e4038;border-radius:10px;padding:4px 16px;">`;
+// Lista de materiales. big=true cuando va sola (letra más grande).
+function waMaterialsList(big, P) {
+  const nameSize = big ? 20 : 18, qtySize = big ? 23 : 21, pad = big ? 12 : 10;
+  let html = `<div style="background:${P.card};border:1px solid ${P.cardBorder};border-radius:10px;padding:4px 16px;">`;
   materials.forEach((m, i) => {
     const q = m.qty || 1;
     html += `
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:${pad}px 0;${i < materials.length-1 ? 'border-bottom:1px solid #2e4038;' : ''}">
-          <div style="${WA_F}font-size:${nameSize}px;line-height:1.3;color:${m.checked?'#8a8e7e':'#f0ede4'};${m.checked?'text-decoration:line-through;':''}flex:1;min-width:0;">${m.name}</div>
-          <div style="${WA_FC}font-size:${qtySize}px;font-weight:700;color:#f5c518;white-space:nowrap;">× ${q}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:${pad}px 0;${i < materials.length-1 ? `border-bottom:1px solid ${P.cardBorder};` : ''}${NOBREAK}">
+          <div style="${WA_F}font-size:${nameSize}px;line-height:1.3;color:${m.checked?P.checked:P.text};${m.checked?'text-decoration:line-through;':''}flex:1;min-width:0;">${m.name}</div>
+          <div style="${WA_FC}font-size:${qtySize}px;font-weight:700;color:${P.price};white-space:nowrap;">× ${q}</div>
         </div>`;
   });
   return html + `</div>`;
 }
 
-// Arma el/los HTML de las imágenes. Devuelve [{label, filename, html}]
-function buildWAImages() {
+// Arma las partes del presupuesto con la paleta P
+function waBudgetParts(P) {
   const client  = document.getElementById('client-name').value.trim();
   const today   = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
   const expiry  = (() => {
@@ -2133,9 +2219,7 @@ function buildWAImages() {
   const pct     = getDiscountPct();
   const saving  = sub * pct / 100;
   const total   = sub - saving;
-  const hasMats = settings.showMats && materials.length > 0;
-  const separate = hasMats && settings.matsSeparate;
-  const slug = (client || 'presupuesto').replace(/[^a-z0-9]+/gi,'-').toLowerCase();
+  const slug    = (client || 'presupuesto').replace(/[^a-z0-9]+/gi,'-').toLowerCase();
 
   const grp = {};
   budget.forEach(b => {
@@ -2144,79 +2228,109 @@ function buildWAImages() {
     grp[t.cat].push({b,t});
   });
 
-  let itemsHTML = '';
-  for (const [cat, items] of Object.entries(grp)) {
-    itemsHTML += waSecTitle(cat);
-    items.forEach(({b,t}) => {
+  let items = '';
+  for (const [cat, list] of Object.entries(grp)) {
+    items += waSecTitle(cat, P);
+    list.forEach(({b,t}) => {
       const st = t.price*b.qty;
       const desc = settings.includeDesc ? getTaskDesc(t) : '';
-      itemsHTML += `
-        <div style="background:#1c2b23;border:1px solid #2e4038;border-radius:10px;padding:14px 16px;margin-bottom:8px;">
+      items += `
+        <div style="background:${P.card};border:1px solid ${P.cardBorder};border-radius:10px;padding:14px 16px;margin-bottom:8px;${NOBREAK}">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
-            <div style="${WA_F}font-size:20px;font-weight:700;color:#f0ede4;line-height:1.25;flex:1;min-width:0;">${t.name}</div>
-            <div style="${WA_FC}font-size:24px;font-weight:700;color:#f5c518;white-space:nowrap;">${fmt(st)}</div>
+            <div style="${WA_F}font-size:21px;font-weight:700;color:${P.text};line-height:1.25;flex:1;min-width:0;">${t.name}</div>
+            <div style="${WA_FC}font-size:26px;font-weight:700;color:${P.price};white-space:nowrap;">${fmt(st)}</div>
           </div>
-          <div style="${WA_F}font-size:16px;color:#b8bcab;margin-top:4px;">${settings.hideUnit ? `Cantidad: ${b.qty}` : `${fmt(t.price)} × ${b.qty}`}</div>
-          ${desc ? `<div style="${WA_F}font-size:14.5px;color:#a9ad9c;line-height:1.45;margin-top:8px;padding-top:8px;border-top:1px solid #2e4038;">${desc}</div>` : ''}
+          <div style="${WA_F}font-size:17px;color:${P.sub};margin-top:4px;font-weight:500;">${settings.hideUnit ? `Cantidad: ${b.qty}` : `${fmt(t.price)} × ${b.qty}`}</div>
+          ${desc ? `<div style="${WA_F}font-size:16px;color:${P.sub};line-height:1.5;margin-top:8px;padding-top:8px;border-top:1px solid ${P.cardBorder};">${desc}</div>` : ''}
         </div>`;
     });
   }
 
-  const totalHTML = `
-      <div style="background:#131d18;border:2px solid #f5c518;border-radius:12px;padding:16px 18px;margin-top:22px;">
+  const totalBox = `
+      <div style="background:${P.totalBg};border:3px solid ${P.totalBorder};border-radius:12px;padding:16px 18px;margin-top:22px;${NOBREAK}">
         ${pct > 0 ? `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid #2e4038;">
-          <div style="${WA_F}font-size:16px;color:#b8bcab;text-transform:uppercase;letter-spacing:1.5px;">Subtotal</div>
-          <div style="${WA_FC}font-size:24px;color:#b8bcab;text-decoration:line-through;">${fmt(sub)}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid ${P.cardBorder};">
+          <div style="${WA_F}font-size:17px;color:${P.sub};text-transform:uppercase;letter-spacing:1.2px;font-weight:600;">Subtotal</div>
+          <div style="${WA_FC}font-size:26px;color:${P.strike};text-decoration:line-through;">${fmt(sub)}</div>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid #2e4038;">
-          <div style="${WA_F}font-size:16px;color:#7fbf93;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;">Descuento ${pct}%</div>
-          <div style="${WA_FC}font-size:24px;font-weight:700;color:#7fbf93;">− ${fmt(saving)}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid ${P.cardBorder};">
+          <div style="${WA_F}font-size:17px;color:${P.discount};text-transform:uppercase;letter-spacing:1.2px;font-weight:700;">Descuento ${pct}%</div>
+          <div style="${WA_FC}font-size:26px;font-weight:700;color:${P.discount};">− ${fmt(saving)}</div>
         </div>` : ''}
-        <div style="${WA_F}font-size:16px;color:#d8d5cb;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;">Total mano de obra</div>
-        <div style="${WA_FC}font-size:48px;font-weight:800;color:#f5c518;line-height:1.1;text-align:right;">${fmt(total)}</div>
-        <div style="${WA_F}font-size:14px;color:#a9ad9c;text-align:right;">No incluye materiales</div>
+        <div style="${WA_F}font-size:17px;color:${P.text};text-transform:uppercase;letter-spacing:1.2px;font-weight:700;">Total mano de obra</div>
+        <div style="${WA_FC}font-size:50px;font-weight:800;color:${P.total};line-height:1.1;text-align:right;">${fmt(total)}</div>
+        <div style="${WA_F}font-size:15px;color:${P.sub};text-align:right;">No incluye materiales</div>
       </div>`;
 
   const dateBudget = `
-        <div style="font-size:15px;color:#d8d5cb;">Fecha: <b>${today}</b></div>
-        <div style="font-size:15px;color:#f5c518;font-weight:700;">✅ Válido hasta ${expiry}</div>`;
+        <div style="font-size:17px;color:${P.text};">Fecha: <b>${today}</b></div>
+        <div style="font-size:17px;color:${P.brand};font-weight:700;">✅ Válido hasta ${expiry}</div>`;
 
-  // Aviso en la imagen del presupuesto cuando los materiales van aparte
+  const totalUnits = materials.reduce((s, m) => s + (m.qty || 1), 0);
+  const dateMats = `
+        <div style="font-size:17px;color:${P.text};">Fecha: <b>${today}</b></div>
+        <div style="font-size:17px;color:${P.brand};font-weight:700;">${materials.length} ítems · ${totalUnits} unidades</div>`;
+
+  return { client, slug, items, totalBox, dateBudget, dateMats };
+}
+
+// Arma el/los HTML de las imágenes. Devuelve [{label, filename, html}]
+function buildWAImages() {
+  const P = waPal();
+  const hasMats  = settings.showMats && materials.length > 0;
+  const separate = hasMats && settings.matsSeparate;
+  const p = waBudgetParts(P);
+
   const matsNote = separate ? `
-      <div style="margin-top:14px;padding:12px 16px;border:1px dashed #f5c518;border-radius:10px;${WA_F}font-size:16px;color:#f0ede4;text-align:center;">
+      <div style="margin-top:14px;padding:12px 16px;border:2px dashed ${P.note};border-radius:10px;${WA_F}font-size:17px;color:${P.text};text-align:center;font-weight:600;">
         📋 La lista de materiales (${materials.length} ítems) va en la imagen siguiente
       </div>` : '';
 
   const budgetInner =
-    waHeader('Instalaciones eléctricas · Presupuesto', dateBudget) +
-    waClient(client) +
-    itemsHTML +
-    (hasMats && !separate ? waSecTitle(`Materiales a comprar (${materials.length})`) + waMaterialsList(false) : '') +
-    totalHTML + matsNote + waContact() +
-    waFooter('Valores de referencia · Electro Instalador · No incluye materiales');
+    waHeader('Instalaciones eléctricas · Presupuesto', p.dateBudget, P) +
+    waClient(p.client, P) + p.items +
+    (hasMats && !separate ? waSecTitle(`Materiales a comprar (${materials.length})`, P) + waMaterialsList(false, P) : '') +
+    p.totalBox + matsNote + waContact(P) +
+    waFooter('Valores de referencia · Electro Instalador · No incluye materiales', P);
 
   const images = [{
     label: separate ? '1 de 2 · Presupuesto' : 'Presupuesto',
-    filename: `presupuesto-${slug}.png`,
-    html: waWrap(budgetInner)
+    filename: `presupuesto-${p.slug}.png`,
+    html: waWrap(budgetInner, P)
   }];
 
   if (separate) {
-    const totalUnits = materials.reduce((s, m) => s + (m.qty || 1), 0);
-    const dateMats = `
-        <div style="font-size:15px;color:#d8d5cb;">Fecha: <b>${today}</b></div>
-        <div style="font-size:15px;color:#f5c518;font-weight:700;">${materials.length} ítems · ${totalUnits} unidades</div>`;
     const matsInner =
-      waHeader('Lista de materiales', dateMats) +
-      waClient(client) +
-      waSecTitle('Materiales a comprar') +
-      waMaterialsList(true) +
-      waContact() +
-      waFooter('Lista de materiales para la obra · Precios según proveedor');
-    images.push({ label: '2 de 2 · Materiales', filename: `materiales-${slug}.png`, html: waWrap(matsInner) });
+      waHeader('Lista de materiales', p.dateMats, P) +
+      waClient(p.client, P) +
+      waSecTitle('Materiales a comprar', P) +
+      waMaterialsList(true, P) +
+      waContact(P) +
+      waFooter('Lista de materiales para la obra · Precios según proveedor', P);
+    images.push({ label: '2 de 2 · Materiales', filename: `materiales-${p.slug}.png`, html: waWrap(matsInner, P) });
   }
   return images;
+}
+
+// Documento para PDF / imprimir: siempre en estilo claro (es para papel),
+// presupuesto primero y la lista de materiales en hoja aparte.
+function buildBudgetPrintHTML() {
+  const P = WA_LIGHT;
+  const hasMats = settings.showMats && materials.length > 0;
+  const p = waBudgetParts(P);
+  let html =
+    waHeader('Instalaciones eléctricas · Presupuesto', p.dateBudget, P) +
+    waClient(p.client, P) + p.items + p.totalBox + waContact(P) +
+    waFooter('Valores de referencia · Electro Instalador · No incluye materiales', P);
+  if (hasMats) {
+    html += `<div style="break-before:page;page-break-before:always;"></div>` +
+      waHeader('Lista de materiales', p.dateMats, P) +
+      waClient(p.client, P) +
+      waSecTitle('Materiales a comprar', P) +
+      waMaterialsList(true, P) +
+      waFooter('Lista de materiales para la obra · Precios según proveedor', P);
+  }
+  return { html: waWrap(html, P, true), title: `Presupuesto ${p.client || ''}`.trim() };
 }
 
 // Convierte un HTML en imagen PNG (dataURL) usando el contenedor oculto #wa-src
@@ -2224,15 +2338,17 @@ async function waRender(html) {
   const el = document.getElementById('wa-src');
   el.innerHTML = html;
   await pvWaitImages(el);
-  const canvas = await html2canvas(el, { scale:2, backgroundColor:'#0e1512', logging:false, useCORS:true });
+  const canvas = await html2canvas(el, { scale:2, backgroundColor: settings.imgDark ? '#0e1512' : '#ffffff', logging:false, useCORS:true });
   return canvas.toDataURL('image/png');
 }
 
-let waImages = []; // [{label, filename, dataUrl}] de la ventana abierta
+let waImages = [];        // [{label, filename, dataUrl}] de la ventana abierta
+let waPrintBuilder = null; // función que arma el documento para PDF de lo que se está mostrando
 
 // Muestra una o más imágenes en la ventana, cada una con Descargar / Compartir
-function showWAImages(list, showMatsToggle) {
+function showWAImages(list, showMatsToggle, printBuilder) {
   waImages = list;
+  waPrintBuilder = printBuilder || null;
   const cont = document.getElementById('wa-images');
   cont.innerHTML = list.map((im, i) => `
     <div class="wa-block">
@@ -2243,19 +2359,23 @@ function showWAImages(list, showMatsToggle) {
         <button class="btn-p" onclick="shareWAImage(${i})">📤 Compartir</button>
       </div>
     </div>`).join('');
-  const row = document.getElementById('wa-mats-row');
-  row.style.display = showMatsToggle ? 'flex' : 'none';
+  document.getElementById('wa-mats-row').style.display = showMatsToggle ? 'flex' : 'none';
   document.getElementById('sw-mats-sep').classList.toggle('on', !!settings.matsSeparate);
+  document.getElementById('sw-img-dark').classList.toggle('on', !!settings.imgDark);
+  document.getElementById('wa-pdf-btn').style.display = waPrintBuilder ? 'block' : 'none';
   document.getElementById('wa-modal').classList.remove('hidden');
 }
 
+let waLastRender = null; // para regenerar al cambiar opciones (presupuesto o historial)
+
 async function renderAndShowWA() {
+  waLastRender = renderAndShowWA;
   toast('Generando imagen…');
   try {
     const defs = buildWAImages();
     const out = [];
     for (const d of defs) out.push({ label: d.label, filename: d.filename, dataUrl: await waRender(d.html) });
-    showWAImages(out, settings.showMats && materials.length > 0);
+    showWAImages(out, settings.showMats && materials.length > 0, buildBudgetPrintHTML);
     if (out.length > 1) toast('✅ 2 imágenes listas: presupuesto y materiales');
   } catch (e) {
     toast('Error al generar imagen', true);
@@ -2268,15 +2388,37 @@ function generateWA() {
   renderAndShowWA();
 }
 
-// Interruptor "Materiales en imagen aparte": regenera sin volver a guardar en el Historial
+// Interruptores de la ventana: regeneran sin volver a guardar en el Historial
 function toggleMatsSeparate() {
   settings.matsSeparate = !settings.matsSeparate;
   lsSet('pv_settings', JSON.stringify(settings));
   renderAndShowWA();
 }
+function toggleImgDark() {
+  settings.imgDark = !settings.imgDark;
+  lsSet('pv_settings', JSON.stringify(settings));
+  if (waLastRender) waLastRender();
+}
+
+// ── PDF / IMPRIMIR ──
+// Usa la impresión del navegador: el texto queda como texto real (no foto),
+// así el PDF no pierde calidad aunque se amplíe o se imprima.
+// En el celular: en la pantalla de impresión elegí "Guardar como PDF".
+async function printWAPdf() {
+  if (!waPrintBuilder) return;
+  const doc = waPrintBuilder();
+  const el = document.getElementById('print-doc');
+  el.innerHTML = doc.html;
+  await pvWaitImages(el);
+  const prevTitle = document.title;
+  document.title = doc.title || 'Patagonia Volt'; // nombre sugerido del archivo PDF
+  const restore = () => { document.title = prevTitle; el.innerHTML = ''; window.removeEventListener('afterprint', restore); };
+  window.addEventListener('afterprint', restore);
+  setTimeout(() => window.print(), 150);
+}
 
 function waDataUrlToFile(dataUrl, filename) {
-  const [meta, b64] = dataUrl.split(',');
+  const b64 = dataUrl.split(',')[1];
   const bin = atob(b64);
   const arr = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);

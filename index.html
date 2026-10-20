@@ -317,9 +317,14 @@
 <div class="overlay hidden" id="wa-modal">
   <div class="modal">
     <div class="modal-title">📸 Imagen para WhatsApp</div>
-    <div class="sw-row" id="wa-mats-row" style="display:none;margin-bottom:10px;">
+    <button class="btn-p btn-full" id="wa-pdf-btn" onclick="printWAPdf()" style="display:none;margin-bottom:10px;">📄 PDF / Imprimir (máxima calidad)</button>
+    <div class="sw-row" id="wa-mats-row" style="display:none;">
       <span class="sw-lbl">📋 Materiales en imagen aparte</span>
       <div class="switch" id="sw-mats-sep" onclick="toggleMatsSeparate()"></div>
+    </div>
+    <div class="sw-row" style="margin-bottom:10px;">
+      <span class="sw-lbl">🌙 Imagen con fondo oscuro</span>
+      <div class="switch" id="sw-img-dark" onclick="toggleImgDark()"></div>
     </div>
     <div id="wa-images"></div>
     <div class="modal-actions">
@@ -342,6 +347,8 @@
 
 <!-- HIDDEN RENDER TARGET -->
 <div id="wa-src"></div>
+<!-- Documento para PDF / imprimir (solo se ve al imprimir) -->
+<div id="print-doc"></div>
 
 <script src="app.js"></script>
 </body>
