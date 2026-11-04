@@ -762,6 +762,7 @@ function init() {
     materials = c.materials || [];
     document.getElementById('client-name').value    = c.client   || '';
     document.getElementById('discount-input').value = c.discount || '';
+    currentUpdatedAt = c.updatedAt || 0;
   }
 
   // Settings
@@ -941,9 +942,16 @@ function applyMerged(remote) {
   // Opciones de vista: si este celular nunca las tocó, toma las de la nube.
   if (!ls('pv_settings') && remote.settings) settings = { ...DEFAULT_SETTINGS, ...remote.settings };
 
-  // Presupuesto en curso: si en el celular está vacío, se recupera el de la nube.
-  if (!budget.length && remote.current && Array.isArray(remote.current.budget) && remote.current.budget.length) {
-    budget    = remote.current.budget;
+  // Presupuesto en curso: solo se trae el de la nube si en este celular el área de trabajo
+  // está COMPLETAMENTE vacía (sin tareas, sin materiales y sin cliente) y nunca se usó, o si
+  // lo de la nube es más nuevo. Antes alcanzaba con "sin tareas", y una lista de solo
+  // materiales quedaba pisada por el presupuesto de otro cliente.
+  const rc2 = remote.current;
+  const localEmpty = !budget.length && !materials.length && !document.getElementById('client-name').value.trim();
+  const remoteHasData = rc2 && ((Array.isArray(rc2.budget) && rc2.budget.length) || (Array.isArray(rc2.materials) && rc2.materials.length));
+  if (localEmpty && remoteHasData && (!currentUpdatedAt || (rc2.updatedAt || 0) > currentUpdatedAt)) {
+    currentUpdatedAt = rc2.updatedAt || 0;
+    budget    = remote.current.budget || [];
     materials = remote.current.materials || [];
     document.getElementById('client-name').value    = remote.current.client   || '';
     document.getElementById('discount-input').value = remote.current.discount || '';
@@ -1078,13 +1086,16 @@ function lsSet(k,v) { try { localStorage.setItem(k, v); } catch(e){} schedulePus
 function lsSetSilent(k,v) { try { localStorage.setItem(k, v); } catch(e){} } // usado al recibir datos de Supabase, no vuelve a empujar
 
 // Save current working state (budget + materials + client name + discount)
+let currentUpdatedAt = 0; // cuándo se tocó por última vez el área de trabajo en ESTE celular
 function saveCurrentState() {
   const state = {
     client:   document.getElementById('client-name').value,
     discount: document.getElementById('discount-input').value,
     budget,
-    materials
+    materials,
+    updatedAt: Date.now()
   };
+  currentUpdatedAt = state.updatedAt;
   lsSet('pv_current', JSON.stringify(state));
 }
 
@@ -1198,14 +1209,14 @@ function removeItem(i) {
 
 function renderBudget() {
   const el = document.getElementById('budget-list');
-  if (!budget.length) { el.innerHTML='<div class="empty">Agregá tareas desde ⚡ Tareas</div>'; return; }
+  if (!budget.length && !materials.length) { el.innerHTML='<div class="empty">Agregá tareas desde ⚡ Tareas o materiales desde 🔧 Materiales</div>'; return; }
   const grp = {};
   budget.forEach((b,i) => {
     const t = tasks.find(x=>x.id===b.taskId); if(!t) return;
     if (!grp[t.cat]) grp[t.cat]=[];
     grp[t.cat].push({b,i,t});
   });
-  let html='';
+  let html = budget.length ? '' : '<div class="empty" style="padding:10px 0;">📋 Solo lista de materiales (sin mano de obra)</div>';
   for (const [cat, items] of Object.entries(grp)) {
     html += `<div class="sh">${cat}</div>`;
     items.forEach(({b,i,t}) => {
@@ -1226,7 +1237,7 @@ function renderBudget() {
       </div>`;
     });
   }
-  if (settings.showMats && materials.length) {
+  if ((settings.showMats || !budget.length) && materials.length) {
     html += `<div class="sh">Materiales</div>`;
     materials.forEach(m => {
       html += `<div class="mat-item${m.checked?' ck':''}">
@@ -1238,11 +1249,17 @@ function renderBudget() {
   el.innerHTML = html;
 }
 
+// Empieza un presupuesto nuevo: borra tareas, materiales, cliente y descuento del área de
+// trabajo (lo guardado en el Historial no se toca). Así no se mezclan datos de dos clientes.
 function clearBudget() {
-  if (!budget.length) return;
-  if (!confirm('¿Limpiar el presupuesto actual?')) return;
-  budget=[]; saveCurrentState(); renderBudget(); updateTotal();
-  toast('Presupuesto limpiado');
+  const clientEl = document.getElementById('client-name');
+  if (!budget.length && !materials.length && !clientEl.value.trim()) { toast('El área de trabajo ya está vacía'); return; }
+  if (!confirm('¿Empezar un presupuesto nuevo?\n\nSe borran del área de trabajo las tareas, los materiales y el nombre del cliente.\nLo que está guardado en el Historial NO se toca.')) return;
+  budget = []; materials = [];
+  clientEl.value = '';
+  document.getElementById('discount-input').value = '';
+  saveCurrentState(); renderBudget(); renderMats(); updateTotal();
+  toast('🆕 Presupuesto nuevo');
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1339,7 +1356,7 @@ function addMatFromCatalog(name) {
 // Guarda el presupuesto actual en el Historial. silent=true no muestra cartelito
 // (se usa cuando esto pasa automáticamente, por ejemplo al generar la imagen de WhatsApp).
 function pushCurrentBudgetToHistory(silent) {
-  if (!budget.length) { if (!silent) toast('Agregá tareas antes de guardar','error'); return; }
+  if (!budget.length && !materials.length) { if (!silent) toast('Agregá tareas o materiales antes de guardar','error'); return; }
   const client = document.getElementById('client-name').value.trim() || 'Sin nombre';
   const entry = {
     id:       Date.now(),
@@ -1392,7 +1409,7 @@ function viewHistEntry(id) {
   if (!entry) return;
   activeHistIdx = id;
   document.getElementById('hm-title').textContent = entry.client;
-  let html = `<div style="font-size:13px;color:var(--muted);margin-bottom:12px;">${entry.date} · ${fmt(entry.total)}</div>`;
+  let html = `<div style="font-size:13px;color:var(--muted);margin-bottom:12px;">${entry.date} · ${histTotalLabel(entry)}</div>`;
   const grp = {};
   entry.budget.forEach(b => {
     const t = tasks.find(x=>x.id===b.taskId); if(!t) return;
@@ -1422,9 +1439,10 @@ function restoreFromHistory() {
   const entry = history_.find(h=>h.id===activeHistIdx);
   if (!entry) return;
   if (!confirm('¿Restaurar este presupuesto en el área de trabajo actual? Se perderá el presupuesto actual.')) return;
-  budget    = JSON.parse(JSON.stringify(entry.budget));
-  materials = JSON.parse(JSON.stringify(entry.materials));
+  budget    = JSON.parse(JSON.stringify(entry.budget || []));
+  materials = JSON.parse(JSON.stringify(entry.materials || []));
   document.getElementById('client-name').value = entry.client;
+  document.getElementById('discount-input').value = entry.discount ? String(entry.discount) : '';
   saveCurrentState(); renderBudget(); renderMats(); updateTotal();
   closeModal('hist-modal');
   switchTab('presupuesto');
@@ -1731,7 +1749,7 @@ function deleteVisit(id) {
 // ── Vincular presupuestos al cliente ──
 function attachCurrentBudgetToClient() {
   if (!activeClientId) return;
-  if (!budget.length) { toast('No hay tareas cargadas en el presupuesto actual (pestaña Presupuesto)', true); return; }
+  if (!budget.length && !materials.length) { toast('No hay tareas ni materiales cargados en el área de trabajo', true); return; }
   const c = clients.find(x => x.id === activeClientId); if (!c) return;
   const entry = {
     id: Date.now(),
@@ -1759,7 +1777,7 @@ function renderClientBudgetList() {
   el.innerHTML = list.map(h => `
     <div class="card" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px;">
       <div style="min-width:0;">
-        <div style="font-weight:700;">${h.date} · ${fmt(h.total)}</div>
+        <div style="font-weight:700;">${h.date} · ${histTotalLabel(h)}</div>
         <div style="font-size:11px;color:var(--muted);text-transform:capitalize;">${h.status}</div>
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0;">
@@ -1866,6 +1884,10 @@ function downloadClientHistory() {
   run();
 }
 
+function histTotalLabel(h) {
+  if ((!h.budget || !h.budget.length) && h.materials && h.materials.length) return `📋 ${h.materials.length} materiales`;
+  return fmt(h.total);
+}
 function renderHistory() {
   const el = document.getElementById('hist-list');
   const cnt = document.getElementById('hist-count');
@@ -1879,7 +1901,7 @@ function renderHistory() {
     <div class="hist-item">
       <div class="hist-header">
         <span class="hist-client">${h.client}</span>
-        <span class="hist-total">${fmt(h.total)}</span>
+        <span class="hist-total">${histTotalLabel(h)}</span>
       </div>
       <div class="hist-date">${h.date}</div>
       <div class="hist-badges">
@@ -2277,6 +2299,18 @@ function waBudgetParts(P) {
 // Arma el/los HTML de las imágenes. Devuelve [{label, filename, html}]
 function buildWAImages() {
   const P = waPal();
+  // Solo lista de materiales (sin mano de obra): una sola imagen de materiales
+  if (!budget.length) {
+    const p = waBudgetParts(P);
+    const inner =
+      waHeader('Lista de materiales', p.dateMats, P) +
+      waClient(p.client, P) +
+      waSecTitle('Materiales a comprar', P) +
+      waMaterialsList(true, P) +
+      waContact(P) +
+      waFooter('Lista de materiales para la obra · Precios según proveedor', P);
+    return [{ label: 'Materiales', filename: `materiales-${p.slug}.png`, html: waWrap(inner, P) }];
+  }
   const hasMats  = settings.showMats && materials.length > 0;
   const separate = hasMats && settings.matsSeparate;
   const p = waBudgetParts(P);
@@ -2316,8 +2350,18 @@ function buildWAImages() {
 // presupuesto primero y la lista de materiales en hoja aparte.
 function buildBudgetPrintHTML() {
   const P = WA_LIGHT;
-  const hasMats = settings.showMats && materials.length > 0;
   const p = waBudgetParts(P);
+  if (!budget.length) {
+    const html =
+      waHeader('Lista de materiales', p.dateMats, P) +
+      waClient(p.client, P) +
+      waSecTitle('Materiales a comprar', P) +
+      waMaterialsList(true, P) +
+      waContact(P) +
+      waFooter('Lista de materiales para la obra · Precios según proveedor', P);
+    return { html: waWrap(html, P, true), title: `Materiales ${p.client || ''}`.trim() };
+  }
+  const hasMats = settings.showMats && materials.length > 0;
   let html =
     waHeader('Instalaciones eléctricas · Presupuesto', p.dateBudget, P) +
     waClient(p.client, P) + p.items + p.totalBox + waContact(P) +
@@ -2375,7 +2419,7 @@ async function renderAndShowWA() {
     const defs = buildWAImages();
     const out = [];
     for (const d of defs) out.push({ label: d.label, filename: d.filename, dataUrl: await waRender(d.html) });
-    showWAImages(out, settings.showMats && materials.length > 0, buildBudgetPrintHTML);
+    showWAImages(out, budget.length > 0 && settings.showMats && materials.length > 0, buildBudgetPrintHTML);
     if (out.length > 1) toast('✅ 2 imágenes listas: presupuesto y materiales');
   } catch (e) {
     toast('Error al generar imagen', true);
@@ -2383,7 +2427,7 @@ async function renderAndShowWA() {
 }
 
 function generateWA() {
-  if (!budget.length) { toast('Agregá tareas primero','error'); return; }
+  if (!budget.length && !materials.length) { toast('Agregá tareas o materiales primero','error'); return; }
   pushCurrentBudgetToHistory(true); // se guarda solo en el Historial (una sola vez)
   renderAndShowWA();
 }
