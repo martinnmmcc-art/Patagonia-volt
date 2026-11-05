@@ -259,6 +259,14 @@
   </div>
 
   <div class="card">
+    <div class="card-title">📝 Presupuesto desde texto (IA)</div>
+    <div class="muted-s" style="margin-bottom:8px;">Contale el trabajo como se lo dirías a un ayudante. La IA elige las tareas de tu catálogo (con tus precios), calcula la mano de obra y arma la lista de materiales. Vos revisás y confirmás.</div>
+    <textarea id="presu-ia-text" class="imp" style="min-height:110px;" placeholder="Ej: Karim, tablero de riego en estanco con térmica, disyuntor, contactor y selector manual-auto, más jabalina. Bomba monofásica de 1 HP a 20 m."></textarea>
+    <button class="btn-p btn-full" id="presu-ia-btn" onclick="presuIAGenerar()">🤖 Armar presupuesto</button>
+    <div id="presu-ia-out"></div>
+  </div>
+
+  <div class="card">
     <div class="card-title">🧮 Calculadoras (funcionan sin señal)</div>
     <select class="cfg" id="ing-calc-type" onchange="ingCalcType()">
       <option value="cable">Sección de cable y térmica</option>

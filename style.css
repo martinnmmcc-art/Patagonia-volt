@@ -277,3 +277,5 @@ input.cfg:focus { outline:none; border-color:var(--accent); }
 .ing-note { font-size:11.5px; color:var(--muted); margin-top:8px; line-height:1.4; }
 .muted-s { color:var(--muted); font-size:12px; }
 select.cfg { width:100%; background:var(--s2); border:1px solid var(--border); border-radius:8px; padding:9px 11px; color:var(--text); font-family:'Barlow',sans-serif; font-size:14px; margin-bottom:8px; }
+.presu-ia-row { display:flex; gap:8px; align-items:center; padding:7px 0; border-bottom:1px solid var(--border); font-size:13.5px; }
+.presu-ia-row .qval-input { width:56px; flex-shrink:0; }

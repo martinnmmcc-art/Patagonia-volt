@@ -2875,6 +2875,133 @@ function ingCalcMedPrueba() {
   document.getElementById('iq-dmedio-wrap').style.display = medio ? 'block' : 'none';
 }
 
+
+// ── 📝 PRESUPUESTO DESDE TEXTO (IA) ───────────────────────
+// Martin describe el trabajo con sus palabras; la IA elige tareas de SU catálogo (con sus
+// precios) y arma la lista de materiales. Nada se carga hasta que él lo revisa y confirma.
+let presuIA = null; // { cliente, resumen, items:[{task, qty, motivo}], mats:[{name, qty, fuera}], supuestos, preguntas, model }
+
+async function presuIAGenerar() {
+  const inp = document.getElementById('presu-ia-text');
+  const text = inp.value.trim();
+  if (!text) { toast('Describí el trabajo primero', true); return; }
+  if (!navigator.onLine) { toast('Para armar el presupuesto con IA hace falta señal', true); return; }
+  const btn = document.getElementById('presu-ia-btn');
+  const out = document.getElementById('presu-ia-out');
+  btn.disabled = true; btn.textContent = '⏳ Armando presupuesto…';
+  out.innerHTML = '<div class="empty" style="padding:12px;">La IA está eligiendo tareas y materiales de tu catálogo (puede tardar hasta un minuto)…</div>';
+  try {
+    const ctrl = new AbortController(); const to = setTimeout(() => ctrl.abort(), 120000);
+    const res = await fetch(ING_URL, {
+      method: 'POST', signal: ctrl.signal,
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+      body: JSON.stringify({
+        mode: 'presupuesto', text,
+        tasks: tasks.map(t => ({ id: t.id, cat: t.cat, name: t.name, price: t.price })),
+        materials: MATERIAL_CATALOG.map(m => m.name),
+      })
+    });
+    clearTimeout(to);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.presupuesto) throw new Error(data.error || ('Error ' + res.status));
+    const p = data.presupuesto;
+    const items = [];
+    (p.tareas || []).forEach(x => {
+      const t = tasks.find(tt => String(tt.id) === String(x.id));
+      const qty = Math.max(1, Math.round(Number(x.cantidad) || 1));
+      if (!t) return; // tarea inexistente: se descarta
+      const ex = items.find(i => i.task.id === t.id);
+      if (ex) ex.qty += qty; else items.push({ task: t, qty, motivo: x.motivo || '' });
+    });
+    const catNames = new Set(MATERIAL_CATALOG.map(m => m.name));
+    const mats = [];
+    (p.materiales || []).forEach(m => {
+      const name = String(m.nombre || '').trim(); if (!name) return;
+      const qty = Math.max(1, Math.round(Number(m.cantidad) || 1));
+      const ex = mats.find(x => x.name.toLowerCase() === name.toLowerCase());
+      if (ex) ex.qty += qty; else mats.push({ name, qty, fuera: !catNames.has(name) });
+    });
+    if (!items.length && !mats.length) throw new Error('La IA no encontró tareas ni materiales para ese texto. Probá describirlo con más detalle.');
+    presuIA = { cliente: (p.cliente || '').trim(), resumen: p.resumen || '', items, mats,
+      supuestos: Array.isArray(p.supuestos) ? p.supuestos : [], preguntas: Array.isArray(p.preguntas) ? p.preguntas : [], model: data.model };
+    renderPresuIA();
+  } catch (e) {
+    presuIA = null;
+    out.innerHTML = ingBad(e.name === 'AbortError' ? 'Tardó demasiado. Probá de nuevo.' : (e.message === 'Failed to fetch' ? 'No se pudo conectar. Revisá la señal.' : ingEsc(e.message)));
+  }
+  btn.disabled = false; btn.textContent = '🤖 Armar presupuesto';
+}
+
+function renderPresuIA() {
+  const out = document.getElementById('presu-ia-out');
+  if (!presuIA) { out.innerHTML = ''; return; }
+  const p = presuIA;
+  const total = p.items.reduce((s, i) => s + i.task.price * i.qty, 0);
+  let h = `<div class="ing-calc-res">`;
+  if (p.resumen) h += `<div style="font-weight:700;margin-bottom:4px;">${ingEsc(p.resumen)}</div>`;
+  h += `<div class="cfg-lbl" style="margin-top:6px;">Cliente</div>
+    <input class="cfg" id="presu-ia-cliente" value="${ingEsc(p.cliente).replace(/"/g,'&quot;')}" placeholder="Nombre del cliente" oninput="presuIA.cliente=this.value"/>`;
+  h += `<div class="sh" style="margin-top:8px;">Mano de obra (tu catálogo)</div>`;
+  if (!p.items.length) h += `<div class="muted-s">Sin tareas.</div>`;
+  p.items.forEach((it, i) => {
+    h += `<div class="presu-ia-row">
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;">${ingEsc(it.task.name)}</div>
+        <div class="muted-s">${ingEsc(it.task.cat)} · ${fmt(it.task.price)} c/u${it.motivo ? ' · ' + ingEsc(it.motivo) : ''}</div>
+      </div>
+      <input type="number" class="qval-input" min="1" value="${it.qty}" onchange="presuIA.items[${i}].qty=Math.max(1,parseInt(this.value,10)||1);renderPresuIA()"/>
+      <div class="rmbtn" onclick="presuIA.items.splice(${i},1);renderPresuIA()">✕</div>
+    </div>`;
+  });
+  h += `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-weight:700;">
+      <span>Total mano de obra</span><span style="color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-size:22px;">${fmt(total)}</span></div>`;
+  h += `<div class="sh" style="margin-top:10px;">Materiales (${p.mats.length})</div>`;
+  if (!p.mats.length) h += `<div class="muted-s">Sin materiales.</div>`;
+  p.mats.forEach((m, i) => {
+    h += `<div class="presu-ia-row">
+      <div style="flex:1;min-width:0;">${ingEsc(m.name)}${m.fuera ? ' <span class="muted-s">(no está en tu catálogo)</span>' : ''}</div>
+      <input type="number" class="qval-input" min="1" value="${m.qty}" onchange="presuIA.mats[${i}].qty=Math.max(1,parseInt(this.value,10)||1)"/>
+      <div class="rmbtn" onclick="presuIA.mats.splice(${i},1);renderPresuIA()">✕</div>
+    </div>`;
+  });
+  h += `</div>`;
+  if (p.supuestos.length) h += `<div class="ing-r ing-r-warn"><b>Supuestos de la IA:</b><ul style="margin:4px 0 0 18px;padding:0;">${p.supuestos.map(s => `<li>${ingEsc(s)}</li>`).join('')}</ul></div>`;
+  if (p.preguntas.length) h += `<div class="ing-r ing-r-warn"><b>Datos que faltan:</b><ul style="margin:4px 0 0 18px;padding:0;">${p.preguntas.map(s => `<li>${ingEsc(s)}</li>`).join('')}</ul><div class="muted-s" style="margin-top:4px;">Agregalos al texto de arriba y volvé a tocar "Armar presupuesto".</div></div>`;
+  h += `<div style="display:flex;gap:8px;margin-top:10px;">
+      <button class="btn-s" style="flex:1;" onclick="presuIACargar(false)">➕ Sumar al actual</button>
+      <button class="btn-p" style="flex:1;" onclick="presuIACargar(true)">📋 Cargar como nuevo</button>
+    </div>
+    <div class="ing-note">Revisá cantidades y tareas antes de mandarlo: la IA sugiere, el presupuesto lo decidís vos. Los precios son los de tu catálogo.</div>`;
+  out.innerHTML = h;
+}
+
+function presuIACargar(nuevo) {
+  if (!presuIA) return;
+  const p = presuIA;
+  const clientEl = document.getElementById('client-name');
+  if (nuevo) {
+    if ((budget.length || materials.length) && !confirm('¿Reemplazar lo que hay en el área de trabajo por este presupuesto?\n(Lo guardado en el Historial no se toca.)')) return;
+    budget = []; materials = [];
+    document.getElementById('discount-input').value = '';
+    clientEl.value = p.cliente || '';
+  } else if (!clientEl.value.trim() && p.cliente) {
+    clientEl.value = p.cliente;
+  }
+  p.items.forEach(it => {
+    const ex = budget.find(b => b.taskId === it.task.id);
+    if (ex) ex.qty += it.qty; else budget.push({ taskId: it.task.id, qty: it.qty });
+  });
+  p.mats.forEach(m => {
+    const ex = materials.find(x => x.name.toLowerCase() === m.name.toLowerCase());
+    if (ex) ex.qty = (ex.qty || 1) + m.qty; else materials.push({ name: m.name, qty: m.qty, checked: false });
+  });
+  saveCurrentState(); renderBudget(); renderMats(); updateTotal();
+  presuIA = null; renderPresuIA();
+  document.getElementById('presu-ia-text').value = '';
+  switchTab('presupuesto');
+  toast('✅ Presupuesto cargado: revisalo y mandalo por 📸 WhatsApp');
+}
+
 function ingInit() {
   ingLoad();
   renderIngChat();
