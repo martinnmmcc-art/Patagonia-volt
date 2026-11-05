@@ -279,3 +279,4 @@ input.cfg:focus { outline:none; border-color:var(--accent); }
 select.cfg { width:100%; background:var(--s2); border:1px solid var(--border); border-radius:8px; padding:9px 11px; color:var(--text); font-family:'Barlow',sans-serif; font-size:14px; margin-bottom:8px; }
 .presu-ia-row { display:flex; gap:8px; align-items:center; padding:7px 0; border-bottom:1px solid var(--border); font-size:13.5px; }
 .presu-ia-row .qval-input { width:56px; flex-shrink:0; }
+.rec-on { background:var(--danger-bg) !important; color:var(--text) !important; border-color:var(--danger) !important; }

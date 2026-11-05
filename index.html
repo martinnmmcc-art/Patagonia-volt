@@ -114,6 +114,7 @@
     </div>
   </div>
 
+  <button class="btn-s btn-full" style="margin-bottom:10px;" onclick="promptCustomLabor()">💲 Agregar mano de obra por monto</button>
   <div id="budget-list"></div>
 </div>
 
@@ -260,9 +261,12 @@
 
   <div class="card">
     <div class="card-title">📝 Presupuesto desde texto (IA)</div>
-    <div class="muted-s" style="margin-bottom:8px;">Contale el trabajo como se lo dirías a un ayudante. La IA elige las tareas de tu catálogo (con tus precios), calcula la mano de obra y arma la lista de materiales. Vos revisás y confirmás.</div>
-    <textarea id="presu-ia-text" class="imp" style="min-height:110px;" placeholder="Ej: Karim, tablero de riego en estanco con térmica, disyuntor, contactor y selector manual-auto, más jabalina. Bomba monofásica de 1 HP a 20 m."></textarea>
-    <button class="btn-p btn-full" id="presu-ia-btn" onclick="presuIAGenerar()">🤖 Armar presupuesto</button>
+    <div class="muted-s" style="margin-bottom:8px;">Dictale o escribile el trabajo como a un ayudante. Arma la lista de materiales (sin precios) y la mano de obra: con los ítems de tu catálogo o con el monto que le digas ("mano de obra 500 mil"). Si decís "solo materiales", no pone mano de obra. Vos revisás y confirmás.</div>
+    <textarea id="presu-ia-text" class="imp" style="min-height:110px;" placeholder="Ej: Karim, tablero de riego en estanco con térmica, disyuntor, contactor y selector manual-auto, más jabalina. Mano de obra 500 mil.  (Decí &quot;solo materiales&quot; si no querés mano de obra, o &quot;con los ítems del catálogo&quot;.)"></textarea>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-s" id="presu-mic" onclick="presuMic()" style="flex:0 0 auto;">🎤 Dictar</button>
+      <button class="btn-p" style="flex:1;" id="presu-ia-btn" onclick="presuIAGenerar()">🤖 Armar presupuesto</button>
+    </div>
     <div id="presu-ia-out"></div>
   </div>
 

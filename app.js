@@ -116,6 +116,7 @@ const TASK_DESC_MANO_OBRA = 'Valor de referencia de la mano de obra según la ca
 function getTaskDesc(task, _depth) {
   if (!task) return '';
   if (taskDescOverride[task.name]) return taskDescOverride[task.name];
+  if (task.custom) return task.desc || '';
   // 1) Reglas por nombre de la tarea
   for (const [re, text] of TASK_DESC_RULES) { if (re.test(task.name)) return text; }
   // 2) Descripción de la categoría (categorías propias de la app)
@@ -1141,7 +1142,7 @@ function toast(msg, err) {
 //  CATEGORIES
 // ══════════════════════════════════════════════════════════
 function renderCats() {
-  const cats = ['Todos', ...[...new Set(tasks.map(t=>t.cat))].filter(Boolean).sort()];
+  const cats = ['Todos', ...[...new Set(tasks.filter(t=>!t.custom).map(t=>t.cat))].filter(Boolean).sort()];
   const wrap = document.getElementById('cat-filters');
   wrap.innerHTML = cats.map(c => {
     const safeCat = c.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
@@ -1167,6 +1168,7 @@ function filterTasks() { renderTasks(); }
 function renderTasks() {
   const q = document.getElementById('search-input').value.toLowerCase();
   const f = tasks.filter(t => {
+    if (t.custom) return false; // montos acordados: no son del catálogo
     const mc = activeCat==='Todos' || t.cat===activeCat;
     const ms = !q || t.name.toLowerCase().includes(q) || t.cat.toLowerCase().includes(q);
     return mc && ms;
@@ -1253,6 +1255,51 @@ function renderBudget() {
 
 // Empieza un presupuesto nuevo: borra tareas, materiales, cliente y descuento del área de
 // trabajo (lo guardado en el Historial no se toca). Así no se mezclan datos de dos clientes.
+// ── Mano de obra por monto acordado (no sale del catálogo) ──
+// Se guarda como una "tarea propia" oculta (custom:true) para que funcione igual que el resto:
+// imagen de WhatsApp, PDF, historial y sincronización.
+function addCustomLabor(desc, monto, qty) {
+  const price = Math.round(Number(monto) || 0);
+  if (price <= 0) return null;
+  const name = String(desc || 'Mano de obra').trim().slice(0, 120) || 'Mano de obra';
+  const t = { id: Date.now() + Math.floor(Math.random() * 1000), cat: 'Mano de obra', name, price, custom: true,
+              desc: 'Monto de mano de obra acordado para este trabajo. No incluye materiales.' };
+  tasks.push(t);
+  lsSet('pv_tasks', JSON.stringify(tasks));
+  budget.push({ taskId: t.id, qty: Math.max(1, Math.round(Number(qty) || 1)) });
+  return t;
+}
+// Convierte "500 mil", "500.000", "$ 1,5 millones", "medio palo" en número
+function parseMonto(txt) {
+  let s = String(txt || '').toLowerCase().replace(/\$/g, '').trim();
+  if (!s) return 0;
+  if (/medio palo/.test(s)) return 500000;
+  if (/un palo y medio/.test(s)) return 1500000;
+  if (/^un palo$/.test(s)) return 1000000;
+  const m = s.match(/(\d[\d.,]*)\s*(mill[oó]n(?:es)?|palos?|mil|k)?/);
+  if (!m) return 0;
+  let numTxt = m[1];
+  const unit = m[2] || '';
+  // 1.500.000 -> miles con punto ; 1,5 -> decimal
+  if (/^\d{1,3}(\.\d{3})+$/.test(numTxt)) numTxt = numTxt.replace(/\./g, '');
+  else numTxt = numTxt.replace(/\./g, '').replace(',', '.');
+  let n = parseFloat(numTxt) || 0;
+  if (/mill|palo/.test(unit)) n *= 1000000;
+  else if (/^mil|^k/.test(unit)) n *= 1000;
+  return Math.round(n);
+}
+function promptCustomLabor() {
+  const desc = prompt('Descripción de la mano de obra:', 'Mano de obra');
+  if (desc === null) return;
+  const montoTxt = prompt('Monto (ej: 500000, 500 mil, 1,2 millones):', '');
+  if (montoTxt === null) return;
+  const monto = parseMonto(montoTxt);
+  if (!monto) { toast('Monto inválido', true); return; }
+  addCustomLabor(desc, monto, 1);
+  saveCurrentState(); renderBudget(); updateTotal();
+  toast('✅ Mano de obra agregada: ' + fmt(monto));
+}
+
 function clearBudget() {
   const clientEl = document.getElementById('client-name');
   if (!budget.length && !materials.length && !clientEl.value.trim()) { toast('El área de trabajo ya está vacía'); return; }
@@ -2066,7 +2113,7 @@ function importPrices() {
 
 function confirmReset() {
   if (!confirm('¿Restaurar la base de datos original? Se perderán las tareas importadas.')) return;
-  tasks = BUILTIN.map((t,i)=>({...t,id:i}));
+  tasks = BUILTIN.map((t,i)=>({...t,id:i})).concat(tasks.filter(t => t.custom));
   lsSet('pv_tasks', JSON.stringify(tasks));
   activeCat='Todos'; renderCats(); renderTasks(); updateDBStats();
   toast('Base de datos restaurada');
@@ -2112,6 +2159,7 @@ async function updatePricesFromWeb() {
       if (!it || !it.name || typeof it.price !== 'number' || it.price <= 0) return;
       const key = it.name.trim().toLowerCase();
       const existing = byName.get(key);
+      if (existing && existing.custom) return;
       if (existing) {
         if (existing.price !== it.price) { existing.price = it.price; updated++; }
         if (it.cat) existing.cat = it.cat;
@@ -2882,6 +2930,7 @@ function ingCalcMedPrueba() {
 let presuIA = null; // { cliente, resumen, items:[{task, qty, motivo}], mats:[{name, qty, fuera}], supuestos, preguntas, model }
 
 async function presuIAGenerar() {
+  if (presuRecOn) { presuRecOn = false; try { presuRec.stop(); } catch (e) {} }
   const inp = document.getElementById('presu-ia-text');
   const text = inp.value.trim();
   if (!text) { toast('Describí el trabajo primero', true); return; }
@@ -2897,7 +2946,7 @@ async function presuIAGenerar() {
       headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
       body: JSON.stringify({
         mode: 'presupuesto', text,
-        tasks: tasks.map(t => ({ id: t.id, cat: t.cat, name: t.name, price: t.price })),
+        tasks: tasks.filter(t => !t.custom).map(t => ({ id: t.id, cat: t.cat, name: t.name, price: t.price })),
         materials: MATERIAL_CATALOG.map(m => m.name),
       })
     });
@@ -2921,8 +2970,12 @@ async function presuIAGenerar() {
       const ex = mats.find(x => x.name.toLowerCase() === name.toLowerCase());
       if (ex) ex.qty += qty; else mats.push({ name, qty, fuera: !catNames.has(name) });
     });
-    if (!items.length && !mats.length) throw new Error('La IA no encontró tareas ni materiales para ese texto. Probá describirlo con más detalle.');
-    presuIA = { cliente: (p.cliente || '').trim(), resumen: p.resumen || '', items, mats,
+    const hayLibre = Array.isArray(p.mano_obra_libre) && p.mano_obra_libre.some(x => Number(x.monto) > 0);
+    if (!items.length && !mats.length && !hayLibre) throw new Error('La IA no encontró tareas ni materiales para ese texto. Probá describirlo con más detalle.');
+    const libre = (Array.isArray(p.mano_obra_libre) ? p.mano_obra_libre : [])
+      .map(x => ({ desc: String(x.descripcion || 'Mano de obra').trim(), monto: Math.round(Number(x.monto) || 0), qty: Math.max(1, Math.round(Number(x.cantidad) || 1)) }))
+      .filter(x => x.monto > 0);
+    presuIA = { cliente: (p.cliente || '').trim(), resumen: p.resumen || '', items, mats, libre,
       supuestos: Array.isArray(p.supuestos) ? p.supuestos : [], preguntas: Array.isArray(p.preguntas) ? p.preguntas : [], model: data.model };
     renderPresuIA();
   } catch (e) {
@@ -2932,17 +2985,57 @@ async function presuIAGenerar() {
   btn.disabled = false; btn.textContent = '🤖 Armar presupuesto';
 }
 
+// Dictado por voz continuo: vas hablando y el texto se va escribiendo.
+let presuRec = null, presuRecOn = false;
+function presuMic() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { toast('Este navegador no permite dictado: usá el 🎤 del teclado', true); return; }
+  if (presuRecOn) { presuRecOn = false; try { presuRec.stop(); } catch (e) {} return; }
+  if (!navigator.onLine) toast('Sin señal el dictado puede no andar: probá el 🎤 del teclado', true);
+  const ta = document.getElementById('presu-ia-text');
+  const btn = document.getElementById('presu-mic');
+  presuRecOn = true;
+  let base = ta.value ? ta.value.replace(/\s*$/, ' ') : '';
+  const start = () => {
+    presuRec = new SR(); presuRec.lang = 'es-AR'; presuRec.continuous = true; presuRec.interimResults = true;
+    presuRec.onresult = e => {
+      let fin = '', interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const tr = e.results[i][0].transcript;
+        if (e.results[i].isFinal) fin += tr + ' '; else interim += tr;
+      }
+      if (fin) base += fin;
+      ta.value = base + interim;
+    };
+    presuRec.onerror = ev => { if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') { presuRecOn = false; toast('Permití el micrófono para dictar', true); } };
+    presuRec.onend = () => { if (presuRecOn) { try { start(); } catch (e) { presuRecOn = false; } } else { btn.textContent = '🎤 Dictar'; btn.classList.remove('rec-on'); ta.value = base.trim(); } };
+    presuRec.start();
+  };
+  btn.textContent = '⏹ Parar'; btn.classList.add('rec-on');
+  try { start(); } catch (e) { presuRecOn = false; btn.textContent = '🎤 Dictar'; }
+}
+
 function renderPresuIA() {
   const out = document.getElementById('presu-ia-out');
   if (!presuIA) { out.innerHTML = ''; return; }
   const p = presuIA;
-  const total = p.items.reduce((s, i) => s + i.task.price * i.qty, 0);
+  const total = p.items.reduce((s, i) => s + i.task.price * i.qty, 0) + p.libre.reduce((s, l) => s + l.monto * l.qty, 0);
   let h = `<div class="ing-calc-res">`;
   if (p.resumen) h += `<div style="font-weight:700;margin-bottom:4px;">${ingEsc(p.resumen)}</div>`;
   h += `<div class="cfg-lbl" style="margin-top:6px;">Cliente</div>
     <input class="cfg" id="presu-ia-cliente" value="${ingEsc(p.cliente).replace(/"/g,'&quot;')}" placeholder="Nombre del cliente" oninput="presuIA.cliente=this.value"/>`;
-  h += `<div class="sh" style="margin-top:8px;">Mano de obra (tu catálogo)</div>`;
-  if (!p.items.length) h += `<div class="muted-s">Sin tareas.</div>`;
+  h += `<div class="sh" style="margin-top:8px;">Mano de obra</div>`;
+  if (!p.items.length && !p.libre.length) h += `<div class="muted-s">Sin mano de obra (solo materiales). Podés agregar un monto abajo.</div>`;
+  p.libre.forEach((l, i) => {
+    h += `<div class="presu-ia-row">
+      <div style="flex:1;min-width:0;">
+        <input class="cfg" style="margin:0 0 4px;" value="${ingEsc(l.desc).replace(/"/g,'&quot;')}" oninput="presuIA.libre[${i}].desc=this.value"/>
+        <div style="display:flex;align-items:center;gap:6px;"><span class="muted-s">Monto $</span>
+          <input class="cfg" style="margin:0;" type="text" inputmode="numeric" value="${l.monto}" onchange="presuIA.libre[${i}].monto=parseMonto(this.value);renderPresuIA()"/></div>
+      </div>
+      <div class="rmbtn" onclick="presuIA.libre.splice(${i},1);renderPresuIA()">✕</div>
+    </div>`;
+  });
   p.items.forEach((it, i) => {
     h += `<div class="presu-ia-row">
       <div style="flex:1;min-width:0;">
@@ -2953,6 +3046,7 @@ function renderPresuIA() {
       <div class="rmbtn" onclick="presuIA.items.splice(${i},1);renderPresuIA()">✕</div>
     </div>`;
   });
+  h += `<button class="btn-s btn-full" style="margin-top:8px;" onclick="presuIA.libre.push({desc:'Mano de obra',monto:0,qty:1});renderPresuIA()">💲 Agregar mano de obra por monto</button>`;
   h += `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-weight:700;">
       <span>Total mano de obra</span><span style="color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-size:22px;">${fmt(total)}</span></div>`;
   h += `<div class="sh" style="margin-top:10px;">Materiales (${p.mats.length})</div>`;
@@ -2991,6 +3085,7 @@ function presuIACargar(nuevo) {
     const ex = budget.find(b => b.taskId === it.task.id);
     if (ex) ex.qty += it.qty; else budget.push({ taskId: it.task.id, qty: it.qty });
   });
+  p.libre.forEach(l => { if (l.monto > 0) addCustomLabor(l.desc, l.monto, l.qty); });
   p.mats.forEach(m => {
     const ex = materials.find(x => x.name.toLowerCase() === m.name.toLowerCase());
     if (ex) ex.qty = (ex.qty || 1) + m.qty; else materials.push({ name: m.name, qty: m.qty, checked: false });
