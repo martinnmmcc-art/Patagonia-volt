@@ -2927,28 +2927,58 @@ function ingCalcMedPrueba() {
 // ── 📝 PRESUPUESTO DESDE TEXTO (IA) ───────────────────────
 // Martin describe el trabajo con sus palabras; la IA elige tareas de SU catálogo (con sus
 // precios) y arma la lista de materiales. Nada se carga hasta que él lo revisa y confirma.
-let presuIA = null; // { cliente, resumen, items:[{task, qty, motivo}], mats:[{name, qty, fuera}], supuestos, preguntas, model }
+let presuIA = null; // { cliente, resumen, items:[{task, qty, motivo}], libre:[{desc,monto,qty}], mats:[{name, qty, fuera}], supuestos, preguntas, model }
 
-async function presuIAGenerar() {
-  if (presuRecOn) { presuRecOn = false; try { presuRec.stop(); } catch (e) {} }
-  const inp = document.getElementById('presu-ia-text');
-  const text = inp.value.trim();
-  if (!text) { toast('Describí el trabajo primero', true); return; }
-  if (!navigator.onLine) { toast('Para armar el presupuesto con IA hace falta señal', true); return; }
-  const btn = document.getElementById('presu-ia-btn');
+// Catálogos achicados para no gastar el cupo gratis de la IA: tareas sin repetidas y
+// solo los materiales que tienen que ver con lo dictado (más los de uso general).
+function presuCatalogs(text, draft) {
+  const seen = new Set();
+  const tl = [];
+  tasks.forEach(t => {
+    if (t.custom) return;
+    const k = pvNorm(t.name);
+    if (seen.has(k)) return; seen.add(k);
+    tl.push({ id: t.id, cat: t.cat, name: t.name, price: t.price });
+  });
+  const draftMats = draft ? (draft.materiales || []).map(m => m.nombre) : [];
+  const stems = [...new Set(pvNorm(text + ' ' + draftMats.join(' ')).split(/[^a-z0-9]+/).filter(w => w.length >= 4).map(w => w.slice(0, 5)))];
+  const BASE = /cable unipolar|caja|termica|disyuntor|riel|bornera|puntera|terminal|precinto|tarugo|cinta|prensacable|cablecanal|jabalina|interruptor|toma/;
+  const scored = MATERIAL_CATALOG.map(m => {
+    const n = pvNorm(m.name + ' ' + m.cat);
+    let sc = 0; stems.forEach(st => { if (n.includes(st)) sc += 2; });
+    if (BASE.test(n)) sc += 1;
+    return { name: m.name, sc };
+  }).filter(x => x.sc > 0).sort((x, y) => y.sc - x.sc);
+  const ml = scored.slice(0, 160).map(x => x.name);
+  draftMats.forEach(n => { if (n && !ml.includes(n)) ml.push(n); });
+  return { tasks: tl, materials: ml };
+}
+
+function presuDraft() {
+  if (!presuIA) return null;
+  return {
+    cliente: presuIA.cliente || '',
+    tareas: presuIA.items.map(i => ({ id: i.task.id, cantidad: i.qty, nombre: i.task.name })),
+    mano_obra_libre: presuIA.libre.map(l => ({ descripcion: l.desc, monto: l.monto, cantidad: l.qty })),
+    materiales: presuIA.mats.map(m => ({ nombre: m.name, cantidad: m.qty })),
+  };
+}
+
+// Llama a la IA. draft = presupuesto actual a modificar (o null para armar uno nuevo)
+async function presuIACall(text, draft, btn, busyLabel, idleLabel) {
+  presuMicStop();
+  if (!navigator.onLine) { toast('Para usar la IA hace falta señal', true); return; }
   const out = document.getElementById('presu-ia-out');
-  btn.disabled = true; btn.textContent = '⏳ Armando presupuesto…';
-  out.innerHTML = '<div class="empty" style="padding:12px;">La IA está eligiendo tareas y materiales de tu catálogo (puede tardar hasta un minuto)…</div>';
+  btn.disabled = true; btn.textContent = busyLabel;
+  const prevHTML = out.innerHTML;
+  if (!draft) out.innerHTML = '<div class="empty" style="padding:12px;">La IA está armando la lista de materiales y la mano de obra (puede tardar hasta un minuto)…</div>';
   try {
-    const ctrl = new AbortController(); const to = setTimeout(() => ctrl.abort(), 120000);
+    const cat = presuCatalogs(text, draft);
+    const ctrl = new AbortController(); const to = setTimeout(() => ctrl.abort(), 140000);
     const res = await fetch(ING_URL, {
       method: 'POST', signal: ctrl.signal,
       headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
-      body: JSON.stringify({
-        mode: 'presupuesto', text,
-        tasks: tasks.filter(t => !t.custom).map(t => ({ id: t.id, cat: t.cat, name: t.name, price: t.price })),
-        materials: MATERIAL_CATALOG.map(m => m.name),
-      })
+      body: JSON.stringify({ mode: 'presupuesto', text, draft: draft || undefined, tasks: cat.tasks, materials: cat.materials })
     });
     clearTimeout(to);
     const data = await res.json().catch(() => ({}));
@@ -2958,7 +2988,7 @@ async function presuIAGenerar() {
     (p.tareas || []).forEach(x => {
       const t = tasks.find(tt => String(tt.id) === String(x.id));
       const qty = Math.max(1, Math.round(Number(x.cantidad) || 1));
-      if (!t) return; // tarea inexistente: se descarta
+      if (!t || t.custom) return; // tarea inexistente: se descarta
       const ex = items.find(i => i.task.id === t.id);
       if (ex) ex.qty += qty; else items.push({ task: t, qty, motivo: x.motivo || '' });
     });
@@ -2970,31 +3000,64 @@ async function presuIAGenerar() {
       const ex = mats.find(x => x.name.toLowerCase() === name.toLowerCase());
       if (ex) ex.qty += qty; else mats.push({ name, qty, fuera: !catNames.has(name) });
     });
-    const hayLibre = Array.isArray(p.mano_obra_libre) && p.mano_obra_libre.some(x => Number(x.monto) > 0);
-    if (!items.length && !mats.length && !hayLibre) throw new Error('La IA no encontró tareas ni materiales para ese texto. Probá describirlo con más detalle.');
     const libre = (Array.isArray(p.mano_obra_libre) ? p.mano_obra_libre : [])
       .map(x => ({ desc: String(x.descripcion || 'Mano de obra').trim(), monto: Math.round(Number(x.monto) || 0), qty: Math.max(1, Math.round(Number(x.cantidad) || 1)) }))
       .filter(x => x.monto > 0);
-    presuIA = { cliente: (p.cliente || '').trim(), resumen: p.resumen || '', items, mats, libre,
+    if (!items.length && !mats.length && !libre.length) throw new Error('La IA no encontró nada para cargar. Probá decirlo con más detalle.');
+    const keepClient = draft && draft.cliente;
+    presuIA = { cliente: keepClient ? draft.cliente : (p.cliente || '').trim(), resumen: p.resumen || (presuIA && presuIA.resumen) || '', items, mats, libre,
       supuestos: Array.isArray(p.supuestos) ? p.supuestos : [], preguntas: Array.isArray(p.preguntas) ? p.preguntas : [], model: data.model };
     renderPresuIA();
+    if (draft) toast('✅ Cambios aplicados');
   } catch (e) {
-    presuIA = null;
-    out.innerHTML = ingBad(e.name === 'AbortError' ? 'Tardó demasiado. Probá de nuevo.' : (e.message === 'Failed to fetch' ? 'No se pudo conectar. Revisá la señal.' : ingEsc(e.message)));
+    const msg = e.name === 'AbortError' ? 'Tardó demasiado. Probá de nuevo.' : (e.message === 'Failed to fetch' ? 'No se pudo conectar. Revisá la señal.' : e.message);
+    if (draft) { out.innerHTML = prevHTML; toast('⚠️ ' + msg, true); }
+    else { presuIA = null; out.innerHTML = ingBad(ingEsc(msg)); }
   }
-  btn.disabled = false; btn.textContent = '🤖 Armar presupuesto';
+  btn.disabled = false; btn.textContent = idleLabel;
+}
+
+function presuIAGenerar() {
+  const text = document.getElementById('presu-ia-text').value.trim();
+  if (!text) { toast('Dictá o escribí el trabajo primero', true); return; }
+  presuIACall(text, null, document.getElementById('presu-ia-btn'), '⏳ Armando presupuesto…', '🤖 Armar presupuesto');
+}
+function presuIAEditar() {
+  const ta = document.getElementById('presu-ia-edit');
+  const text = ta.value.trim();
+  if (!text) { toast('Decí qué querés cambiar o agregar', true); return; }
+  presuIACall(text, presuDraft(), document.getElementById('presu-edit-btn'), '⏳ Aplicando…', '✏️ Aplicar cambios');
+}
+
+// Trae lo que está cargado en el área de trabajo para modificarlo con la IA
+function presuIADesdeActual() {
+  if (!budget.length && !materials.length) { toast('No hay nada cargado en el área de trabajo', true); return; }
+  const items = [], libre = [];
+  budget.forEach(b => {
+    const t = tasks.find(x => x.id === b.taskId); if (!t) return;
+    if (t.custom) libre.push({ desc: t.name, monto: t.price, qty: b.qty });
+    else items.push({ task: t, qty: b.qty, motivo: '' });
+  });
+  const catNames = new Set(MATERIAL_CATALOG.map(m => m.name));
+  presuIA = { cliente: document.getElementById('client-name').value.trim(), resumen: 'Presupuesto cargado en el área de trabajo', items, libre,
+    mats: materials.map(m => ({ name: m.name, qty: m.qty || 1, fuera: !catNames.has(m.name) })), supuestos: [], preguntas: [], model: '' };
+  renderPresuIA();
+  setTimeout(() => { const el = document.getElementById('presu-ia-edit'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
 }
 
 // Dictado por voz continuo: vas hablando y el texto se va escribiendo.
-let presuRec = null, presuRecOn = false;
-function presuMic() {
+let presuRec = null, presuRecOn = false, presuRecBtn = null;
+function presuMicStop() { if (presuRecOn) { presuRecOn = false; try { presuRec.stop(); } catch (e) {} } }
+function presuMic(taId, btnId) {
+  taId = taId || 'presu-ia-text'; btnId = btnId || 'presu-mic';
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) { toast('Este navegador no permite dictado: usá el 🎤 del teclado', true); return; }
-  if (presuRecOn) { presuRecOn = false; try { presuRec.stop(); } catch (e) {} return; }
+  if (presuRecOn) { const same = presuRecBtn && presuRecBtn.id === btnId; presuMicStop(); if (same) return; }
   if (!navigator.onLine) toast('Sin señal el dictado puede no andar: probá el 🎤 del teclado', true);
-  const ta = document.getElementById('presu-ia-text');
-  const btn = document.getElementById('presu-mic');
-  presuRecOn = true;
+  const ta = document.getElementById(taId);
+  const btn = document.getElementById(btnId);
+  const idle = btn.textContent;
+  presuRecOn = true; presuRecBtn = btn;
   let base = ta.value ? ta.value.replace(/\s*$/, ' ') : '';
   const start = () => {
     presuRec = new SR(); presuRec.lang = 'es-AR'; presuRec.continuous = true; presuRec.interimResults = true;
@@ -3008,13 +3071,22 @@ function presuMic() {
       ta.value = base + interim;
     };
     presuRec.onerror = ev => { if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') { presuRecOn = false; toast('Permití el micrófono para dictar', true); } };
-    presuRec.onend = () => { if (presuRecOn) { try { start(); } catch (e) { presuRecOn = false; } } else { btn.textContent = '🎤 Dictar'; btn.classList.remove('rec-on'); ta.value = base.trim(); } };
+    presuRec.onend = () => {
+      if (presuRecOn && presuRecBtn === btn) { try { start(); } catch (e) { presuRecOn = false; } }
+      else { btn.textContent = idle.includes('Parar') ? '🎤 Dictar' : idle; btn.classList.remove('rec-on'); ta.value = base.trim(); }
+    };
     presuRec.start();
   };
   btn.textContent = '⏹ Parar'; btn.classList.add('rec-on');
-  try { start(); } catch (e) { presuRecOn = false; btn.textContent = '🎤 Dictar'; }
+  try { start(); } catch (e) { presuRecOn = false; btn.textContent = idle; btn.classList.remove('rec-on'); }
 }
 
+function presuAddMat() {
+  const el = document.getElementById('presu-add-mat'); const v = (el.value || '').trim(); if (!v || !presuIA) return;
+  const ex = presuIA.mats.find(m => m.name.toLowerCase() === v.toLowerCase());
+  if (ex) ex.qty++; else presuIA.mats.push({ name: v, qty: 1, fuera: !MATERIAL_CATALOG.some(m => m.name === v) });
+  renderPresuIA();
+}
 function renderPresuIA() {
   const out = document.getElementById('presu-ia-out');
   if (!presuIA) { out.innerHTML = ''; return; }
@@ -3058,14 +3130,25 @@ function renderPresuIA() {
       <div class="rmbtn" onclick="presuIA.mats.splice(${i},1);renderPresuIA()">✕</div>
     </div>`;
   });
+  h += `<div style="display:flex;gap:6px;margin-top:8px;">
+      <input class="cfg" id="presu-add-mat" style="margin:0;flex:1;" placeholder="Agregar material a mano…" onkeydown="if(event.key==='Enter')presuAddMat()"/>
+      <button class="btn-s" onclick="presuAddMat()">➕</button></div>`;
   h += `</div>`;
   if (p.supuestos.length) h += `<div class="ing-r ing-r-warn"><b>Supuestos de la IA:</b><ul style="margin:4px 0 0 18px;padding:0;">${p.supuestos.map(s => `<li>${ingEsc(s)}</li>`).join('')}</ul></div>`;
   if (p.preguntas.length) h += `<div class="ing-r ing-r-warn"><b>Datos que faltan:</b><ul style="margin:4px 0 0 18px;padding:0;">${p.preguntas.map(s => `<li>${ingEsc(s)}</li>`).join('')}</ul><div class="muted-s" style="margin-top:4px;">Agregalos al texto de arriba y volvé a tocar "Armar presupuesto".</div></div>`;
+  h += `<div class="presu-edit-box">
+      <div style="font-weight:700;margin-bottom:6px;">✏️ ¿Falta algo? Pedíselo</div>
+      <textarea id="presu-ia-edit" class="imp" style="min-height:64px;margin-bottom:8px;" placeholder="Ej: agregá 2 cajas estanco y un temporizador · sacá la jabalina · anotá 300 mil de mano de obra por el tablero"></textarea>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-s" id="presu-edit-mic" onclick="presuMic('presu-ia-edit','presu-edit-mic')">🎤 Dictar</button>
+        <button class="btn-p" style="flex:1;" id="presu-edit-btn" onclick="presuIAEditar()">✏️ Aplicar cambios</button>
+      </div>
+    </div>`;
   h += `<div style="display:flex;gap:8px;margin-top:10px;">
       <button class="btn-s" style="flex:1;" onclick="presuIACargar(false)">➕ Sumar al actual</button>
       <button class="btn-p" style="flex:1;" onclick="presuIACargar(true)">📋 Cargar como nuevo</button>
     </div>
-    <div class="ing-note">Revisá cantidades y tareas antes de mandarlo: la IA sugiere, el presupuesto lo decidís vos. Los precios son los de tu catálogo.</div>`;
+    <div class="ing-note">Revisá cantidades y tareas antes de mandarlo: la IA sugiere, el presupuesto lo decidís vos. Los precios son los de tu catálogo.${p.model ? ' · IA: ' + ingEsc(p.model) : ''}</div>`;
   out.innerHTML = h;
 }
 
