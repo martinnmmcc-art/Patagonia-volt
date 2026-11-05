@@ -1118,8 +1118,10 @@ function switchTab(tab) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + tab).classList.add('active');
-  const idx = ['tareas','presupuesto','materiales','visita','historial','config'].indexOf(tab);
-  document.querySelectorAll('.tab')[idx].classList.add('active');
+  const idx = ['tareas','presupuesto','materiales','visita','ingeniero','historial','config'].indexOf(tab);
+  const tabEl = document.querySelectorAll('.tab')[idx];
+  tabEl.classList.add('active');
+  try { tabEl.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); } catch (e) {}
 }
 
 // ══════════════════════════════════════════════════════════
@@ -2535,7 +2537,356 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+
+// ══════════════════════════════════════════════════════════
+//  🧑‍🔧 INGENIERO — asistente con IA (con señal) + calculadoras (sin señal)
+// ══════════════════════════════════════════════════════════
+// Con señal: consulta a la función "ingeniero" de Supabase (Gemini; la clave está en el servidor).
+// Sin señal: la pregunta queda guardada y se responde sola cuando vuelve la señal.
+// Las calculadoras funcionan siempre, sin internet.
+const ING_URL = SUPABASE_URL + '/functions/v1/ingeniero';
+let ingChat = [];          // [{id, role:'user'|'assistant', text, ts, pending?, error?, model?}]
+let ingBusy = false;
+let ingCtx = true;         // incluir datos del presupuesto / visita actual
+
+function ingLoad() {
+  try { ingChat = JSON.parse(ls('pv_ing_chat') || '[]'); } catch (e) { ingChat = []; }
+  const c = ls('pv_ing_ctx'); ingCtx = c === null ? true : c === '1';
+}
+function ingSave() {
+  if (ingChat.length > 80) ingChat = ingChat.slice(-80);
+  lsSetSilent('pv_ing_chat', JSON.stringify(ingChat)); // el chat queda solo en este celular
+}
+
+function ingEsc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+// Markdown simple: ### títulos, **negrita**, listas con - o 1.
+function ingMd(text) {
+  const lines = ingEsc(text).replace(/\$\$?([^$]+)\$\$?/g, '$1').split('\n');
+  let html = '', inList = false;
+  const inline = t => t.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<i>$2</i>').replace(/`([^`]+)`/g, '<code>$1</code>');
+  for (const raw of lines) {
+    const l = raw.trimEnd();
+    const li = l.match(/^\s*(?:[-*•]|\d+[.)])\s+(.*)$/);
+    if (li) { if (!inList) { html += '<ul>'; inList = true; } html += `<li>${inline(li[1])}</li>`; continue; }
+    if (inList) { html += '</ul>'; inList = false; }
+    const h = l.match(/^#{1,4}\s+(.*)$/);
+    if (h) { html += `<div class="ing-h">${inline(h[1])}</div>`; continue; }
+    if (!l.trim()) { html += '<div style="height:6px"></div>'; continue; }
+    html += `<div>${inline(l)}</div>`;
+  }
+  if (inList) html += '</ul>';
+  return html;
+}
+
+function ingStatus() {
+  const el = document.getElementById('ing-status'); if (!el) return;
+  const pend = ingChat.filter(m => m.pending).length;
+  el.innerHTML = navigator.onLine
+    ? `🟢 Con señal${pend ? ` · respondiendo ${pend} pendiente${pend>1?'s':''}…` : ''}`
+    : `🔴 Sin señal${pend ? ` · ${pend} pregunta${pend>1?'s':''} en espera` : ' · usá las calculadoras de abajo'}`;
+}
+
+function renderIngChat() {
+  const el = document.getElementById('ing-chat'); if (!el) return;
+  ingStatus();
+  document.getElementById('sw-ing-ctx').classList.toggle('on', ingCtx);
+  if (!ingChat.length) {
+    el.innerHTML = `<div class="empty" style="padding:14px 6px;">Preguntale lo que necesites: secciones de cable, protecciones, motores, mediciones, normas AEA…<br><br>Con "Incluir presupuesto y visita" activado, también revisa lo que tenés cargado.</div>`;
+    return;
+  }
+  el.innerHTML = ingChat.map(m => {
+    if (m.role === 'user') {
+      return `<div class="ing-msg ing-user">${ingEsc(m.text).replace(/\n/g,'<br>')}
+        ${m.pending ? `<div class="ing-meta">⏳ ${navigator.onLine ? 'Consultando…' : 'Sin señal: se responde cuando vuelva'}</div>` : ''}
+        ${m.error ? `<div class="ing-meta" style="color:var(--danger)">⚠️ ${ingEsc(m.error)} <span class="ing-retry" onclick="ingRetry('${m.id}')">Reintentar</span></div>` : ''}
+      </div>`;
+    }
+    return `<div class="ing-msg ing-bot">${ingMd(m.text)}
+      <div class="ing-meta">🧑‍🔧 Ingeniero · <span class="ing-retry" onclick="ingCopy('${m.id}')">Copiar</span></div></div>`;
+  }).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+function toggleIngCtx() {
+  ingCtx = !ingCtx; lsSetSilent('pv_ing_ctx', ingCtx ? '1' : '0');
+  document.getElementById('sw-ing-ctx').classList.toggle('on', ingCtx);
+}
+
+// Datos de la app para que el Ingeniero los revise
+function ingBuildContext() {
+  const parts = [];
+  const client = document.getElementById('client-name').value.trim();
+  if (budget.length || materials.length) {
+    let s = `PRESUPUESTO EN CURSO${client ? ' — cliente: ' + client : ''}`;
+    if (budget.length) {
+      s += '\nTareas de mano de obra:\n' + budget.map(b => {
+        const t = tasks.find(x => x.id === b.taskId);
+        return t ? `- ${t.name} (${t.cat}) × ${b.qty}` : '';
+      }).filter(Boolean).join('\n');
+    }
+    if (materials.length) s += '\nMateriales:\n' + materials.map(m => `- ${m.name} × ${m.qty || 1}`).join('\n');
+    parts.push(s);
+  }
+  const cid = activeClientId;
+  if (cid) {
+    const c = clients.find(x => x.id === cid);
+    const vs = visits.filter(v => v.clientId === cid).sort((a,b) => esDateKey(b.date) - esDateKey(a.date));
+    if (c && vs.length) {
+      const v = vs[0];
+      const med = v.mediciones || {};
+      const medTxt = MEDICION_FIELDS.filter(f => med[f.key] && med[f.key] !== '—')
+        .map(f => `- ${f.section} / ${f.label}: ${med[f.key]}${f.unit ? ' ' + f.unit : ''}`).join('\n');
+      let s = `ÚLTIMA VISITA — cliente ${c.nombre}, fecha ${v.date || ''}`;
+      if (v.motivo) s += `\nTrabajo hecho: ${v.motivo}`;
+      if (v.pendiente) s += `\nPendiente: ${v.pendiente}`;
+      if (medTxt) s += `\nMediciones:\n${medTxt}`;
+      if (med._libre) s += `\nMediciones (texto libre): ${med._libre}`;
+      const circ = circuitsToText(v.circuitos);
+      if (circ) s += `\nCircuitos: ${circ}`;
+      if (v.obs) s += `\nObservaciones: ${v.obs}`;
+      parts.push(s);
+    }
+  }
+  return parts.join('\n\n');
+}
+
+function ingSend(textArg) {
+  const inp = document.getElementById('ing-input');
+  const text = (textArg || inp.value).trim();
+  if (!text) return;
+  const ctx = ingCtx ? ingBuildContext() : '';
+  ingChat.push({ id: 'u' + Date.now(), role: 'user', text, ctx, ts: Date.now(), pending: true });
+  if (!textArg) inp.value = '';
+  ingSave(); renderIngChat();
+  ingProcessQueue();
+}
+function ingQuick(kind) {
+  if (kind === 'presu') {
+    if (!budget.length && !materials.length) { toast('No hay tareas ni materiales cargados', true); return; }
+    if (!ingCtx) toggleIngCtx();
+    ingSend('Revisá el presupuesto / lista de materiales que tengo cargado: ¿falta algo, hay protecciones o secciones mal elegidas, algo que no cumpla la AEA? Decime qué agregar o cambiar.');
+  } else if (kind === 'visita') {
+    if (!activeClientId) { toast('Abrí primero un cliente en 🧰 Visita', true); return; }
+    if (!ingCtx) toggleIngCtx();
+    ingSend('Revisá las mediciones de la última visita de este cliente: ¿qué está fuera de norma, qué es riesgoso y qué le recomiendo hacer?');
+  }
+}
+
+// Envía, en orden, las preguntas pendientes (también las que quedaron sin señal)
+async function ingProcessQueue() {
+  if (ingBusy || !navigator.onLine) { renderIngChat(); return; }
+  const idx = ingChat.findIndex(m => m.role === 'user' && m.pending);
+  if (idx < 0) return;
+  ingBusy = true;
+  const q = ingChat[idx];
+  // historial hasta esa pregunta (las respuestas con error no se mandan)
+  const hist = ingChat.slice(0, idx + 1).filter(m => !m.error || m === q).slice(-12)
+    .map(m => ({ role: m.role, text: m.text }));
+  try {
+    const ctrl = new AbortController(); const to = setTimeout(() => ctrl.abort(), 90000);
+    const res = await fetch(ING_URL, {
+      method: 'POST', signal: ctrl.signal,
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+      body: JSON.stringify({ messages: hist, context: q.ctx || '' })
+    });
+    clearTimeout(to);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.text) throw new Error(data.error || ('Error ' + res.status));
+    q.pending = false; delete q.error;
+    ingChat.splice(idx + 1, 0, { id: 'a' + Date.now(), role: 'assistant', text: data.text, ts: Date.now(), model: data.model });
+  } catch (e) {
+    if (!navigator.onLine) { ingBusy = false; ingSave(); renderIngChat(); return; } // sigue en espera
+    q.pending = false;
+    q.error = e.name === 'AbortError' ? 'Tardó demasiado' : (e.message === 'Failed to fetch' ? 'No se pudo conectar' : e.message);
+  }
+  ingBusy = false; ingSave(); renderIngChat();
+  ingProcessQueue(); // siguiente pendiente, si hay
+}
+function ingRetry(id) {
+  const m = ingChat.find(x => x.id === id); if (!m) return;
+  delete m.error; m.pending = true; ingSave(); renderIngChat(); ingProcessQueue();
+}
+function ingCopy(id) {
+  const m = ingChat.find(x => x.id === id); if (!m) return;
+  const t = m.text.replace(/\*\*/g, '').replace(/^#+\s*/gm, '');
+  (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast('📋 Copiado'), () => toast('No se pudo copiar', true));
+}
+function ingClear() {
+  if (!ingChat.length) return;
+  if (!confirm('¿Borrar toda la conversación con el Ingeniero?')) return;
+  ingChat = []; ingSave(); renderIngChat();
+}
+
+// Dictado por voz (si el celular lo permite)
+let ingRec = null;
+function ingMic() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { toast('Este navegador no permite dictado; usá el micrófono del teclado', true); return; }
+  if (ingRec) { ingRec.stop(); return; }
+  ingRec = new SR(); ingRec.lang = 'es-AR'; ingRec.interimResults = false;
+  const btn = document.getElementById('ing-mic'); btn.textContent = '⏺';
+  ingRec.onresult = e => { const inp = document.getElementById('ing-input'); inp.value = (inp.value ? inp.value + ' ' : '') + e.results[0][0].transcript; };
+  ingRec.onerror = () => toast('No se pudo usar el micrófono', true);
+  ingRec.onend = () => { ingRec = null; btn.textContent = '🎤'; };
+  ingRec.start();
+}
+
+// ── CALCULADORAS (sin señal) ──────────────────────────────
+// Corrientes admisibles de referencia: IEC 60364-5-52, cobre, aislación PVC (70 °C), en caño
+// (método B2), 30 °C ambiente. Verificar con la tabla de la AEA 90364 / dato del fabricante.
+const ING_SECC = [1.5, 2.5, 4, 6, 10, 16, 25, 35, 50, 70, 95];
+const ING_IZ2  = [16.5, 23, 30, 38, 52, 69, 90, 111, 133, 168, 201]; // 2 conductores cargados (monofásico)
+const ING_IZ3  = [15, 20, 27, 34, 46, 62, 80, 99, 118, 149, 179];    // 3 conductores cargados (trifásico)
+const ING_IN   = [6, 10, 16, 20, 25, 32, 40, 50, 63, 80, 100, 125];
+const ING_RHO  = 0.0225; // Ω·mm²/m cobre a temperatura de servicio (~70 °C)
+
+const ingN = id => { const v = parseFloat(String(document.getElementById(id).value).replace(',', '.')); return isNaN(v) ? null : v; };
+const ingF = (n, d = 1) => Number(n).toLocaleString('es-AR', { maximumFractionDigits: d, minimumFractionDigits: d });
+const ingOk  = t => `<div class="ing-r ing-r-ok">✅ ${t}</div>`;
+const ingBad = t => `<div class="ing-r ing-r-bad">❌ ${t}</div>`;
+const ingWarn= t => `<div class="ing-r ing-r-warn">⚠️ ${t}</div>`;
+
+function ingCalcType() {
+  const t = document.getElementById('ing-calc-type').value;
+  document.querySelectorAll('.ing-calc').forEach(el => el.style.display = el.id === 'ing-calc-' + t ? 'block' : 'none');
+}
+
+function ingCalcCable() {
+  const out = document.getElementById('ing-out-cable');
+  const tri = document.getElementById('ic-sis').value === 'tri';
+  const V = tri ? 380 : 220;
+  const cos = ingN('ic-cos') || 0.9;
+  const P = ingN('ic-p'), Iin = ingN('ic-i'), L = ingN('ic-l');
+  const dvMax = ingN('ic-dv') || 3;
+  const sMin = parseFloat(document.getElementById('ic-smin').value);
+  if ((!P && !Iin) || !L) { out.innerHTML = ingWarn('Cargá la potencia (o la corriente) y la longitud.'); return; }
+  const Ib = Iin || (tri ? P / (Math.sqrt(3) * V * cos) : P / (V * cos));
+  const In = ING_IN.find(x => x >= Ib);
+  if (!In) { out.innerHTML = ingBad('Corriente muy alta para esta calculadora (> 125 A). Consultá al Ingeniero.'); return; }
+  const k = tri ? Math.sqrt(3) : 2;
+  const IZ = tri ? ING_IZ3 : ING_IZ2;
+  let pick = null;
+  for (let i = 0; i < ING_SECC.length; i++) {
+    const S = ING_SECC[i];
+    if (S < sMin) continue;
+    const dv = k * L * Ib * ING_RHO * cos / S;
+    const pct = dv / V * 100;
+    if (IZ[i] >= In && pct <= dvMax) { pick = { S, Iz: IZ[i], dv, pct }; break; }
+  }
+  const fIb = tri ? `Ib = P / (√3 × ${V} × ${ingF(cos,2)})` : `Ib = P / (${V} × ${ingF(cos,2)})`;
+  let h = `<div class="ing-calc-res">
+    <div><b>Corriente de empleo:</b> ${ingF(Ib)} A <span class="muted-s">${Iin ? '(dato)' : fIb}</span></div>
+    <div><b>Térmica:</b> ${tri ? 'tetrapolar/tripolar' : 'bipolar'} <b>${In} A</b> curva C</div>`;
+  if (!pick) {
+    h += `</div>` + ingBad(`Ninguna sección hasta 95 mm² cumple ${ingF(dvMax)}% de caída en ${L} m. Acortá el recorrido o consultá al Ingeniero.`);
+  } else {
+    h += `<div><b>Cable:</b> <b>${ingF(pick.S, pick.S % 1 ? 1 : 0)} mm²</b> cobre (admite ≈ ${ingF(pick.Iz, pick.Iz % 1 ? 1 : 0)} A en caño)</div>
+      <div><b>Caída de tensión:</b> ${ingF(pick.dv)} V = ${ingF(pick.pct, 2)}% <span class="muted-s">(ΔV = ${tri ? '√3' : '2'} × L × I × ρ × cos φ / S)</span></div></div>`;
+    h += ingOk(`Se cumple: Ib ${ingF(Ib)} A ≤ In ${In} A ≤ Iz ${ingF(pick.Iz, pick.Iz % 1 ? 1 : 0)} A y caída ≤ ${ingF(dvMax)}%`);
+    if (pick.S > sMin && ING_IZ2[ING_SECC.indexOf(sMin)] && (tri ? ING_IZ3 : ING_IZ2)[ING_SECC.indexOf(sMin)] >= In)
+      h += ingWarn(`Por corriente alcanzaba ${ingF(sMin, sMin % 1 ? 1 : 0)} mm², se sube la sección por la caída de tensión del recorrido.`);
+  }
+  h += `<div class="ing-note">Agregá diferencial 30 mA. Valores de referencia (IEC 60364-5-52, PVC, en caño, 30 °C): verificá con la AEA 90364 y el fabricante.</div>`;
+  out.innerHTML = h;
+}
+
+function ingCalcMotor() {
+  const out = document.getElementById('ing-out-motor');
+  let P = ingN('im-p'); const unit = document.getElementById('im-unit').value;
+  const tri = document.getElementById('im-sis').value === 'tri';
+  const cos = ingN('im-cos') || 0.85, eta = (ingN('im-eta') || 85) / 100;
+  if (!P) { out.innerHTML = ingWarn('Cargá la potencia del motor (de la chapa).'); return; }
+  const kW = unit === 'hp' ? P * 0.746 : P;
+  const V = tri ? 380 : 220;
+  const In = tri ? kW * 1000 / (Math.sqrt(3) * V * cos * eta) : kW * 1000 / (V * cos * eta);
+  const prot = ING_IN.find(x => x >= In * 1.25) || '>125';
+  out.innerHTML = `<div class="ing-calc-res">
+    <div><b>Potencia:</b> ${ingF(kW, 2)} kW${unit === 'hp' ? ` (${ingF(P,1)} HP)` : ''}</div>
+    <div><b>Corriente nominal:</b> <b>${ingF(In)} A</b> <span class="muted-s">In = P / (${tri ? '√3 × ' : ''}${V} × ${ingF(cos,2)} × ${ingF(eta,2)})</span></div>
+    <div><b>Arranque directo:</b> ≈ ${ingF(In * 6, 0)} a ${ingF(In * 8, 0)} A (6 a 8 × In)</div>
+    <div><b>Guardamotor:</b> rango que incluya ${ingF(In)} A, regulado en la corriente de chapa</div>
+    <div><b>Térmica de línea:</b> ${prot} A curva D (o C si tiene arranque suave/variador)</div>
+    <div><b>Contactor:</b> AC-3 con corriente nominal ≥ ${ingF(In)} A</div></div>
+    <div class="ing-note">Usá siempre la corriente de la chapa del motor si la tenés. Valores típicos: cos φ 0,8–0,85 y rendimiento 80–90%.</div>`;
+}
+
+function ingCalcMed() {
+  const out = document.getElementById('ing-out-med');
+  let h = '';
+  const vfn = ingN('iq-vfn');
+  if (vfn !== null) {
+    if (vfn >= 209 && vfn <= 231) h += ingOk(`Tensión F-N ${ingF(vfn,0)} V: normal (220 V ±5%).`);
+    else if (vfn >= 198 && vfn <= 242) h += ingWarn(`Tensión F-N ${ingF(vfn,0)} V: aceptable pero fuera de ±5%. Medí en otro horario o reclamá a la distribuidora si persiste.`);
+    else h += ingBad(`Tensión F-N ${ingF(vfn,0)} V: fuera de rango (±10%). Riesgo para equipos: reclamo a la distribuidora.`);
+  }
+  const vnp = ingN('iq-vnp');
+  if (vnp !== null) {
+    if (vnp <= 2) h += ingOk(`Tensión N-PAT ${ingF(vnp)} V: bien.`);
+    else if (vnp <= 5) h += ingWarn(`Tensión N-PAT ${ingF(vnp)} V: algo alta. Revisá ajustes de neutro, desequilibrio de cargas o la puesta a tierra.`);
+    else h += ingBad(`Tensión N-PAT ${ingF(vnp)} V: alta. Posible neutro cortado/flojo o PAT deficiente: revisar urgente.`);
+  }
+  const rpat = ingN('iq-pat');
+  if (rpat !== null) {
+    if (rpat <= 10) h += ingOk(`Puesta a tierra ${ingF(rpat)} Ω: muy buena.`);
+    else if (rpat <= 40) h += ingWarn(`Puesta a tierra ${ingF(rpat)} Ω: dentro del máximo de 40 Ω de la AEA, pero conviene bajarla (otra jabalina, mejorar el terreno).`);
+    else h += ingBad(`Puesta a tierra ${ingF(rpat)} Ω: supera los 40 Ω. Agregar jabalinas en paralelo o mejorar el terreno.`);
+  }
+  const ais = ingN('iq-ais');
+  if (ais !== null) {
+    if (ais >= 1) h += ingOk(`Aislación ${ingF(ais, 2)} MΩ: cumple (mínimo 1 MΩ a 500 V cc en circuitos de 220/380 V).`);
+    else if (ais >= 0.5) h += ingWarn(`Aislación ${ingF(ais, 2)} MΩ: baja. Buscá humedad o cable dañado; separá circuitos para encontrar el que baja el valor.`);
+    else h += ingBad(`Aislación ${ingF(ais, 2)} MΩ: muy baja, riesgo de fuga y de disparos. Hay que encontrar la falla antes de energizar.`);
+  }
+  const prueba = document.getElementById('iq-dprueba').value, td = ingN('iq-dt');
+  if (prueba === 'medio') {
+    const disp = document.getElementById('iq-dmedio').value;
+    if (disp === 'no') h += ingOk('Diferencial a ½ IΔn: no disparó, correcto.');
+    else if (disp === 'si') h += ingBad('Diferencial a ½ IΔn: disparó. Está demasiado sensible o hay fugas en la instalación: medí con todo desconectado.');
+  } else if (td !== null) {
+    const lim = prueba === 'cinco' ? 40 : 300;
+    const lbl = prueba === 'cinco' ? '5 × IΔn' : '1 × IΔn';
+    if (td <= lim) h += ingOk(`Diferencial a ${lbl}: ${ingF(td,0)} ms (máximo ${lim} ms). Correcto.`);
+    else h += ingBad(`Diferencial a ${lbl}: ${ingF(td,0)} ms, supera ${lim} ms. Reemplazarlo.`);
+  }
+  out.innerHTML = h || ingWarn('Cargá al menos una medición.');
+  if (h) out.innerHTML += `<div class="ing-note">Criterios de referencia (AEA 90364 / IEC 61008). Ante dudas, preguntale al Ingeniero con la visita incluida.</div>`;
+}
+
+// Trae las mediciones de la última visita del cliente abierto
+function ingFillFromVisit() {
+  if (!activeClientId) { toast('Abrí primero un cliente en 🧰 Visita', true); return; }
+  const vs = visits.filter(v => v.clientId === activeClientId).sort((a,b) => esDateKey(b.date) - esDateKey(a.date));
+  if (!vs.length) { toast('Ese cliente no tiene visitas', true); return; }
+  const m = vs[0].mediciones || {};
+  const num = x => { const n = parseFloat(String(x || '').replace(',', '.')); return isNaN(n) ? '' : n; };
+  document.getElementById('iq-vfn').value = num(m.tensionF1N);
+  document.getElementById('iq-vnp').value = num(m.tensionNPAT);
+  document.getElementById('iq-ais').value = num(m.megado);
+  document.getElementById('iq-dt').value  = num(m.difTiempo);
+  const c = m.difCurva || '';
+  document.getElementById('iq-dprueba').value = c.startsWith('½') ? 'medio' : c.startsWith('5') ? 'cinco' : 'uno';
+  ingCalcMedPrueba();
+  toast('Mediciones cargadas de la visita del ' + (vs[0].date || ''));
+  ingCalcMed();
+}
+function ingCalcMedPrueba() {
+  const medio = document.getElementById('iq-dprueba').value === 'medio';
+  document.getElementById('iq-dt-wrap').style.display = medio ? 'none' : 'block';
+  document.getElementById('iq-dmedio-wrap').style.display = medio ? 'block' : 'none';
+}
+
+function ingInit() {
+  ingLoad();
+  renderIngChat();
+  ingCalcType();
+  window.addEventListener('online',  () => { ingStatus(); ingProcessQueue(); });
+  window.addEventListener('offline', () => renderIngChat());
+  // si quedaron preguntas "consultando" de una sesión anterior, se vuelven a mandar
+  setTimeout(ingProcessQueue, 1500);
+}
+
 // ══════════════════════════════════════════════════════════
 //  BOOT
 // ══════════════════════════════════════════════════════════
 init();
+ingInit();

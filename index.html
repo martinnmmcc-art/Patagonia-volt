@@ -56,6 +56,7 @@
   <div class="tab" onclick="switchTab('presupuesto')">📋 Presupuesto</div>
   <div class="tab" onclick="switchTab('materiales')">🔧 Materiales</div>
   <div class="tab" onclick="switchTab('visita')">🧰 Visita</div>
+  <div class="tab" onclick="switchTab('ingeniero')">🧑‍🔧 Ingeniero</div>
   <div class="tab" onclick="switchTab('historial')">🗂 Historial</div>
   <div class="tab" onclick="switchTab('config')">⚙️ Config</div>
 </nav>
@@ -236,6 +237,95 @@
 </div>
 
 <!-- PAGE: HISTORIAL -->
+<div class="page" id="page-ingeniero">
+  <div class="card">
+    <div class="card-title">🧑‍🔧 Ingeniero (IA)</div>
+    <div id="ing-status" class="ing-status"></div>
+    <div id="ing-chat" class="ing-chat"></div>
+    <div class="sw-row" style="margin-top:8px;">
+      <span class="sw-lbl">📎 Incluir presupuesto y visita actual</span>
+      <div class="switch" id="sw-ing-ctx" onclick="toggleIngCtx()"></div>
+    </div>
+    <div class="ing-quick">
+      <button class="btn-s" onclick="ingQuick('presu')">🔍 Revisar presupuesto</button>
+      <button class="btn-s" onclick="ingQuick('visita')">📏 Revisar mediciones</button>
+    </div>
+    <textarea id="ing-input" class="imp" style="min-height:80px;" placeholder="Ej: ¿Qué sección y térmica para un termotanque de 2000 W a 25 m?"></textarea>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-s" id="ing-mic" onclick="ingMic()" title="Dictar">🎤</button>
+      <button class="btn-p" style="flex:1;" onclick="ingSend()">Preguntar</button>
+      <button class="btn-s" onclick="ingClear()" title="Borrar conversación">🗑</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🧮 Calculadoras (funcionan sin señal)</div>
+    <select class="cfg" id="ing-calc-type" onchange="ingCalcType()">
+      <option value="cable">Sección de cable y térmica</option>
+      <option value="motor">Corriente de motor</option>
+      <option value="med">Verificar mediciones</option>
+    </select>
+
+    <div class="ing-calc" id="ing-calc-cable">
+      <div class="cfg-lbl">Sistema</div>
+      <select class="cfg" id="ic-sis"><option value="mono">Monofásico 220 V</option><option value="tri">Trifásico 380 V</option></select>
+      <div class="ing-2">
+        <div><div class="cfg-lbl">Potencia (W)</div><input class="cfg" id="ic-p" type="number" inputmode="decimal" placeholder="Ej: 3500"/></div>
+        <div><div class="cfg-lbl">o Corriente (A)</div><input class="cfg" id="ic-i" type="number" inputmode="decimal" placeholder="opcional"/></div>
+      </div>
+      <div class="ing-2">
+        <div><div class="cfg-lbl">Longitud (m)</div><input class="cfg" id="ic-l" type="number" inputmode="decimal" placeholder="Ej: 30"/></div>
+        <div><div class="cfg-lbl">cos φ</div><input class="cfg" id="ic-cos" type="number" inputmode="decimal" value="0.9" step="0.05"/></div>
+      </div>
+      <div class="ing-2">
+        <div><div class="cfg-lbl">Caída máx. (%)</div><input class="cfg" id="ic-dv" type="number" inputmode="decimal" value="3"/></div>
+        <div><div class="cfg-lbl">Sección mínima</div>
+          <select class="cfg" id="ic-smin"><option value="1.5">1,5 mm² (iluminación)</option><option value="2.5" selected>2,5 mm² (tomas)</option><option value="4">4 mm²</option><option value="6">6 mm²</option></select></div>
+      </div>
+      <button class="btn-p btn-full" onclick="ingCalcCable()">Calcular</button>
+      <div id="ing-out-cable"></div>
+    </div>
+
+    <div class="ing-calc" id="ing-calc-motor">
+      <div class="cfg-lbl">Sistema</div>
+      <select class="cfg" id="im-sis"><option value="tri">Trifásico 380 V</option><option value="mono">Monofásico 220 V</option></select>
+      <div class="ing-2">
+        <div><div class="cfg-lbl">Potencia</div><input class="cfg" id="im-p" type="number" inputmode="decimal" placeholder="Ej: 1.5"/></div>
+        <div><div class="cfg-lbl">Unidad</div><select class="cfg" id="im-unit"><option value="kw">kW</option><option value="hp">HP</option></select></div>
+      </div>
+      <div class="ing-2">
+        <div><div class="cfg-lbl">cos φ</div><input class="cfg" id="im-cos" type="number" inputmode="decimal" value="0.85" step="0.05"/></div>
+        <div><div class="cfg-lbl">Rendimiento (%)</div><input class="cfg" id="im-eta" type="number" inputmode="decimal" value="85"/></div>
+      </div>
+      <button class="btn-p btn-full" onclick="ingCalcMotor()">Calcular</button>
+      <div id="ing-out-motor"></div>
+    </div>
+
+    <div class="ing-calc" id="ing-calc-med">
+      <button class="btn-s btn-full" style="margin-bottom:10px;" onclick="ingFillFromVisit()">📥 Traer de la última visita del cliente abierto</button>
+      <div class="ing-2">
+        <div><div class="cfg-lbl">Tensión F-N (V)</div><input class="cfg" id="iq-vfn" type="number" inputmode="decimal"/></div>
+        <div><div class="cfg-lbl">Tensión N-PAT (V)</div><input class="cfg" id="iq-vnp" type="number" inputmode="decimal"/></div>
+      </div>
+      <div class="ing-2">
+        <div><div class="cfg-lbl">Puesta a tierra (Ω)</div><input class="cfg" id="iq-pat" type="number" inputmode="decimal"/></div>
+        <div><div class="cfg-lbl">Aislación (MΩ)</div><input class="cfg" id="iq-ais" type="number" inputmode="decimal"/></div>
+      </div>
+      <div class="cfg-lbl">Prueba del diferencial</div>
+      <select class="cfg" id="iq-dprueba" onchange="ingCalcMedPrueba()">
+        <option value="uno">1 × IΔn (tiempo de disparo)</option>
+        <option value="cinco">5 × IΔn (tiempo de disparo)</option>
+        <option value="medio">½ IΔn (no debe disparar)</option>
+      </select>
+      <div id="iq-dt-wrap"><div class="cfg-lbl">Tiempo de disparo (ms)</div><input class="cfg" id="iq-dt" type="number" inputmode="decimal"/></div>
+      <div id="iq-dmedio-wrap" style="display:none;"><div class="cfg-lbl">¿Disparó?</div>
+        <select class="cfg" id="iq-dmedio"><option value="">—</option><option value="no">No disparó</option><option value="si">Disparó</option></select></div>
+      <button class="btn-p btn-full" onclick="ingCalcMed()">Verificar</button>
+      <div id="ing-out-med"></div>
+    </div>
+  </div>
+</div>
+
 <div class="page" id="page-historial">
   <div class="sync-bar">
     <span><span class="sync-dot" id="sync-dot"></span><span id="sync-text">Conectando con la nube…</span></span>
