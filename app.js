@@ -2765,19 +2765,8 @@ function ingClear() {
   ingChat = []; ingSave(); renderIngChat();
 }
 
-// Dictado por voz (si el celular lo permite)
-let ingRec = null;
-function ingMic() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { toast('Este navegador no permite dictado; usá el micrófono del teclado', true); return; }
-  if (ingRec) { ingRec.stop(); return; }
-  ingRec = new SR(); ingRec.lang = 'es-AR'; ingRec.interimResults = false;
-  const btn = document.getElementById('ing-mic'); btn.textContent = '⏺';
-  ingRec.onresult = e => { const inp = document.getElementById('ing-input'); inp.value = (inp.value ? inp.value + ' ' : '') + e.results[0][0].transcript; };
-  ingRec.onerror = () => toast('No se pudo usar el micrófono', true);
-  ingRec.onend = () => { ingRec = null; btn.textContent = '🎤'; };
-  ingRec.start();
-}
+// Dictado del chat: mismo sistema que el presupuesto (graba y transcribe con IA)
+function ingMic() { presuMic('ing-input', 'ing-mic'); }
 
 // ── CALCULADORAS (sin señal) ──────────────────────────────
 // Corrientes admisibles de referencia: IEC 60364-5-52, cobre, aislación PVC (70 °C), en caño
@@ -2966,7 +2955,7 @@ function presuDraft() {
 
 // Llama a la IA. draft = presupuesto actual a modificar (o null para armar uno nuevo)
 async function presuIACall(text, draft, btn, busyLabel, idleLabel) {
-  presuMicStop();
+  if (vozRec && vozRec.state === 'recording') { toast('Primero tocá ⏹ Terminar en el dictado', true); return; }
   if (!navigator.onLine) { toast('Para usar la IA hace falta señal', true); return; }
   const out = document.getElementById('presu-ia-out');
   btn.disabled = true; btn.textContent = busyLabel;
@@ -3045,40 +3034,102 @@ function presuIADesdeActual() {
   setTimeout(() => { const el = document.getElementById('presu-ia-edit'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
 }
 
-// Dictado por voz continuo: vas hablando y el texto se va escribiendo.
-let presuRec = null, presuRecOn = false, presuRecBtn = null;
-function presuMicStop() { if (presuRecOn) { presuRecOn = false; try { presuRec.stop(); } catch (e) {} } }
-function presuMic(taId, btnId) {
+// ── DICTADO: graba el audio y lo transcribe con IA (Whisper) ──
+// Reemplaza al dictado de Chrome, que en Android repetía las frases ("armame armame un…").
+// El micrófono se abre con cancelación de ruido y eco del celular; la IA de transcripción
+// prioriza la voz más cercana y la IA del presupuesto descarta lo que no tiene que ver.
+let vozRec = null, vozChunks = [], vozStream = null, vozTimer = null, vozT0 = 0, vozBtn = null, vozIdle = '', vozTa = null;
+const VOZ_MAX_S = 180;
+
+function presuMicStop() { if (vozRec && vozRec.state === 'recording') vozRec.stop(); }
+
+function vozMime() {
+  const opts = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'];
+  for (const m of opts) { try { if (window.MediaRecorder && MediaRecorder.isTypeSupported(m)) return m; } catch (e) {} }
+  return '';
+}
+
+async function presuMic(taId, btnId) {
   taId = taId || 'presu-ia-text'; btnId = btnId || 'presu-mic';
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { toast('Este navegador no permite dictado: usá el 🎤 del teclado', true); return; }
-  if (presuRecOn) { const same = presuRecBtn && presuRecBtn.id === btnId; presuMicStop(); if (same) return; }
-  if (!navigator.onLine) toast('Sin señal el dictado puede no andar: probá el 🎤 del teclado', true);
-  const ta = document.getElementById(taId);
-  const btn = document.getElementById(btnId);
-  const idle = btn.textContent;
-  presuRecOn = true; presuRecBtn = btn;
-  let base = ta.value ? ta.value.replace(/\s*$/, ' ') : '';
-  const start = () => {
-    presuRec = new SR(); presuRec.lang = 'es-AR'; presuRec.continuous = true; presuRec.interimResults = true;
-    presuRec.onresult = e => {
-      let fin = '', interim = '';
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const tr = e.results[i][0].transcript;
-        if (e.results[i].isFinal) fin += tr + ' '; else interim += tr;
-      }
-      if (fin) base += fin;
-      ta.value = base + interim;
-    };
-    presuRec.onerror = ev => { if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') { presuRecOn = false; toast('Permití el micrófono para dictar', true); } };
-    presuRec.onend = () => {
-      if (presuRecOn && presuRecBtn === btn) { try { start(); } catch (e) { presuRecOn = false; } }
-      else { btn.textContent = idle.includes('Parar') ? '🎤 Dictar' : idle; btn.classList.remove('rec-on'); ta.value = base.trim(); }
-    };
-    presuRec.start();
+  // Si ya está grabando: tocar de nuevo = terminar
+  if (vozRec && vozRec.state === 'recording') { vozRec.stop(); return; }
+  if (!navigator.onLine) { toast('Sin señal no se puede transcribir: usá el 🎤 del teclado', true); return; }
+  if (!navigator.mediaDevices || !window.MediaRecorder) { toast('Este navegador no permite grabar: usá el 🎤 del teclado', true); return; }
+  vozTa = document.getElementById(taId); vozBtn = document.getElementById(btnId); vozIdle = vozBtn.textContent;
+  try {
+    vozStream = await navigator.mediaDevices.getUserMedia({ audio: {
+      echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 } });
+  } catch (e) { toast('Permití el micrófono para dictar', true); return; }
+  const mime = vozMime();
+  vozChunks = [];
+  try { vozRec = new MediaRecorder(vozStream, mime ? { mimeType: mime, audioBitsPerSecond: 24000 } : undefined); }
+  catch (e) { vozRec = new MediaRecorder(vozStream); }
+  vozRec.ondataavailable = e => { if (e.data && e.data.size) vozChunks.push(e.data); };
+  vozRec.onstop = vozProcesar;
+  vozRec.start(1000);
+  vozT0 = Date.now();
+  vozBtn.classList.add('rec-on');
+  const tick = () => {
+    const s = Math.floor((Date.now() - vozT0) / 1000);
+    vozBtn.textContent = `⏹ Terminar ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    if (s >= VOZ_MAX_S) presuMicStop();
   };
-  btn.textContent = '⏹ Parar'; btn.classList.add('rec-on');
-  try { start(); } catch (e) { presuRecOn = false; btn.textContent = idle; btn.classList.remove('rec-on'); }
+  tick(); vozTimer = setInterval(tick, 500);
+}
+
+async function vozProcesar() {
+  clearInterval(vozTimer);
+  try { vozStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+  const btn = vozBtn, ta = vozTa, idle = vozIdle;
+  const type = (vozRec && vozRec.mimeType) || 'audio/webm';
+  const blob = new Blob(vozChunks, { type });
+  vozRec = null; vozChunks = [];
+  if (blob.size < 2000) { btn.classList.remove('rec-on'); btn.textContent = idle; toast('No se escuchó nada', true); return; }
+  btn.textContent = '⏳ Pasando a texto…'; btn.disabled = true;
+  try {
+    const b64 = await new Promise((res, rej) => {
+      const fr = new FileReader();
+      fr.onload = () => res(String(fr.result).split(',')[1] || '');
+      fr.onerror = rej; fr.readAsDataURL(blob);
+    });
+    const ctrl = new AbortController(); const to = setTimeout(() => ctrl.abort(), 90000);
+    const r = await fetch(ING_URL, {
+      method: 'POST', signal: ctrl.signal,
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+      body: JSON.stringify({ mode: 'transcribir', audio: b64, mime: type })
+    });
+    clearTimeout(to);
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.text) throw new Error(d.error || ('Error ' + r.status));
+    const txt = limpiarDictado(d.text);
+    // Frases que Whisper inventa cuando no hay voz clara
+    const fantasma = /^(¡?gracias!?\.?|gracias por ver( el video)?\.?|subt[ií]tulos.*|amara\.org.*|suscr[ií]bete.*|\.+|…)$/i;
+    if (!txt || fantasma.test(txt.trim())) throw new Error('No se entendió la voz. Hablá más cerca del celular y probá de nuevo.');
+    ta.value = (ta.value.trim() ? ta.value.trim() + ' ' : '') + txt;
+    toast('✅ Listo: revisá el texto y tocá el botón para seguir');
+  } catch (e) {
+    toast('⚠️ ' + (e.name === 'AbortError' ? 'Tardó demasiado' : e.message === 'Failed to fetch' ? 'Sin conexión' : e.message), true);
+  }
+  btn.disabled = false; btn.classList.remove('rec-on'); btn.textContent = idle;
+}
+
+// Por las dudas: saca repeticiones tipo "armame armame un armame un presupuesto"
+function limpiarDictado(t) {
+  let s = String(t || '').replace(/\s+/g, ' ').trim();
+  // palabras repetidas seguidas: "y y y" -> "y"
+  s = s.replace(/\b(\p{L}+)(\s+\1\b)+/giu, '$1');
+  // frases que se repiten creciendo: "A, A B, A B C" -> "A B C"
+  const w = s.split(' ');
+  const out = [];
+  for (let i = 0; i < w.length; i++) {
+    out.push(w[i]);
+    // si las últimas n palabras de out repiten las n anteriores, se borran
+    for (let n = Math.min(12, Math.floor(out.length / 2)); n >= 2; n--) {
+      const a = out.slice(-n).join(' ').toLowerCase(), b = out.slice(-2 * n, -n).join(' ').toLowerCase();
+      if (a === b) { out.splice(out.length - n, n); break; }
+    }
+  }
+  return out.join(' ');
 }
 
 function presuAddMat() {
