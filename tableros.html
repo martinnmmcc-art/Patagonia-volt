@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#0e1512">
+<title>Tableros · Patagonia Volt</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e1512;--surface:#16211c;--s2:#1c2b23;--border:#2e4038;--accent:#f5c518;--on-accent:#0e1512;
+  --text:#f0ede4;--muted:#9a9e8e;--danger:#e0654f;--danger-bg:#3a1f1a;--green:#5a8f6b;--ok-bg:#1a3a28;--warn:#e8a33d;--warn-bg:#3a2d17;--r:12px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font-size:15px}
+body{min-height:100vh;padding-bottom:110px}
+button{font-family:inherit;cursor:pointer}
+header{background:var(--surface);border-bottom:2px solid var(--accent);padding:10px 14px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:50}
+.brand{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:19px;letter-spacing:1px;color:var(--accent);line-height:1}
+.sub{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
+.hbtn{background:var(--s2);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:8px;font-size:12px;white-space:nowrap;text-decoration:none}
+.boardbar{background:var(--s2);border-bottom:1px solid var(--border);padding:8px 14px;display:flex;gap:6px;align-items:center}
+.boardbar select{flex:1;min-width:0}
+nav.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;position:sticky;top:60px;z-index:40}
+.tab{flex:1;text-align:center;padding:11px 8px;font-size:13px;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;white-space:nowrap;cursor:pointer;user-select:none}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+main{padding:12px;max-width:980px;margin:0 auto}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:12px}
+.card h3{font-family:'Barlow Condensed',sans-serif;font-size:17px;letter-spacing:.5px;margin-bottom:8px;color:var(--accent)}
+label.f{display:block;font-size:11px;color:var(--muted);margin:8px 0 3px;text-transform:uppercase;letter-spacing:.8px}
+input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 10px;font-size:15px;font-family:inherit}
+textarea{min-height:60px;resize:vertical}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.btn-p{background:var(--accent);color:var(--on-accent);border:none;border-radius:10px;padding:12px 14px;font-weight:700;font-size:15px}
+.btn-s{background:var(--s2);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:11px 12px;font-size:14px}
+.btn-d{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger);border-radius:10px;padding:11px 12px;font-size:14px}
+.btn-full{width:100%}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btns>*{flex:1}
+details.card summary{cursor:pointer;font-weight:600;list-style:none}
+details.card summary::after{content:' ▾';color:var(--muted)}
+.panelwrap{background:#0b100e;border:1px solid var(--border);border-radius:var(--r);padding:8px;overflow-x:auto;text-align:center}
+.panelwrap svg{max-width:100%;height:auto}
+.hint{font-size:12px;color:var(--muted);margin-top:6px}
+.tree .it{display:flex;align-items:center;gap:8px;padding:9px 6px;border-bottom:1px solid var(--border)}
+.tree .it:last-child{border-bottom:none}
+.tree .num{width:24px;height:24px;border-radius:50%;background:var(--s2);border:2px solid var(--muted);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.tree .tx{flex:1;min-width:0}
+.tree .t1{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tree .t2{font-size:12px;color:var(--muted)}
+.tree .ac{display:flex;gap:4px}
+.tree .ac button{background:var(--s2);border:1px solid var(--border);color:var(--text);border-radius:7px;width:32px;height:32px;font-size:14px}
+.fab{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:60;box-shadow:0 6px 20px rgba(0,0,0,.5);border-radius:30px;padding:14px 22px;font-size:16px}
+.val{font-size:13px;padding:8px 10px;border-radius:8px;margin-bottom:6px;line-height:1.35}
+.val.err{background:var(--danger-bg);color:#f3b2a5;border-left:3px solid var(--danger)}
+.val.warn{background:var(--warn-bg);color:#f2d29a;border-left:3px solid var(--warn)}
+.val.ok{background:var(--ok-bg);color:#a9dcb7;border-left:3px solid var(--green)}
+/* hoja (cliente / plano): siempre clara, como papel */
+.sheet{background:#fff;color:#1b2a22;border-radius:10px;padding:18px;margin-bottom:12px;font-family:'Barlow',sans-serif}
+.sheet .sh-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;border-bottom:3px solid #1e5a3f;padding-bottom:10px;margin-bottom:12px}
+.sheet .sh-brand{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:22px;color:#1e5a3f;letter-spacing:1px}
+.sheet .sh-brand span{color:#d4a20a}
+.sheet h2{font-family:'Barlow Condensed',sans-serif;font-size:22px;color:#1b2a22;margin-bottom:2px}
+.sheet .meta{font-size:13px;color:#5b6657}
+.sheet .svgbox{overflow-x:auto;text-align:center;margin:8px 0 14px}
+.sheet .svgbox svg{max-width:100%;height:auto}
+.legend{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.lc{border:1px solid #d3c9b3;border-radius:10px;padding:10px;display:flex;gap:10px;background:#fffdf7;break-inside:avoid}
+.lc .ico{flex-shrink:0}
+.lc .n{display:inline-flex;width:22px;height:22px;border-radius:50%;color:#fff;font-weight:700;font-size:12px;align-items:center;justify-content:center;margin-right:6px;vertical-align:middle}
+.lc h4{font-size:15px;margin-bottom:3px;display:flex;align-items:center}
+.lc .spec{font-size:12px;color:#5b6657;margin-bottom:4px}
+.lc p{font-size:13px;line-height:1.35;margin-bottom:4px}
+.lc .feeds{font-size:13px;background:#ede7d8;border-radius:6px;padding:4px 7px;margin-top:4px}
+.guide{border:2px solid #1e5a3f;border-radius:10px;padding:12px;margin-top:14px;background:#e1efe4}
+.guide h3{font-family:'Barlow Condensed',sans-serif;color:#1e5a3f;font-size:18px;margin-bottom:6px}
+.guide li{font-size:13px;margin:0 0 5px 18px;line-height:1.35}
+.ctable{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+.ctable th,.ctable td{border:1px solid #c9c2ae;padding:5px 6px;text-align:left}
+.ctable th{background:#1e5a3f;color:#fff;font-weight:600}
+.ctable tr:nth-child(even) td{background:#f6f2e8}
+.notes{font-size:12px;color:#3d4a40;margin-top:10px;line-height:1.45}
+.sh-foot{font-size:11px;color:#7a826f;margin-top:12px;border-top:1px solid #d3c9b3;padding-top:8px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;display:none;align-items:flex-end;justify-content:center}
+.modal.open{display:flex}
+.sheetm{background:var(--surface);border-top:2px solid var(--accent);border-radius:16px 16px 0 0;width:100%;max-width:640px;max-height:92vh;overflow-y:auto;padding:14px 14px 24px}
+.sheetm h3{font-family:'Barlow Condensed',sans-serif;font-size:20px;color:var(--accent);margin-bottom:8px}
+.types{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px}
+.types button,.presets button{background:var(--s2);border:2px solid var(--border);color:var(--text);border-radius:10px;padding:8px 4px;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:4px;line-height:1.1}
+.types button.sel,.presets button.sel{border-color:var(--accent);background:#2a2a14}
+.presets{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.presets button{font-size:11px;padding:7px 2px}
+.presets .em{font-size:20px}
+.seg{display:flex;border:1px solid var(--border);border-radius:9px;overflow:hidden}
+.seg button{flex:1;background:var(--bg);border:none;color:var(--muted);padding:9px 4px;font-size:13px;font-weight:600}
+.seg button.sel{background:var(--accent);color:var(--on-accent)}
+.qrbox{background:#fff;border-radius:12px;padding:14px;text-align:center;color:#1b2a22}
+.qrbox img{width:240px;max-width:100%;image-rendering:pixelated}
+.linkbox{word-break:break-all;font-size:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px;margin:8px 0;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#000c;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;z-index:200;display:none;max-width:90vw;text-align:center}
+.viewer-top{background:#1e5a3f;color:#fff;padding:14px;text-align:center}
+.viewer-top .brand{color:#f5c518}
+.hide{display:none!important}
+#printArea{display:none}
+@media print{
+  @page{size:A4;margin:10mm}
+  body{background:#fff;padding:0}
+  body>*:not(#printArea){display:none!important}
+  #printArea{display:block}
+  #printArea .sheet{border-radius:0;padding:0;margin:0}
+  #printArea .svgbox{overflow:visible}
+  .lc,.guide,tr{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<!-- ======== MODO EDITOR (electricista) ======== -->
+<div id="editorApp">
+<header>
+  <div style="flex:1;min-width:0">
+    <div class="brand">⚡ PATAGONIA VOLT</div>
+    <div class="sub">Tableros · AEA 90364</div>
+  </div>
+  <a class="hbtn" href="index.html">← Presupuestos</a>
+</header>
+<div class="boardbar">
+  <select id="boardSel" onchange="selectBoard(this.value)"></select>
+  <button class="hbtn" onclick="newBoard()">＋ Nuevo</button>
+  <button class="hbtn" onclick="dupBoard()" title="Duplicar">⧉</button>
+</div>
+<nav class="tabs">
+  <div class="tab active" data-t="armar" onclick="switchTab('armar')">🔧 Armar</div>
+  <div class="tab" data-t="cliente" onclick="switchTab('cliente')">👤 Cliente</div>
+  <div class="tab" data-t="plano" onclick="switchTab('plano')">📐 Plano</div>
+  <div class="tab" data-t="qr" onclick="switchTab('qr')">📲 QR</div>
+</nav>
+
+<main>
+  <!-- ARMAR -->
+  <section id="t-armar">
+    <details class="card" id="datosCard">
+      <summary>📋 Datos del tablero <span id="datosResumen" style="color:var(--muted);font-weight:400;font-size:13px"></span></summary>
+      <label class="f">Cliente</label><input id="b-cliente" oninput="setB('cliente',this.value)" placeholder="Ej: Familia Gómez">
+      <label class="f">Dirección</label><input id="b-direccion" oninput="setB('direccion',this.value)" placeholder="Ej: Av. San Martín 1234, El Bolsón">
+      <div class="row2">
+        <div><label class="f">Nombre del tablero</label><input id="b-nombre" oninput="setB('nombre',this.value)"></div>
+        <div><label class="f">Fecha</label><input id="b-fecha" type="date" oninput="setB('fecha',this.value)"></div>
+      </div>
+      <label class="f">Alimentación</label>
+      <div class="seg" id="segTension">
+        <button data-v="mono" onclick="setTension('mono')">Monofásica 220 V</button>
+        <button data-v="tri" onclick="setTension('tri')">Trifásica 3×380/220 V</button>
+      </div>
+      <div class="row3">
+        <div><label class="f">Gabinete (módulos)</label><select id="b-modulos" onchange="setB('modulos',+this.value)"></select></div>
+        <div><label class="f">Línea principal</label><select id="b-lineaSec" onchange="setB('lineaSec',+this.value)"></select></div>
+        <div><label class="f">PAT medida (Ω)</label><input id="b-pat" inputmode="decimal" oninput="setB('pat',this.value)" placeholder="Ej: 8"></div>
+      </div>
+      <label class="f">Notas para el plano</label><textarea id="b-notas" oninput="setB('notas',this.value)" placeholder="Ej: Jabalina 1,5 m con cámara de inspección junto al pilar"></textarea>
+      <div class="btns" style="margin-top:10px">
+        <button class="btn-s" onclick="loadExample()">⭐ Cargar ejemplo</button>
+        <button class="btn-d" onclick="delBoard()">🗑 Borrar tablero</button>
+      </div>
+    </details>
+
+    <div class="card">
+      <h3>Vista del tablero</h3>
+      <div class="panelwrap" id="editPanel"></div>
+      <div class="hint">Tocá cualquier protección para editarla. Los colores agrupan lo que protege cada disyuntor.</div>
+    </div>
+
+    <div class="card">
+      <h3>Protecciones y circuitos</h3>
+      <div class="tree" id="tree"></div>
+    </div>
+
+    <div class="card">
+      <h3>Control según AEA 90364-7-771</h3>
+      <div id="validation"></div>
+      <div class="hint">Chequeo orientativo para no olvidarse de nada; el cálculo final y la firma son del instalador.</div>
+    </div>
+
+    <div class="card">
+      <h3>Mis datos de instalador</h3>
+      <div class="row2">
+        <div><label class="f">Nombre / empresa</label><input id="i-nombre" oninput="setInst('nombre',this.value)"></div>
+        <div><label class="f">WhatsApp / teléfono</label><input id="i-tel" inputmode="tel" oninput="setInst('tel',this.value)" placeholder="Ej: 2944 123456"></div>
+      </div>
+      <label class="f">Matrícula / certificación</label><input id="i-mat" oninput="setInst('mat',this.value)" placeholder="Ej: Instalador ERSEP cat. III">
+      <div class="hint">Aparece en la hoja del cliente, en el plano y en la etiqueta QR.</div>
+    </div>
+  </section>
+
+  <!-- CLIENTE -->
+  <section id="t-cliente" class="hide">
+    <div class="btns" style="margin-bottom:10px">
+      <button class="btn-p" onclick="exportPNG('sheetCliente','cliente')">🖼 Imagen</button>
+      <button class="btn-s" onclick="exportPDF('sheetCliente')">📄 PDF</button>
+      <button class="btn-s" onclick="shareImage('sheetCliente','cliente')">📤 Compartir</button>
+    </div>
+    <div id="sheetCliente"></div>
+  </section>
+
+  <!-- PLANO -->
+  <section id="t-plano" class="hide">
+    <div class="btns" style="margin-bottom:10px">
+      <button class="btn-p" onclick="exportPNG('sheetPlano','plano')">🖼 Imagen</button>
+      <button class="btn-s" onclick="exportPDF('sheetPlano')">📄 PDF</button>
+      <button class="btn-s" onclick="shareImage('sheetPlano','plano')">📤 Compartir</button>
+    </div>
+    <div id="sheetPlano"></div>
+  </section>
+
+  <!-- QR -->
+  <section id="t-qr" class="hide">
+    <div class="card">
+      <h3>QR para pegar en el tablero</h3>
+      <p style="font-size:14px;line-height:1.4;margin-bottom:10px">El cliente escanea el QR con la cámara del celular y ve su tablero: qué hace cada protección, qué alimenta y qué hacer si salta. Si después cambiás algo y tocás <b>Actualizar</b>, el mismo QR muestra la versión nueva.</p>
+      <button class="btn-p btn-full" id="qrBtn" onclick="makeQR()">📲 Generar / actualizar QR</button>
+      <div id="qrOut" style="margin-top:12px"></div>
+    </div>
+  </section>
+</main>
+<button class="btn-p fab" id="fab" onclick="openDev(null)">＋ Agregar protección</button>
+</div>
+
+<!-- ======== MODO CLIENTE (abre desde el QR) ======== -->
+<div id="viewerApp" class="hide">
+  <div class="viewer-top">
+    <div class="brand" id="vBrand">⚡ PATAGONIA VOLT</div>
+    <div style="font-size:13px;opacity:.9;margin-top:4px" id="vSub"></div>
+  </div>
+  <nav class="tabs" style="top:0">
+    <div class="tab active" data-v="cliente" onclick="viewerTab('cliente')">👤 Mi tablero</div>
+    <div class="tab" data-v="plano" onclick="viewerTab('plano')">📐 Plano técnico</div>
+  </nav>
+  <main>
+    <div id="vCliente"></div>
+    <div id="vPlano" class="hide"></div>
+    <div class="btns" id="vActions" style="margin-top:6px"></div>
+  </main>
+</div>
+
+<!-- MODAL protección -->
+<div class="modal" id="devModal" onclick="if(event.target===this)closeDev()">
+  <div class="sheetm" id="devForm"></div>
+</div>
+<div class="toast" id="toast"></div>
+<div id="printArea"></div>
+
+<script>/* qrcode-generator 1.4.4 — (c) Kazuhiko Arase — MIT License */
+var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],f={},c=function(t,r){o=function(t){for(var r=new Array(t),e=0;e<t;e+=1){r[e]=new Array(t);for(var n=0;n<t;n+=1)r[e][n]=null}return r}(i=4*e+17),l(0,0),l(i-7,0),l(0,i-7),s(),h(),d(t,r),e>=7&&v(t),null==a&&(a=p(e,n,u)),w(a,r)},l=function(t,r){for(var e=-1;e<=7;e+=1)if(!(t+e<=-1||i<=t+e))for(var n=-1;n<=7;n+=1)r+n<=-1||i<=r+n||(o[t+e][r+n]=0<=e&&e<=6&&(0==n||6==n)||0<=n&&n<=6&&(0==e||6==e)||2<=e&&e<=4&&2<=n&&n<=4)},h=function(){for(var t=8;t<i-8;t+=1)null==o[t][6]&&(o[t][6]=t%2==0);for(var r=8;r<i-8;r+=1)null==o[6][r]&&(o[6][r]=r%2==0)},s=function(){for(var t=B.getPatternPosition(e),r=0;r<t.length;r+=1)for(var n=0;n<t.length;n+=1){var i=t[r],a=t[n];if(null==o[i][a])for(var u=-2;u<=2;u+=1)for(var f=-2;f<=2;f+=1)o[i+u][a+f]=-2==u||2==u||-2==f||2==f||0==u&&0==f}},v=function(t){for(var r=B.getBCHTypeNumber(e),n=0;n<18;n+=1){var a=!t&&1==(r>>n&1);o[Math.floor(n/3)][n%3+i-8-3]=a}for(n=0;n<18;n+=1){a=!t&&1==(r>>n&1);o[n%3+i-8-3][Math.floor(n/3)]=a}},d=function(t,r){for(var e=n<<3|r,a=B.getBCHTypeInfo(e),u=0;u<15;u+=1){var f=!t&&1==(a>>u&1);u<6?o[u][8]=f:u<8?o[u+1][8]=f:o[i-15+u][8]=f}for(u=0;u<15;u+=1){f=!t&&1==(a>>u&1);u<8?o[8][i-u-1]=f:u<9?o[8][15-u-1+1]=f:o[8][15-u-1]=f}o[i-8][8]=!t},w=function(t,r){for(var e=-1,n=i-1,a=7,u=0,f=B.getMaskFunction(r),c=i-1;c>0;c-=2)for(6==c&&(c-=1);;){for(var g=0;g<2;g+=1)if(null==o[n][c-g]){var l=!1;u<t.length&&(l=1==(t[u]>>>a&1)),f(n,c-g)&&(l=!l),o[n][c-g]=l,-1==(a-=1)&&(u+=1,a=7)}if((n+=e)<0||i<=n){n-=e,e=-e;break}}},p=function(t,r,e){for(var n=A.getRSBlocks(t,r),o=b(),i=0;i<e.length;i+=1){var a=e[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var u=0;for(i=0;i<n.length;i+=1)u+=n[i].dataCount;if(o.getLengthInBits()>8*u)throw"code length overflow. ("+o.getLengthInBits()+">"+8*u+")";for(o.getLengthInBits()+4<=8*u&&o.put(0,4);o.getLengthInBits()%8!=0;)o.putBit(!1);for(;!(o.getLengthInBits()>=8*u||(o.put(236,8),o.getLengthInBits()>=8*u));)o.put(17,8);return function(t,r){for(var e=0,n=0,o=0,i=new Array(r.length),a=new Array(r.length),u=0;u<r.length;u+=1){var f=r[u].dataCount,c=r[u].totalCount-f;n=Math.max(n,f),o=Math.max(o,c),i[u]=new Array(f);for(var g=0;g<i[u].length;g+=1)i[u][g]=255&t.getBuffer()[g+e];e+=f;var l=B.getErrorCorrectPolynomial(c),h=k(i[u],l.getLength()-1).mod(l);for(a[u]=new Array(l.getLength()-1),g=0;g<a[u].length;g+=1){var s=g+h.getLength()-a[u].length;a[u][g]=s>=0?h.getAt(s):0}}var v=0;for(g=0;g<r.length;g+=1)v+=r[g].totalCount;var d=new Array(v),w=0;for(g=0;g<n;g+=1)for(u=0;u<r.length;u+=1)g<i[u].length&&(d[w]=i[u][g],w+=1);for(g=0;g<o;g+=1)for(u=0;u<r.length;u+=1)g<a[u].length&&(d[w]=a[u][g],w+=1);return d}(o,n)};f.addData=function(t,r){var e=null;switch(r=r||"Byte"){case"Numeric":e=M(t);break;case"Alphanumeric":e=x(t);break;case"Byte":e=m(t);break;case"Kanji":e=L(t);break;default:throw"mode:"+r}u.push(e),a=null},f.isDark=function(t,r){if(t<0||i<=t||r<0||i<=r)throw t+","+r;return o[t][r]},f.getModuleCount=function(){return i},f.make=function(){if(e<1){for(var t=1;t<40;t++){for(var r=A.getRSBlocks(t,n),o=b(),i=0;i<u.length;i++){var a=u[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var g=0;for(i=0;i<r.length;i++)g+=r[i].dataCount;if(o.getLengthInBits()<=8*g)break}e=t}c(!1,function(){for(var t=0,r=0,e=0;e<8;e+=1){c(!0,e);var n=B.getLostPoint(f);(0==e||t>n)&&(t=n,r=e)}return r}())},f.createTableTag=function(t,r){t=t||2;var e="";e+='<table style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: "+(r=void 0===r?4*t:r)+"px;",e+='">',e+="<tbody>";for(var n=0;n<f.getModuleCount();n+=1){e+="<tr>";for(var o=0;o<f.getModuleCount();o+=1)e+='<td style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: 0px;",e+=" width: "+t+"px;",e+=" height: "+t+"px;",e+=" background-color: ",e+=f.isDark(n,o)?"#000000":"#ffffff",e+=";",e+='"/>';e+="</tr>"}return e+="</tbody>",e+="</table>"},f.createSvgTag=function(t,r,e,n){var o={};"object"==typeof arguments[0]&&(t=(o=arguments[0]).cellSize,r=o.margin,e=o.alt,n=o.title),t=t||2,r=void 0===r?4*t:r,(e="string"==typeof e?{text:e}:e||{}).text=e.text||null,e.id=e.text?e.id||"qrcode-description":null,(n="string"==typeof n?{text:n}:n||{}).text=n.text||null,n.id=n.text?n.id||"qrcode-title":null;var i,a,u,c,g=f.getModuleCount()*t+2*r,l="";for(c="l"+t+",0 0,"+t+" -"+t+",0 0,-"+t+"z ",l+='<svg version="1.1" xmlns="http://www.w3.org/2000/svg"',l+=o.scalable?"":' width="'+g+'px" height="'+g+'px"',l+=' viewBox="0 0 '+g+" "+g+'" ',l+=' preserveAspectRatio="xMinYMin meet"',l+=n.text||e.text?' role="img" aria-labelledby="'+y([n.id,e.id].join(" ").trim())+'"':"",l+=">",l+=n.text?'<title id="'+y(n.id)+'">'+y(n.text)+"</title>":"",l+=e.text?'<description id="'+y(e.id)+'">'+y(e.text)+"</description>":"",l+='<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>',l+='<path d="',a=0;a<f.getModuleCount();a+=1)for(u=a*t+r,i=0;i<f.getModuleCount();i+=1)f.isDark(a,i)&&(l+="M"+(i*t+r)+","+u+c);return l+='" stroke="transparent" fill="black"/>',l+="</svg>"},f.createDataURL=function(t,r){t=t||2,r=void 0===r?4*t:r;var e=f.getModuleCount()*t+2*r,n=r,o=e-r;return I(e,e,function(r,e){if(n<=r&&r<o&&n<=e&&e<o){var i=Math.floor((r-n)/t),a=Math.floor((e-n)/t);return f.isDark(a,i)?0:1}return 1})},f.createImgTag=function(t,r,e){t=t||2,r=void 0===r?4*t:r;var n=f.getModuleCount()*t+2*r,o="";return o+="<img",o+=' src="',o+=f.createDataURL(t,r),o+='"',o+=' width="',o+=n,o+='"',o+=' height="',o+=n,o+='"',e&&(o+=' alt="',o+=y(e),o+='"'),o+="/>"};var y=function(t){for(var r="",e=0;e<t.length;e+=1){var n=t.charAt(e);switch(n){case"<":r+="&lt;";break;case">":r+="&gt;";break;case"&":r+="&amp;";break;case'"':r+="&quot;";break;default:r+=n}}return r};return f.createASCII=function(t,r){if((t=t||1)<2)return function(t){t=void 0===t?2:t;var r,e,n,o,i,a=1*f.getModuleCount()+2*t,u=t,c=a-t,g={"██":"█","█ ":"▀"," █":"▄","  ":" "},l={"██":"▀","█ ":"▀"," █":" ","  ":" "},h="";for(r=0;r<a;r+=2){for(n=Math.floor((r-u)/1),o=Math.floor((r+1-u)/1),e=0;e<a;e+=1)i="█",u<=e&&e<c&&u<=r&&r<c&&f.isDark(n,Math.floor((e-u)/1))&&(i=" "),u<=e&&e<c&&u<=r+1&&r+1<c&&f.isDark(o,Math.floor((e-u)/1))?i+=" ":i+="█",h+=t<1&&r+1>=c?l[i]:g[i];h+="\n"}return a%2&&t>0?h.substring(0,h.length-a-1)+Array(a+1).join("▀"):h.substring(0,h.length-1)}(r);t-=1,r=void 0===r?2*t:r;var e,n,o,i,a=f.getModuleCount()*t+2*r,u=r,c=a-r,g=Array(t+1).join("██"),l=Array(t+1).join("  "),h="",s="";for(e=0;e<a;e+=1){for(o=Math.floor((e-u)/t),s="",n=0;n<a;n+=1)i=1,u<=n&&n<c&&u<=e&&e<c&&f.isDark(o,Math.floor((n-u)/t))&&(i=0),s+=i?g:l;for(o=0;o<t;o+=1)h+=s+"\n"}return h.substring(0,h.length-1)},f.renderTo2dContext=function(t,r){r=r||2;for(var e=f.getModuleCount(),n=0;n<e;n++)for(var o=0;o<e;o++)t.fillStyle=f.isDark(n,o)?"black":"white",t.fillRect(n*r,o*r,r,r)},f};t.stringToBytes=(t.stringToBytesFuncs={default:function(t){for(var r=[],e=0;e<t.length;e+=1){var n=t.charCodeAt(e);r.push(255&n)}return r}}).default,t.createStringToBytes=function(t,r){var e=function(){for(var e=S(t),n=function(){var t=e.read();if(-1==t)throw"eof";return t},o=0,i={};;){var a=e.read();if(-1==a)break;var u=n(),f=n()<<8|n();i[String.fromCharCode(a<<8|u)]=f,o+=1}if(o!=r)throw o+" != "+r;return i}(),n="?".charCodeAt(0);return function(t){for(var r=[],o=0;o<t.length;o+=1){var i=t.charCodeAt(o);if(i<128)r.push(i);else{var a=e[t.charAt(o)];"number"==typeof a?(255&a)==a?r.push(a):(r.push(a>>>8),r.push(255&a)):r.push(n)}}return r}};var r,e,n,o,i,a=1,u=2,f=4,c=8,g={L:1,M:0,Q:3,H:2},l=0,h=1,s=2,v=3,d=4,w=5,p=6,y=7,B=(r=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],e=1335,n=7973,i=function(t){for(var r=0;0!=t;)r+=1,t>>>=1;return r},(o={}).getBCHTypeInfo=function(t){for(var r=t<<10;i(r)-i(e)>=0;)r^=e<<i(r)-i(e);return 21522^(t<<10|r)},o.getBCHTypeNumber=function(t){for(var r=t<<12;i(r)-i(n)>=0;)r^=n<<i(r)-i(n);return t<<12|r},o.getPatternPosition=function(t){return r[t-1]},o.getMaskFunction=function(t){switch(t){case l:return function(t,r){return(t+r)%2==0};case h:return function(t,r){return t%2==0};case s:return function(t,r){return r%3==0};case v:return function(t,r){return(t+r)%3==0};case d:return function(t,r){return(Math.floor(t/2)+Math.floor(r/3))%2==0};case w:return function(t,r){return t*r%2+t*r%3==0};case p:return function(t,r){return(t*r%2+t*r%3)%2==0};case y:return function(t,r){return(t*r%3+(t+r)%2)%2==0};default:throw"bad maskPattern:"+t}},o.getErrorCorrectPolynomial=function(t){for(var r=k([1],0),e=0;e<t;e+=1)r=r.multiply(k([1,C.gexp(e)],0));return r},o.getLengthInBits=function(t,r){if(1<=r&&r<10)switch(t){case a:return 10;case u:return 9;case f:case c:return 8;default:throw"mode:"+t}else if(r<27)switch(t){case a:return 12;case u:return 11;case f:return 16;case c:return 10;default:throw"mode:"+t}else{if(!(r<41))throw"type:"+r;switch(t){case a:return 14;case u:return 13;case f:return 16;case c:return 12;default:throw"mode:"+t}}},o.getLostPoint=function(t){for(var r=t.getModuleCount(),e=0,n=0;n<r;n+=1)for(var o=0;o<r;o+=1){for(var i=0,a=t.isDark(n,o),u=-1;u<=1;u+=1)if(!(n+u<0||r<=n+u))for(var f=-1;f<=1;f+=1)o+f<0||r<=o+f||0==u&&0==f||a==t.isDark(n+u,o+f)&&(i+=1);i>5&&(e+=3+i-5)}for(n=0;n<r-1;n+=1)for(o=0;o<r-1;o+=1){var c=0;t.isDark(n,o)&&(c+=1),t.isDark(n+1,o)&&(c+=1),t.isDark(n,o+1)&&(c+=1),t.isDark(n+1,o+1)&&(c+=1),0!=c&&4!=c||(e+=3)}for(n=0;n<r;n+=1)for(o=0;o<r-6;o+=1)t.isDark(n,o)&&!t.isDark(n,o+1)&&t.isDark(n,o+2)&&t.isDark(n,o+3)&&t.isDark(n,o+4)&&!t.isDark(n,o+5)&&t.isDark(n,o+6)&&(e+=40);for(o=0;o<r;o+=1)for(n=0;n<r-6;n+=1)t.isDark(n,o)&&!t.isDark(n+1,o)&&t.isDark(n+2,o)&&t.isDark(n+3,o)&&t.isDark(n+4,o)&&!t.isDark(n+5,o)&&t.isDark(n+6,o)&&(e+=40);var g=0;for(o=0;o<r;o+=1)for(n=0;n<r;n+=1)t.isDark(n,o)&&(g+=1);return e+=Math.abs(100*g/r/r-50)/5*10},o),C=function(){for(var t=new Array(256),r=new Array(256),e=0;e<8;e+=1)t[e]=1<<e;for(e=8;e<256;e+=1)t[e]=t[e-4]^t[e-5]^t[e-6]^t[e-8];for(e=0;e<255;e+=1)r[t[e]]=e;var n={glog:function(t){if(t<1)throw"glog("+t+")";return r[t]},gexp:function(r){for(;r<0;)r+=255;for(;r>=256;)r-=255;return t[r]}};return n}();function k(t,r){if(void 0===t.length)throw t.length+"/"+r;var e=function(){for(var e=0;e<t.length&&0==t[e];)e+=1;for(var n=new Array(t.length-e+r),o=0;o<t.length-e;o+=1)n[o]=t[o+e];return n}(),n={getAt:function(t){return e[t]},getLength:function(){return e.length},multiply:function(t){for(var r=new Array(n.getLength()+t.getLength()-1),e=0;e<n.getLength();e+=1)for(var o=0;o<t.getLength();o+=1)r[e+o]^=C.gexp(C.glog(n.getAt(e))+C.glog(t.getAt(o)));return k(r,0)},mod:function(t){if(n.getLength()-t.getLength()<0)return n;for(var r=C.glog(n.getAt(0))-C.glog(t.getAt(0)),e=new Array(n.getLength()),o=0;o<n.getLength();o+=1)e[o]=n.getAt(o);for(o=0;o<t.getLength();o+=1)e[o]^=C.gexp(C.glog(t.getAt(o))+r);return k(e,0).mod(t)}};return n}var A=function(){var t=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],r=function(t,r){var e={};return e.totalCount=t,e.dataCount=r,e},e={};return e.getRSBlocks=function(e,n){var o=function(r,e){switch(e){case g.L:return t[4*(r-1)+0];case g.M:return t[4*(r-1)+1];case g.Q:return t[4*(r-1)+2];case g.H:return t[4*(r-1)+3];default:return}}(e,n);if(void 0===o)throw"bad rs block @ typeNumber:"+e+"/errorCorrectionLevel:"+n;for(var i=o.length/3,a=[],u=0;u<i;u+=1)for(var f=o[3*u+0],c=o[3*u+1],l=o[3*u+2],h=0;h<f;h+=1)a.push(r(c,l));return a},e}(),b=function(){var t=[],r=0,e={getBuffer:function(){return t},getAt:function(r){var e=Math.floor(r/8);return 1==(t[e]>>>7-r%8&1)},put:function(t,r){for(var n=0;n<r;n+=1)e.putBit(1==(t>>>r-n-1&1))},getLengthInBits:function(){return r},putBit:function(e){var n=Math.floor(r/8);t.length<=n&&t.push(0),e&&(t[n]|=128>>>r%8),r+=1}};return e},M=function(t){var r=a,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+2<r.length;)t.put(o(r.substring(n,n+3)),10),n+=3;n<r.length&&(r.length-n==1?t.put(o(r.substring(n,n+1)),4):r.length-n==2&&t.put(o(r.substring(n,n+2)),7))}},o=function(t){for(var r=0,e=0;e<t.length;e+=1)r=10*r+i(t.charAt(e));return r},i=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);throw"illegal char :"+t};return n},x=function(t){var r=u,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+1<r.length;)t.put(45*o(r.charAt(n))+o(r.charAt(n+1)),11),n+=2;n<r.length&&t.put(o(r.charAt(n)),6)}},o=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);if("A"<=t&&t<="Z")return t.charCodeAt(0)-"A".charCodeAt(0)+10;switch(t){case" ":return 36;case"$":return 37;case"%":return 38;case"*":return 39;case"+":return 40;case"-":return 41;case".":return 42;case"/":return 43;case":":return 44;default:throw"illegal char :"+t}};return n},m=function(r){var e=f,n=t.stringToBytes(r),o={getMode:function(){return e},getLength:function(t){return n.length},write:function(t){for(var r=0;r<n.length;r+=1)t.put(n[r],8)}};return o},L=function(r){var e=c,n=t.stringToBytesFuncs.SJIS;if(!n)throw"sjis not supported.";!function(){var t=n("友");if(2!=t.length||38726!=(t[0]<<8|t[1]))throw"sjis not supported."}();var o=n(r),i={getMode:function(){return e},getLength:function(t){return~~(o.length/2)},write:function(t){for(var r=o,e=0;e+1<r.length;){var n=(255&r[e])<<8|255&r[e+1];if(33088<=n&&n<=40956)n-=33088;else{if(!(57408<=n&&n<=60351))throw"illegal char at "+(e+1)+"/"+n;n-=49472}n=192*(n>>>8&255)+(255&n),t.put(n,13),e+=2}if(e<r.length)throw"illegal char at "+(e+1)}};return i},D=function(){var t=[],r={writeByte:function(r){t.push(255&r)},writeShort:function(t){r.writeByte(t),r.writeByte(t>>>8)},writeBytes:function(t,e,n){e=e||0,n=n||t.length;for(var o=0;o<n;o+=1)r.writeByte(t[o+e])},writeString:function(t){for(var e=0;e<t.length;e+=1)r.writeByte(t.charCodeAt(e))},toByteArray:function(){return t},toString:function(){var r="";r+="[";for(var e=0;e<t.length;e+=1)e>0&&(r+=","),r+=t[e];return r+="]"}};return r},S=function(t){var r=t,e=0,n=0,o=0,i={read:function(){for(;o<8;){if(e>=r.length){if(0==o)return-1;throw"unexpected end of file./"+o}var t=r.charAt(e);if(e+=1,"="==t)return o=0,-1;t.match(/^\s$/)||(n=n<<6|a(t.charCodeAt(0)),o+=6)}var i=n>>>o-8&255;return o-=8,i}},a=function(t){if(65<=t&&t<=90)return t-65;if(97<=t&&t<=122)return t-97+26;if(48<=t&&t<=57)return t-48+52;if(43==t)return 62;if(47==t)return 63;throw"c:"+t};return i},I=function(t,r,e){for(var n=function(t,r){var e=t,n=r,o=new Array(t*r),i={setPixel:function(t,r,n){o[r*e+t]=n},write:function(t){t.writeString("GIF87a"),t.writeShort(e),t.writeShort(n),t.writeByte(128),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(255),t.writeByte(255),t.writeByte(255),t.writeString(","),t.writeShort(0),t.writeShort(0),t.writeShort(e),t.writeShort(n),t.writeByte(0);var r=a(2);t.writeByte(2);for(var o=0;r.length-o>255;)t.writeByte(255),t.writeBytes(r,o,255),o+=255;t.writeByte(r.length-o),t.writeBytes(r,o,r.length-o),t.writeByte(0),t.writeString(";")}},a=function(t){for(var r=1<<t,e=1+(1<<t),n=t+1,i=u(),a=0;a<r;a+=1)i.add(String.fromCharCode(a));i.add(String.fromCharCode(r)),i.add(String.fromCharCode(e));var f,c,g,l=D(),h=(f=l,c=0,g=0,{write:function(t,r){if(t>>>r!=0)throw"length over";for(;c+r>=8;)f.writeByte(255&(t<<c|g)),r-=8-c,t>>>=8-c,g=0,c=0;g|=t<<c,c+=r},flush:function(){c>0&&f.writeByte(g)}});h.write(r,n);var s=0,v=String.fromCharCode(o[s]);for(s+=1;s<o.length;){var d=String.fromCharCode(o[s]);s+=1,i.contains(v+d)?v+=d:(h.write(i.indexOf(v),n),i.size()<4095&&(i.size()==1<<n&&(n+=1),i.add(v+d)),v=d)}return h.write(i.indexOf(v),n),h.write(e,n),h.flush(),l.toByteArray()},u=function(){var t={},r=0,e={add:function(n){if(e.contains(n))throw"dup key:"+n;t[n]=r,r+=1},size:function(){return r},indexOf:function(r){return t[r]},contains:function(r){return void 0!==t[r]}};return e};return i}(t,r),o=0;o<r;o+=1)for(var i=0;i<t;i+=1)n.setPixel(i,o,e(i,o));var a=D();n.write(a);for(var u=function(){var t=0,r=0,e=0,n="",o={},i=function(t){n+=String.fromCharCode(a(63&t))},a=function(t){if(t<0);else{if(t<26)return 65+t;if(t<52)return t-26+97;if(t<62)return t-52+48;if(62==t)return 43;if(63==t)return 47}throw"n:"+t};return o.writeByte=function(n){for(t=t<<8|255&n,r+=8,e+=1;r>=6;)i(t>>>r-6),r-=6},o.flush=function(){if(r>0&&(i(t<<6-r),t=0,r=0),e%3!=0)for(var o=3-e%3,a=0;a<o;a+=1)n+="="},o.toString=function(){return n},o}(),f=a.toByteArray(),c=0;c<f.length;c+=1)u.writeByte(f[c]);return u.flush(),"data:image/gif;base64,"+u};return t}();qrcode.stringToBytesFuncs["UTF-8"]=function(t){return function(t){for(var r=[],e=0;e<t.length;e++){var n=t.charCodeAt(e);n<128?r.push(n):n<2048?r.push(192|n>>6,128|63&n):n<55296||n>=57344?r.push(224|n>>12,128|n>>6&63,128|63&n):(e++,n=65536+((1023&n)<<10|1023&t.charCodeAt(e)),r.push(240|n>>18,128|n>>12&63,128|n>>6&63,128|63&n))}return r}(t)},function(t){"function"==typeof define&&define.amd?define([],t):"object"==typeof exports&&(module.exports=t())}(function(){return qrcode});</script>
+<script>
+'use strict';
+// =====================================================================
+//  CONFIG
+// =====================================================================
+const SUPABASE_URL = 'https://kmkprbnwcbavonfnyput.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtta3ByYm53Y2Jhdm9uZm55cHV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzODUyMjgsImV4cCI6MjEwMDk2MTIyOH0.A-d1FquQftEcXheF7uTnEHJ-Z1UULb5VSIqq9e1cR8c';
+const LS_KEY = 'pv_tableros_v1';
+
+const AMPS = [6,10,16,20,25,32,40,50,63,80,100];
+const SECS = [1,1.5,2.5,4,6,10,16,25,35];
+const MODULOS = [8,12,24,36,48];
+const ROW = 12;                       // módulos por riel
+// Corriente admisible orientativa (A) — conductores de Cu/PVC en cañería embutida, 2 conductores cargados
+const IZ = {1:11,1.5:15,2.5:21,4:28,6:36,10:50,16:66,25:88,35:109};
+const GROUP_COLORS = ['#2f80ed','#e67e22','#9b51e0','#16a085','#d6336c','#7f8c1a'];
+
+const CIRC_TIPOS = {
+  IUG:'Iluminación de uso general', TUG:'Tomacorrientes de uso general', IUE:'Iluminación de uso especial',
+  TUE:'Tomacorrientes de uso especial', ACU:'Alimentación de carga única', OTRO:'Otro'
+};
+const PRESETS = [
+  {k:'luz',  em:'💡', t:'Iluminación', tipo:'IUG', amp:10, sec:1.5, bocas:8, nombre:'Iluminación', desc:'Luces y bocas de techo'},
+  {k:'tomas',em:'🔌', t:'Tomas',       tipo:'TUG', amp:16, sec:2.5, bocas:8, nombre:'Tomacorrientes', desc:'Enchufes de uso general'},
+  {k:'coc',  em:'🍳', t:'Cocina',      tipo:'TUG', amp:20, sec:2.5, bocas:6, nombre:'Tomas de cocina', desc:'Heladera, microondas, pava eléctrica'},
+  {k:'term', em:'🚿', t:'Termotanque', tipo:'TUE', amp:20, sec:4,   bocas:1, nombre:'Termotanque eléctrico', desc:'Termotanque del baño'},
+  {k:'aire', em:'❄️', t:'Aire acond.', tipo:'TUE', amp:20, sec:4,   bocas:1, nombre:'Aire acondicionado', desc:'Equipo split'},
+  {k:'horno',em:'🔥', t:'Horno/anafe', tipo:'TUE', amp:25, sec:4,   bocas:1, nombre:'Horno y anafe eléctrico', desc:'Horno empotrado y anafe'},
+  {k:'calef',em:'♨️', t:'Calefacción', tipo:'TUE', amp:20, sec:4,   bocas:2, nombre:'Calefacción eléctrica', desc:'Estufas / paneles calefactores'},
+  {k:'bomba',em:'💧', t:'Bomba agua',  tipo:'ACU', amp:16, sec:2.5, bocas:1, nombre:'Bomba de agua', desc:'Bomba presurizadora / de pozo'},
+  {k:'ext',  em:'🌳', t:'Exterior',    tipo:'IUE', amp:10, sec:2.5, bocas:4, nombre:'Luces exteriores', desc:'Parque, galería y frente'},
+  {k:'porton',em:'🚗',t:'Portón',      tipo:'ACU', amp:10, sec:2.5, bocas:1, nombre:'Portón automático', desc:'Motor del portón'},
+  {k:'gar',  em:'🛠', t:'Taller',      tipo:'TUG', amp:20, sec:2.5, bocas:6, nombre:'Garaje / taller', desc:'Tomas del garaje y herramientas'},
+  {k:'otro', em:'📦', t:'Otro',        tipo:'OTRO',amp:16, sec:2.5, bocas:1, nombre:'Circuito', desc:''}
+];
+const DEV_TYPES = {
+  tm:  {em:'⚡', t:'Térmica',            full:'Interruptor termomagnético'},
+  dif: {em:'🛡', t:'Disyuntor',          full:'Interruptor diferencial'},
+  ptm: {em:'📟', t:'Prot. tensión',      full:'Protector de tensión'},
+  dps: {em:'🌩', t:'Descargador',        full:'Descargador de sobretensión (DPS)'},
+  cont:{em:'🔁', t:'Contactor',          full:'Contactor'}
+};
+
+// =====================================================================
+//  ESTADO
+// =====================================================================
+let S = { boards:[], current:null, inst:{nombre:'Patagonia Volt', tel:'', mat:''} };
+let VIEW = null;           // en modo cliente: {board, inst}
+let curTab = 'armar';
+let editing = null;        // borrador de la protección que se edita
+
+const uid = (n=10) => { let s=''; const a='abcdefghijkmnpqrstuvwxyz23456789'; const r=crypto.getRandomValues(new Uint8Array(n)); r.forEach(x=>s+=a[x%a.length]); return s; };
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtSec = v => String(v).replace('.',',');
+const today = () => new Date().toISOString().slice(0,10);
+const fmtDate = d => { if(!d) return ''; const [y,m,dd]=d.split('-'); return `${dd}/${m}/${y}`; };
+
+function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(S)); }catch(e){} }
+function load(){
+  try{ const raw = localStorage.getItem(LS_KEY); if(raw){ const o=JSON.parse(raw); if(o && Array.isArray(o.boards)) S = Object.assign(S,o); } }catch(e){}
+  if(!S.boards.length){ const b = exampleBoard(); S.boards.push(b); S.current=b.id; save(); }
+  if(!S.boards.find(b=>b.id===S.current)) S.current = S.boards[0].id;
+}
+const B = () => S.boards.find(b=>b.id===S.current);
+
+// =====================================================================
+//  MODELOS
+// =====================================================================
+function mk(tipo, o){ return Object.assign({id:uid(6), tipo, de:null}, o); }
+function baseBoard(){
+  return {id:uid(10), nombre:'Tablero principal', cliente:'', direccion:'', fecha:today(), tension:'mono',
+          modulos:24, lineaSec:6, pat:'', notas:'', comps:[]};
+}
+function emptyBoard(){
+  const b = baseBoard();
+  const g = mk('tm',{polos:2, amp:32, curva:'C', ka:4.5, general:true});
+  const d = mk('dif',{de:g.id, polos:2, amp:40, sens:30, clase:'A'});
+  b.comps.push(g,d);
+  return b;
+}
+function circ(p, extra){ return Object.assign({tipo:p.tipo, nombre:p.nombre, sec:p.sec, bocas:p.bocas, icono:p.em, desc:p.desc, fase:'R'}, extra||{}); }
+function exampleBoard(){
+  const b = baseBoard();
+  b.nombre='Tablero principal'; b.cliente='Familia Gómez (ejemplo)'; b.direccion='Calle Los Coihues 250, El Bolsón';
+  b.modulos=36; b.lineaSec=6; b.pat='8'; b.notas='Jabalina de 1,5 m con cámara de inspección junto al pilar. Línea principal subterránea en caño PVC 1".';
+  const P = k => PRESETS.find(p=>p.k===k);
+  const g  = mk('tm', {polos:2, amp:32, curva:'C', ka:4.5, general:true});
+  const pt = mk('ptm',{de:g.id, amp:40});
+  const sp = mk('dps',{de:g.id, polos:2});
+  const d1 = mk('dif',{de:pt.id, polos:2, amp:40, sens:30, clase:'A'});
+  const d2 = mk('dif',{de:pt.id, polos:2, amp:40, sens:30, clase:'A'});
+  const c = (d, k, amp, extra) => mk('tm',{de:d.id, polos:2, amp, curva:'C', ka:4.5, circ:circ(P(k), extra)});
+  b.comps.push(g, sp, pt, d1,
+    c(d1,'luz',10,{nombre:'Iluminación planta baja', desc:'Luces de cocina, living-comedor y pasillo', bocas:9}),
+    c(d1,'coc',20,{desc:'Heladera, microondas, pava y mesada de cocina', bocas:6}),
+    c(d1,'tomas',16,{nombre:'Tomas living-comedor', desc:'Enchufes de living, comedor y TV', bocas:8}),
+    d2,
+    c(d2,'luz',10,{nombre:'Iluminación dormitorios y baño', desc:'Luces de los 3 dormitorios y el baño', bocas:7}),
+    c(d2,'tomas',16,{nombre:'Tomas dormitorios', desc:'Enchufes de los dormitorios', bocas:10}),
+    c(d2,'term',20,{}),
+    c(d2,'ext',10,{desc:'Farolas del parque, galería y luz del frente'})
+  );
+  return b;
+}
+
+// =====================================================================
+//  ÁRBOL / NUMERACIÓN
+// =====================================================================
+function children(b, id){ return b.comps.filter(c=>c.de===id); }
+function dfs(b){
+  const out=[]; const seen=new Set();
+  const walk=(id,depth)=>{ children(b,id).forEach(c=>{ if(seen.has(c.id)) return; seen.add(c.id); out.push({c,depth}); walk(c.id,depth+1); }); };
+  walk(null,0);
+  b.comps.forEach(c=>{ if(!seen.has(c.id)){ c.de=null; out.push({c,depth:0}); seen.add(c.id);} }); // huérfanos
+  return out;
+}
+function isLeaf(b,c){ return !children(b,c.id).length; }
+function hasCirc(b,c){ return (c.tipo==='tm'||c.tipo==='cont') && isLeaf(b,c) && !c.general; }
+function descendants(b,id){ const r=[]; children(b,id).forEach(c=>{ r.push(c.id); r.push(...descendants(b,c.id)); }); return r; }
+function ancestors(b,c){ const r=[]; let p=b.comps.find(x=>x.id===c.de); while(p){ r.push(p); p=b.comps.find(x=>x.id===p.de); } return r; }
+function info(b){
+  // número, código de circuito y color de grupo para cada protección
+  const order = dfs(b); const map={}; const cnt={}; let gi=0;
+  order.forEach(({c,depth},i)=>{ map[c.id]={n:i+1, depth}; });
+  order.forEach(({c})=>{ if(c.tipo==='dif'){ map[c.id].color = GROUP_COLORS[gi++ % GROUP_COLORS.length]; } });
+  order.forEach(({c})=>{
+    const dif = c.tipo==='dif' ? c : ancestors(b,c).find(a=>a.tipo==='dif');
+    map[c.id].color = map[c.id].color || (dif ? map[dif.id].color : '#8a8f86');
+    map[c.id].dif = dif ? dif.id : null;
+    if(hasCirc(b,c)){ const t=(c.circ&&c.circ.tipo)||'OTRO'; cnt[t]=(cnt[t]||0)+1; map[c.id].code = (t==='OTRO'?'C':t)+cnt[t]; }
+  });
+  return {order, map};
+}
+function modsOf(b,c){
+  if(c.tipo==='tm'||c.tipo==='dif') return c.polos||2;
+  if(c.tipo==='dps') return b.tension==='tri' ? 4 : 2;
+  if(c.tipo==='cont') return (c.polos||2)>2 ? 3 : 2;
+  if(c.tipo==='ptm') return b.tension==='tri' ? 4 : 2;
+  return 2;
+}
+function devTitle(b,c,m){
+  if(c.tipo==='tm' && c.general) return 'Llave general';
+  if(hasCirc(b,c)) return (c.circ.icono||'')+' '+(c.circ.nombre||'Circuito');
+  if(c.tipo==='dif') return 'Disyuntor diferencial'+(m&&m.color?'':'');
+  if(c.tipo==='tm') return 'Térmica seccional';
+  return DEV_TYPES[c.tipo].full;
+}
+function devSpec(b,c){
+  const p = c.polos||2;
+  if(c.tipo==='tm')  return `${p}×${c.amp} A · curva ${c.curva} · ${fmtSec(c.ka)} kA`;
+  if(c.tipo==='dif') return `${p}×${c.amp} A · ${c.sens} mA · clase ${c.clase}`;
+  if(c.tipo==='ptm') return `${c.amp||40} A · corte por sobre/baja tensión`;
+  if(c.tipo==='dps') return `Clase II · Uc 275 V`;
+  if(c.tipo==='cont')return `${p} polos · ${c.amp||25} A · bobina 220 V`;
+  return '';
+}
+
+// =====================================================================
+//  DIBUJO REALISTA DEL TABLERO (SVG)
+// =====================================================================
+const MW=30, DH=140, RH=196, PADX=36, TOP=58;
+let SVGN=0;
+const uniqIds = str => { const k=++SVGN; return str.replace(/pv(Body|LeverB|Lever|Cover|Rail|Box|Screw|Sh)\b/g, (m)=>m+'_'+k); };
+function svgDefs(){
+  return `<defs>
+  <linearGradient id="pvBody" x1="0" x2="1"><stop offset="0" stop-color="#e4e4df"/><stop offset=".15" stop-color="#fbfbf8"/><stop offset=".85" stop-color="#f1f1ec"/><stop offset="1" stop-color="#d4d4ce"/></linearGradient>
+  <linearGradient id="pvLever" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b6068"/><stop offset=".45" stop-color="#2f3338"/><stop offset="1" stop-color="#1c1f23"/></linearGradient>
+  <linearGradient id="pvLeverB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4f86c6"/><stop offset=".5" stop-color="#2a5f9e"/><stop offset="1" stop-color="#1d4677"/></linearGradient>
+  <linearGradient id="pvCover" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3f2ee"/><stop offset="1" stop-color="#dcdbd5"/></linearGradient>
+  <linearGradient id="pvRail" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cfd3d6"/><stop offset=".5" stop-color="#9ea4a9"/><stop offset="1" stop-color="#c4c8cc"/></linearGradient>
+  <linearGradient id="pvBox" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e9e9e4"/><stop offset="1" stop-color="#c9c9c2"/></linearGradient>
+  <radialGradient id="pvScrew"><stop offset="0" stop-color="#f4f4f4"/><stop offset="1" stop-color="#8d9196"/></radialGradient>
+  <filter id="pvSh" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity=".35"/></filter>
+  </defs>`;
+}
+function drawDevice(b,c,x,y,w,m,numbered){
+  const col = m.color;
+  let s = `<g data-id="${c.id}" style="cursor:pointer" filter="url(#pvSh)">`;
+  s += `<rect x="${x+.5}" y="${y}" width="${w-1}" height="${DH}" rx="4" fill="url(#pvBody)" stroke="#8f8f8a"/>`;
+  // bornes (quedan tapados por la tapa, pero suman realismo si se ve el borde)
+  for(let i=0;i<w/MW;i++){ const cx=x+MW/2+i*MW;
+    s+=`<circle cx="${cx}" cy="${y+13}" r="5" fill="url(#pvScrew)" stroke="#6d7176"/><line x1="${cx-3.5}" y1="${y+13}" x2="${cx+3.5}" y2="${y+13}" stroke="#55595e" stroke-width="1.4"/>`;
+    s+=`<circle cx="${cx}" cy="${y+DH-13}" r="5" fill="url(#pvScrew)" stroke="#6d7176"/><line x1="${cx}" y1="${y+DH-16.5}" x2="${cx}" y2="${y+DH-9.5}" stroke="#55595e" stroke-width="1.4"/>`; }
+  s += `<rect x="${x+3}" y="${y+30}" width="${w-6}" height="${DH-60}" rx="3" fill="#fdfdfb" stroke="#cfcfc9"/>`;
+  s += `<rect x="${x+3}" y="${y+30}" width="${w-6}" height="5" rx="2" fill="${col}"/>`;
+  const cx = x+w/2;
+  if(c.tipo==='tm' || c.tipo==='dif'){
+    // palanca (ON = arriba)
+    const lw = Math.min(w-10, 14+ (w/MW-1)*MW*.9);
+    s += `<rect x="${cx-lw/2}" y="${y+40}" width="${lw}" height="28" rx="3" fill="#2a2d31"/>`;
+    s += `<rect x="${cx-lw/2+2}" y="${y+41}" width="${lw-4}" height="17" rx="2" fill="url(#${c.tipo==='dif'?'pvLeverB':'pvLever'})"/>`;
+    s += `<text x="${cx}" y="${y+54}" font-size="7" fill="#fff" text-anchor="middle" font-family="Arial" font-weight="700">I-ON</text>`;
+    if(c.tipo==='tm'){
+      s += `<text x="${cx}" y="${y+86}" font-size="${w>MW?15:12}" font-weight="800" fill="#1b1b1b" text-anchor="middle" font-family="Arial">${c.curva}${c.amp}</text>`;
+      s += `<rect x="${cx-12}" y="${y+92}" width="24" height="11" fill="none" stroke="#333" stroke-width=".8"/><text x="${cx}" y="${y+100.5}" font-size="7.5" fill="#222" text-anchor="middle" font-family="Arial">${Math.round(c.ka*1000)}</text>`;
+    } else {
+      s += `<text x="${cx-(w>MW*2?10:0)}" y="${y+84}" font-size="11" font-weight="800" fill="#1b1b1b" text-anchor="middle" font-family="Arial">${c.amp}A</text>`;
+      s += `<text x="${cx-(w>MW*2?10:0)}" y="${y+96}" font-size="9" font-weight="700" fill="#c0392b" text-anchor="middle" font-family="Arial">${c.sens}mA</text>`;
+      s += `<circle cx="${x+w-13}" cy="${y+101}" r="6.5" fill="#f4c20d" stroke="#9a7a00"/><text x="${x+w-13}" y="${y+104.5}" font-size="9" font-weight="800" text-anchor="middle" font-family="Arial" fill="#333">T</text>`;
+      s += `<text x="${x+10}" y="${y+104}" font-size="8" fill="#444" font-family="Arial">${c.clase==='A'?'A ∿':'AC'}</text>`;
+    }
+  } else if(c.tipo==='ptm'){
+    s += `<rect x="${x+8}" y="${y+42}" width="${w-16}" height="22" rx="2" fill="#11291c" stroke="#333"/>`;
+    s += `<text x="${cx}" y="${y+58}" font-size="13" fill="#7dff9e" text-anchor="middle" font-family="monospace" font-weight="700">${b.tension==='tri'?'380V':'220V'}</text>`;
+    s += `<circle cx="${x+12}" cy="${y+74}" r="3" fill="#2ecc71"/><circle cx="${x+22}" cy="${y+74}" r="3" fill="#555"/>`;
+    s += `<text x="${cx}" y="${y+92}" font-size="7.5" fill="#222" text-anchor="middle" font-family="Arial" font-weight="700">PROTECTOR</text><text x="${cx}" y="${y+101}" font-size="7.5" fill="#222" text-anchor="middle" font-family="Arial" font-weight="700">TENSIÓN</text>`;
+  } else if(c.tipo==='dps'){
+    s += `<rect x="${cx-9}" y="${y+44}" width="18" height="10" rx="1" fill="#27ae60" stroke="#1d7a44"/>`;
+    s += `<text x="${cx}" y="${y+74}" font-size="12" font-weight="800" fill="#1b1b1b" text-anchor="middle" font-family="Arial">DPS</text>`;
+    s += `<text x="${cx}" y="${y+86}" font-size="7.5" fill="#333" text-anchor="middle" font-family="Arial">Uc 275V</text>`;
+    s += `<path d="M${cx} ${y+90}v5m-7 0h14m-10 3h6m-3 3h0" stroke="#333" stroke-width="1.2"/>`;
+  } else if(c.tipo==='cont'){
+    s += `<text x="${x+8}" y="${y+46}" font-size="7" fill="#333" font-family="Arial">A1</text><text x="${x+w-18}" y="${y+46}" font-size="7" fill="#333" font-family="Arial">A2</text>`;
+    s += `<rect x="${cx-10}" y="${y+52}" width="20" height="16" rx="2" fill="#dcdcd6" stroke="#888"/><text x="${cx}" y="${y+63}" font-size="8" text-anchor="middle" font-family="Arial" fill="#333">I O</text>`;
+    s += `<text x="${cx}" y="${y+86}" font-size="12" font-weight="800" fill="#1b1b1b" text-anchor="middle" font-family="Arial">KM</text>`;
+    s += `<text x="${cx}" y="${y+98}" font-size="7.5" fill="#333" text-anchor="middle" font-family="Arial">${c.amp||25}A</text>`;
+  }
+  s += `</g>`;
+  return s;
+}
+function layoutRows(b){
+  const {order} = info(b);
+  const rows=[[]]; let used=0;
+  order.forEach(({c})=>{
+    const w = modsOf(b,c);
+    // cada disyuntor arranca riel nuevo con sus térmicas si así entra entero (como se arma en la realidad)
+    if(c.tipo==='dif' && used>0){
+      const gw = w + descendants(b,c.id).reduce((a,id)=>a+modsOf(b,b.comps.find(x=>x.id===id)),0);
+      if(gw<=ROW && used+gw>ROW){ rows.push([]); used=0; }
+    }
+    if(used+w>ROW){ rows.push([]); used=0; }
+    rows[rows.length-1].push({c, m0:used, w}); used+=w;
+  });
+  const minRows = Math.ceil((b.modulos||12)/ROW);
+  while(rows.length<minRows) rows.push([]);
+  return rows;
+}
+function panelSVG(b, opts={}){
+  const {map} = info(b);
+  const rows = layoutRows(b);
+  const W = PADX*2 + ROW*MW, H = TOP + rows.length*RH + 30;
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="Barlow, Arial, sans-serif">${svgDefs()}`;
+  // gabinete
+  s += `<rect x="4" y="4" width="${W-8}" height="${H-8}" rx="14" fill="url(#pvBox)" stroke="#9c9c94" stroke-width="2"/>`;
+  s += `<rect x="12" y="12" width="${W-24}" height="${H-24}" rx="9" fill="#3b3f43"/>`;
+  // rieles + equipos
+  rows.forEach((r,ri)=>{
+    const ry = TOP + ri*RH + 14;
+    s += `<rect x="20" y="${ry+DH/2-9}" width="${W-40}" height="18" fill="url(#pvRail)" stroke="#7d8388"/>`;
+    for(let k=26;k<W-30;k+=22) s+=`<rect x="${k}" y="${ry+DH/2-3}" width="12" height="6" rx="3" fill="#6f757a"/>`;
+    let used=0;
+    r.forEach(it=>{ const x=PADX+it.m0*MW; s+=drawDevice(b,it.c,x,ry,it.w*MW,map[it.c.id]); used=it.m0+it.w; });
+    // tapas ciegas
+    for(let k=used;k<ROW;k++){ const x=PADX+k*MW; s+=`<rect x="${x+1}" y="${ry+28}" width="${MW-2}" height="${DH-56}" fill="#e7e6e1" stroke="#c7c6bf"/><line x1="${x+MW/2}" y1="${ry+40}" x2="${x+MW/2}" y2="${ry+DH-40}" stroke="#d3d2cc"/>`; }
+  });
+  // tapa frontal con ventanas (evenodd)
+  let d = `M12 12H${W-12}V${H-12}H12Z`;
+  rows.forEach((r,ri)=>{ const ry=TOP+ri*RH+14; d+=`M${PADX-2} ${ry+28}H${PADX+ROW*MW+2}V${ry+DH-28}H${PADX-2}Z`; });
+  s += `<path d="${d}" fill="url(#pvCover)" fill-rule="evenodd" stroke="#b9b8b1"/>`;
+  rows.forEach((r,ri)=>{ const ry=TOP+ri*RH+14; s+=`<rect x="${PADX-2}" y="${ry+28}" width="${ROW*MW+4}" height="${DH-56}" fill="none" stroke="#8f8e87" stroke-width="1.5"/>`; });
+  // tornillos de la tapa
+  [[22,22],[W-22,22],[22,H-22],[W-22,H-22]].forEach(([x,y])=>s+=`<circle cx="${x}" cy="${y}" r="4.5" fill="url(#pvScrew)" stroke="#888"/><path d="M${x-3} ${y}h6M${x} ${y-3}v6" stroke="#666"/>`);
+  // título en la tapa
+  s += `<text x="${W/2}" y="34" text-anchor="middle" font-size="15" font-weight="700" fill="#2b3a31" letter-spacing="1">${esc((b.nombre||'Tablero').toUpperCase())}</text>`;
+  s += `<text x="${W/2}" y="48" text-anchor="middle" font-size="9" fill="#6b7468" letter-spacing="2">PATAGONIA VOLT · ${b.tension==='tri'?'3×380/220 V':'220 V'}</text>`;
+  // portaetiquetas con número e ícono, y número sobre el equipo
+  rows.forEach((r,ri)=>{
+    const ry=TOP+ri*RH+14, ly=ry+DH-22;
+    s += `<rect x="${PADX-2}" y="${ly}" width="${ROW*MW+4}" height="22" rx="2" fill="#fff" stroke="#bdbcb4"/>`;
+    r.forEach(it=>{
+      const x=PADX+it.m0*MW, w=it.w*MW, m=map[it.c.id];
+      const lab = hasCirc(b,it.c) ? (it.c.circ.icono||'') : (it.c.general?'⏻':it.c.tipo==='dif'?'🛡':it.c.tipo==='ptm'?'📟':it.c.tipo==='dps'?'🌩':'');
+      s += `<line x1="${x}" y1="${ly+2}" x2="${x}" y2="${ly+20}" stroke="#ddd"/>`;
+      s += `<text x="${x+w/2}" y="${ly+15}" text-anchor="middle" font-size="10" font-weight="700" fill="#222">${w>MW?m.n+' ':''}${lab}</text>`;
+      if(w<=MW) s+=`<text x="${x+w/2}" y="${ly-3}" text-anchor="middle" font-size="8" font-weight="700" fill="#333">${m.n}</text>`;
+      // chapita numerada arriba
+      s += `<circle cx="${x+w/2}" cy="${ry+18}" r="9" fill="${m.color}" stroke="#fff" stroke-width="1.5"/><text x="${x+w/2}" y="${ry+21.5}" text-anchor="middle" font-size="10" font-weight="800" fill="#fff">${m.n}</text>`;
+    });
+  });
+  s += `</svg>`;
+  return uniqIds(s);
+}
+
+// íconos pequeños de cada equipo para las tarjetas del cliente
+function miniDevice(b,c,m){
+  const w = Math.min(modsOf(b,c),4)*MW;
+  return uniqIds(`<svg viewBox="-2 26 ${w+4} ${DH-52}" width="${Math.round((w+4)*.7)}" height="${Math.round((DH-52)*.7)}">${svgDefs()}${drawDevice(b,c,0,0,w,m)}</svg>`);
+}
+
+// =====================================================================
+//  TEXTOS PARA EL CLIENTE
+// =====================================================================
+function clientText(b,c,m,I){
+  const kids = descendants(b,c.id).map(id=>b.comps.find(x=>x.id===id)).filter(x=>hasCirc(b,x));
+  const feedsList = kids.map(k=>`${I.map[k.id].n}. ${esc(k.circ.icono||'')} ${esc(k.circ.nombre)}`).join(' · ');
+  if(c.tipo==='tm' && c.general) return {
+    que:'Es la llave que corta <b>toda la casa</b>. Protege los cables si hay un cortocircuito o si se consume demasiado al mismo tiempo.',
+    feeds:'Toda la instalación', si:'Si salta: desenchufá lo último que conectaste, esperá un minuto y subila. Si vuelve a saltar, llamá al electricista.'};
+  if(hasCirc(b,c)){
+    const ci=c.circ; return {
+    que:`Térmica del circuito <b>${esc(ci.nombre)}</b>. Protege los cables de ese circuito: corta si hay un cortocircuito o demasiado consumo a la vez.`,
+    feeds: esc(ci.desc||ci.nombre) + (ci.bocas?` (${ci.bocas} ${ci.bocas==1?'boca':'bocas'})`:''),
+    si: c.tipo==='cont' ? 'Lo prende y apaga un automático (timer, fotocélula o pulsador).' : 'Si salta: desenchufá algo de ese circuito y volvé a subirla. Si salta enseguida, dejala baja y avisá al electricista.'};
+  }
+  if(c.tipo==='dif') return {
+    que:'Disyuntor diferencial: <b>te protege a vos</b> de una descarga. Si se escapa corriente (un cable pelado, un artefacto mojado) corta en milésimas de segundo.',
+    feeds: feedsList ? 'Protege: '+feedsList : 'Todavía sin circuitos',
+    si:'<b>Probalo una vez por mes</b> apretando el botón amarillo <b>T</b>: tiene que saltar. Si salta solo: bajá las térmicas de su grupo, subí el disyuntor y subí las térmicas de a una; la que lo hace saltar tiene la falla.'};
+  if(c.tipo==='ptm') return {
+    que:'Protector de tensión: corta la luz si la tensión de la red sube o baja demasiado, y la reconecta sola cuando se normaliza.',
+    feeds:'Cuida heladera, TV, computadoras y electrónicos de toda la casa', si:'Si ves la pantallita apagada o titilando, es la red: esperá unos minutos.'};
+  if(c.tipo==='dps') return {
+    que:'Descargador de sobretensión: manda a tierra los picos de tensión por rayos o maniobras de la red.',
+    feeds:'Protege los equipos de toda la instalación', si:'Si la ventanita pasa de verde a <b>rojo</b>, cumplió su función y hay que reemplazarlo.'};
+  if(c.tipo==='tm') return {que:'Térmica que protege a un grupo de circuitos.', feeds: feedsList||'—', si:'Si salta, revisá qué circuito de su grupo está con falla.'};
+  if(c.tipo==='cont') return {que:'Contactor: llave automática que prende y apaga una carga.', feeds:feedsList||'—', si:''};
+  return {que:'',feeds:'',si:''};
+}
+
+// =====================================================================
+//  HOJA CLIENTE
+// =====================================================================
+function instLine(inst){ return [inst.nombre, inst.mat, inst.tel?('Tel. '+inst.tel):''].filter(Boolean).map(esc).join(' · '); }
+function sheetCliente(b, inst){
+  const I = info(b);
+  let h = `<div class="sheet">
+    <div class="sh-head"><div><div class="sh-brand">⚡ PATAGONIA <span>VOLT</span></div><div class="meta">${esc(inst.nombre&&inst.nombre!=='Patagonia Volt'?inst.nombre:'Instalaciones eléctricas')}</div></div>
+    <div style="text-align:right"><h2>${esc(b.nombre||'Tablero')}</h2><div class="meta">${esc(b.cliente)}${b.direccion?'<br>'+esc(b.direccion):''}${b.fecha?'<br>'+fmtDate(b.fecha):''}</div></div></div>
+    <div class="svgbox">${panelSVG(b)}</div>
+    <div class="legend">`;
+  I.order.forEach(({c})=>{
+    const m=I.map[c.id], t=clientText(b,c,m,I);
+    h += `<div class="lc" style="border-left:5px solid ${m.color}"><div class="ico">${miniDevice(b,c,m)}</div><div>
+      <h4><span class="n" style="background:${m.color}">${m.n}</span>${esc(devTitle(b,c,m))}</h4>
+      <div class="spec">${devSpec(b,c)}${m.code?' · '+m.code:''}</div>
+      <p>${t.que}</p>${t.feeds?`<div class="feeds">🔌 ${t.feeds}</div>`:''}${t.si?`<p style="margin-top:5px;font-size:12px;color:#5b6657">${t.si}</p>`:''}
+    </div></div>`;
+  });
+  h += `</div>
+    <div class="guide"><h3>¿Se cortó la luz? Seguí estos pasos</h3><ol>
+      <li>Fijate si se cortó en todo el barrio: si es así, es la red y no tu tablero.</li>
+      <li>Abrí el tablero y buscá la protección que quedó <b>baja</b> (palanca abajo).</li>
+      <li>Si es una <b>térmica</b>: desenchufá lo último que conectaste en ese circuito y subila.</li>
+      <li>Si es un <b>disyuntor</b>: bajá las térmicas de su color, subí el disyuntor y subí las térmicas de a una.</li>
+      <li>Si algo vuelve a saltar enseguida, <b>no insistas</b>: dejala baja y llamá al electricista.</li>
+      <li>Nunca anules ni puentees un disyuntor: es el que te protege de una descarga.</li>
+    </ol></div>
+    <div class="sh-foot"><span>${instLine(inst)}</span><span>Instalación según AEA 90364</span></div>
+  </div>`;
+  return h;
+}
+
+// =====================================================================
+//  PLANO UNIFILAR (para electricistas)
+// =====================================================================
+function symBreaker(x,y,dif,cont){
+  // símbolo IEC de interruptor automático; y = arriba del símbolo, ocupa 70px
+  let s = `<line x1="${x}" y1="${y}" x2="${x}" y2="${y+22}" stroke="#111" stroke-width="1.6"/>`;
+  if(cont) s+=`<path d="M${x-5} ${y+22} a5 5 0 0 0 10 0" fill="none" stroke="#111" stroke-width="1.4"/>`;
+  else s+=`<path d="M${x-4} ${y+18}l8 8M${x+4} ${y+18}l-8 8" stroke="#111" stroke-width="1.4"/>`;
+  s += `<line x1="${x}" y1="${y+48}" x2="${x-14}" y2="${y+24}" stroke="#111" stroke-width="1.8"/>`;
+  s += `<line x1="${x}" y1="${y+48}" x2="${x}" y2="${y+70}" stroke="#111" stroke-width="1.6"/>`;
+  if(dif){ s+=`<ellipse cx="${x}" cy="${y+58}" rx="9" ry="4" fill="none" stroke="#111" stroke-width="1.3"/><path d="M${x-9} ${y+58}h-9V${y+36}h11" fill="none" stroke="#111" stroke-dasharray="3 2"/>`; }
+  return s;
+}
+function symBox(x,y,label){
+  return `<line x1="${x}" y1="${y}" x2="${x}" y2="${y+18}" stroke="#111" stroke-width="1.6"/><rect x="${x-15}" y="${y+18}" width="30" height="32" fill="#fff" stroke="#111" stroke-width="1.4"/><text x="${x}" y="${y+38}" font-size="10" text-anchor="middle" font-weight="700">${label}</text><line x1="${x}" y1="${y+50}" x2="${x}" y2="${y+70}" stroke="#111" stroke-width="1.6"/>`;
+}
+function symGround(x,y){ return `<path d="M${x} ${y}v8M${x-10} ${y+8}h20M${x-6} ${y+12}h12M${x-2.5} ${y+16}h5" stroke="#1d7a44" stroke-width="1.6"/>`; }
+function ticks(x,y,n){ let s=''; for(let i=0;i<n;i++){ const yy=y+i*4; s+=`<line x1="${x-5}" y1="${yy+3}" x2="${x+5}" y2="${yy-3}" stroke="#111" stroke-width="1.1"/>`; } return s; }
+function wrap(t,max){ const w=String(t||'').split(/\s+/); const out=['']; w.forEach(x=>{ if((out[out.length-1]+' '+x).trim().length>max) out.push(x); else out[out.length-1]=(out[out.length-1]+' '+x).trim(); }); return out.filter(Boolean); }
+function planoSVG(b, inst){
+  const I = info(b);
+  const SLOT=118, LV=118, X0=70, Y0=110;
+  // posiciones
+  const pos={}; let leaf=0; let maxDepth=0;
+  const place=(id,depth)=>{
+    const ch=children(b,id);
+    if(id){ maxDepth=Math.max(maxDepth,depth); }
+    if(!ch.length && id){ pos[id]={x:X0+leaf*SLOT, d:depth}; leaf++; return pos[id].x; }
+    const xs=ch.map(c=>place(c.id, depth+1));
+    const x = xs.length ? (xs[0]+xs[xs.length-1])/2 : X0+(leaf++)*SLOT;
+    if(id) pos[id]={x,d:depth};
+    return x;
+  };
+  const rootX = place(null,0);
+  const nLeaves = Math.max(leaf,1);
+  const yOf = d => Y0 + (d-1)*LV;
+  const baseY = yOf(maxDepth)+70+26;
+  const W = Math.max(X0*2 + (nLeaves-1)*SLOT + 40, 760);
+  const H = baseY + 150 + 120;
+  const tri = b.tension==='tri', nCond = tri?4:2;
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="Barlow, Arial, sans-serif" fill="#111">`;
+  s += `<rect x="1" y="1" width="${W-2}" height="${H-2}" fill="#fff" stroke="#1e5a3f" stroke-width="2"/>`;
+  // acometida
+  s += `<rect x="${rootX-48}" y="14" width="96" height="30" rx="3" fill="#fff" stroke="#111" stroke-width="1.4"/><text x="${rootX}" y="28" font-size="10" text-anchor="middle" font-weight="700">MEDIDOR</text><text x="${rootX}" y="39" font-size="8.5" text-anchor="middle">${tri?'3×380/220 V':'1×220 V'} · 50 Hz</text>`;
+  s += `<line x1="${rootX}" y1="44" x2="${rootX}" y2="${Y0}" stroke="#111" stroke-width="2.2"/>` + ticks(rootX,62,nCond+1);
+  s += `<text x="${rootX+10}" y="70" font-size="9.5">Línea principal ${nCond}×${fmtSec(b.lineaSec)} mm² + PE ${fmtSec(Math.max(2.5, b.lineaSec>=16?b.lineaSec/2:b.lineaSec))} mm²</text>`;
+  s += `<text x="${rootX+10}" y="82" font-size="9" fill="#555">Cu/PVC IRAM NM 247-3 · L marrón/negro/rojo · N celeste · PE verde-amarillo</text>`;
+  // PAT
+  s += `<line x1="${rootX}" y1="96" x2="${rootX-40}" y2="96" stroke="#1d7a44" stroke-width="1.6" stroke-dasharray="4 2"/>` + symGround(rootX-40,96);
+  s += `<text x="${rootX-54}" y="${126}" font-size="9" text-anchor="middle" fill="#1d7a44">PAT ${b.pat?esc(b.pat)+' Ω':'— Ω'}</text>`;
+  // conexiones
+  const drawLinks=(id)=>{
+    const ch=children(b,id); if(!ch.length) return;
+    const py = id ? yOf(pos[id].d)+70 : Y0;
+    const px = id ? pos[id].x : rootX;
+    if(ch.length>1){
+      const xs=ch.map(c=>pos[c.id].x); const busY = py+ (id?12:0);
+      if(id) s+=`<line x1="${px}" y1="${py}" x2="${px}" y2="${busY}" stroke="#111" stroke-width="1.6"/>`;
+      s+=`<line x1="${Math.min(...xs)}" y1="${busY}" x2="${Math.max(...xs)}" y2="${busY}" stroke="#111" stroke-width="2.6"/>`;
+      ch.forEach(c=>{ const cy=yOf(pos[c.id].d); s+=`<line x1="${pos[c.id].x}" y1="${busY}" x2="${pos[c.id].x}" y2="${cy}" stroke="#111" stroke-width="1.6"/><circle cx="${pos[c.id].x}" cy="${busY}" r="2.6"/>`; });
+    } else {
+      const c=ch[0]; s+=`<line x1="${px}" y1="${py}" x2="${pos[c.id].x}" y2="${py}" stroke="#111" stroke-width="1.6"/><line x1="${pos[c.id].x}" y1="${py}" x2="${pos[c.id].x}" y2="${yOf(pos[c.id].d)}" stroke="#111" stroke-width="1.6"/>`;
+    }
+    ch.forEach(c=>drawLinks(c.id));
+  };
+  drawLinks(null);
+  // equipos
+  I.order.forEach(({c})=>{
+    const p=pos[c.id]; if(!p) return; const x=p.x, y=yOf(p.d), m=I.map[c.id];
+    if(c.tipo==='tm') s+=symBreaker(x,y,false,false);
+    else if(c.tipo==='dif') s+=symBreaker(x,y,true,false);
+    else if(c.tipo==='cont') s+=symBreaker(x,y,false,true);
+    else if(c.tipo==='ptm') s+=symBox(x,y,'U&lt;&gt;');
+    else if(c.tipo==='dps') s+=symBox(x,y,'DPS');
+    const p2=c.polos||2;
+    const l1 = c.tipo==='tm'?`${p2}×${c.amp} A ${c.curva}` : c.tipo==='dif'?`${p2}×${c.amp} A` : c.tipo==='ptm'?`${c.amp||40} A`:c.tipo==='dps'?'Cl. II':`KM ${c.amp||25} A`;
+    const l2 = c.tipo==='tm'?`${fmtSec(c.ka)} kA` : c.tipo==='dif'?`${c.sens} mA cl.${c.clase}` : c.tipo==='ptm'?'Prot. tensión':c.tipo==='dps'?'Uc 275 V':'Bob. 220 V';
+    s+=`<circle cx="${x-24}" cy="${y+8}" r="8" fill="${m.color}"/><text x="${x-24}" y="${y+11.5}" font-size="9" fill="#fff" text-anchor="middle" font-weight="800">${m.n}</text>`;
+    const lx = (c.tipo==='ptm'||c.tipo==='dps') ? x+20 : x+8;
+    s+=`<text x="${lx}" y="${y+40}" font-size="10" font-weight="700">${l1}</text><text x="${lx}" y="${y+52}" font-size="9" fill="#444">${l2}</text>`;
+    if(c.general) s+=`<text x="${x+8}" y="${y+64}" font-size="8.5" fill="#1e5a3f" font-weight="700">GENERAL</text>`;
+    // hojas: bajada a la línea base + recuadro del circuito
+    if(isLeaf(b,c)){
+      const yb=y+70;
+      if(c.tipo==='dps'){
+        s+=`<line x1="${x}" y1="${yb}" x2="${x}" y2="${yb+14}" stroke="#1d7a44" stroke-width="1.6"/>`+symGround(x,yb+14);
+        s+=`<text x="${x}" y="${yb+44}" font-size="9" text-anchor="middle" fill="#1d7a44">a barra PE</text>`;
+        return;
+      }
+      s+=`<line x1="${x}" y1="${yb}" x2="${x}" y2="${baseY}" stroke="#111" stroke-width="1.6"/>`;
+      const ci=c.circ;
+      if(ci){
+        const pe = Math.max(2.5, ci.sec);
+        s+=ticks(x, yb+14, 3);
+        s+=`<path d="M${x-6} ${baseY}l6 9l6 -9" fill="none" stroke="#111" stroke-width="1.4"/>`;
+        const bx=x-SLOT/2+5, bw=SLOT-10, by=baseY+12;
+        s+=`<rect x="${bx}" y="${by}" width="${bw}" height="112" rx="4" fill="#f6f2e8" stroke="#1e5a3f"/>`;
+        s+=`<rect x="${bx}" y="${by}" width="${bw}" height="20" rx="4" fill="${m.color}"/><text x="${x}" y="${by+14}" font-size="11" text-anchor="middle" fill="#fff" font-weight="800">${m.code||''}</text>`;
+        wrap(ci.nombre, 18).slice(0,3).forEach((ln,i)=>s+=`<text x="${x}" y="${by+34+i*11}" font-size="9.5" text-anchor="middle" font-weight="700">${esc(ln)}</text>`);
+        s+=`<text x="${x}" y="${by+75}" font-size="9" text-anchor="middle">2×${fmtSec(ci.sec)} + PE ${fmtSec(pe)} mm²</text>`;
+        s+=`<text x="${x}" y="${by+87}" font-size="9" text-anchor="middle">${ci.bocas||0} ${ci.bocas==1?'boca':'bocas'}${tri?' · fase '+(ci.fase||'R'):''}</text>`;
+        s+=`<text x="${x}" y="${by+99}" font-size="8.5" text-anchor="middle" fill="#555">Iz≈${IZ[ci.sec]||'?'} A · In ${c.amp} A</text>`;
+      }
+    }
+  });
+  // rótulo
+  const ry=H-104, rw=Math.min(430,W-20), rx=W-rw-10;
+  s+=`<rect x="${rx}" y="${ry}" width="${rw}" height="94" fill="#fff" stroke="#111" stroke-width="1.4"/><line x1="${rx}" y1="${ry+26}" x2="${rx+rw}" y2="${ry+26}" stroke="#111"/>`;
+  s+=`<text x="${rx+8}" y="${ry+18}" font-size="13" font-weight="800" fill="#1e5a3f">PLANO UNIFILAR · ${esc((b.nombre||'').toUpperCase())}</text>`;
+  const lines=[['Cliente',b.cliente],['Dirección',b.direccion],['Instalador',[inst.nombre,inst.mat].filter(Boolean).join(' · ')],['Fecha / Norma',(fmtDate(b.fecha)||'')+' · AEA 90364-7-771']];
+  lines.forEach(([k,v],i)=>s+=`<text x="${rx+8}" y="${ry+42+i*14}" font-size="9.5"><tspan font-weight="700">${k}: </tspan>${esc(v||'')}</text>`);
+  // referencias
+  s+=`<text x="12" y="${H-92}" font-size="10" font-weight="800" fill="#1e5a3f">REFERENCIAS</text>`;
+  s+=symBreaker(30,H-84,false,false)+`<text x="50" y="${H-44}" font-size="9">Termomagnética</text>`;
+  s+=symBreaker(150,H-84,true,false)+`<text x="170" y="${H-44}" font-size="9">Diferencial</text>`;
+  s+=symBox(250,H-84,'U&lt;&gt;')+`<text x="272" y="${H-44}" font-size="9">Prot. tensión</text>`;
+  s+=`</svg>`;
+  return s;
+}
+function sheetPlano(b, inst){
+  const I=info(b);
+  const tri=b.tension==='tri';
+  let rowsH='';
+  I.order.forEach(({c})=>{
+    const m=I.map[c.id];
+    const difC = m.dif ? b.comps.find(x=>x.id===m.dif) : null;
+    if(hasCirc(b,c)){
+      const ci=c.circ;
+      rowsH+=`<tr><td><b>${m.n}</b></td><td><b>${m.code}</b> ${esc(ci.nombre)}</td><td>${CIRC_TIPOS[ci.tipo]||''}</td><td>${c.polos}×${c.amp} A ${c.curva||''}</td><td>${difC?`#${I.map[difC.id].n} ${difC.amp}A/${difC.sens}mA`:'<b style="color:#b3432e">SIN DIF.</b>'}</td><td>2×${fmtSec(ci.sec)} + PE ${fmtSec(Math.max(2.5,ci.sec))}</td><td>${ci.bocas||''}</td>${tri?`<td>${ci.fase||'R'}</td>`:''}</tr>`;
+    }
+  });
+  const v = validate(b);
+  return `<div class="sheet">
+    <div class="sh-head"><div><div class="sh-brand">⚡ PATAGONIA <span>VOLT</span></div><div class="meta">Plano unifilar para instaladores</div></div>
+    <div style="text-align:right"><h2>${esc(b.nombre||'Tablero')}</h2><div class="meta">${esc(b.cliente)}${b.direccion?'<br>'+esc(b.direccion):''}</div></div></div>
+    <div class="svgbox">${planoSVG(b,inst)}</div>
+    <h2 style="font-size:18px">Planilla de circuitos</h2>
+    <div style="overflow-x:auto"><table class="ctable"><tr><th>N°</th><th>Circuito</th><th>Tipo</th><th>Protección</th><th>Diferencial</th><th>Conductor mm²</th><th>Bocas</th>${tri?'<th>Fase</th>':''}</tr>${rowsH}</table></div>
+    <div class="notes"><b>Datos:</b> ${tri?'Trifásica 3×380/220 V':'Monofásica 220 V'} · Línea principal ${tri?4:2}×${fmtSec(b.lineaSec)} mm² · Gabinete ${b.modulos} módulos · PAT medida: ${b.pat?esc(b.pat)+' Ω':'sin dato'}.<br>
+    <b>Control AEA:</b> ${v.filter(x=>x.lv==='err').length} errores · ${v.filter(x=>x.lv==='warn').length} advertencias.${b.notas?'<br><b>Notas:</b> '+esc(b.notas):''}<br>
+    <span style="color:#7a826f">Valores de corriente admisible (Iz) orientativos para Cu/PVC en cañería embutida; verificar con las tablas de la AEA 90364 según método de instalación y agrupamiento.</span></div>
+    <div class="sh-foot"><span>${instLine(inst)}</span><span>${fmtDate(b.fecha)}</span></div>
+  </div>`;
+}
+
+// =====================================================================
+//  VALIDACIÓN (orientativa) AEA 90364-7-771
+// =====================================================================
+function validate(b){
+  const out=[]; const I=info(b); const add=(lv,t)=>out.push({lv,t});
+  const gens=b.comps.filter(c=>c.general);
+  if(!gens.length) add('err','Falta la <b>llave general</b> (termomagnética de cabecera).');
+  const circs=b.comps.filter(c=>hasCirc(b,c));
+  if(!circs.length) add('warn','Todavía no cargaste circuitos.');
+  circs.forEach(c=>{
+    const m=I.map[c.id], ci=c.circ, name=`<b>${m.code}</b> ${esc(ci.nombre)}`;
+    const dif = ancestors(b,c).find(a=>a.tipo==='dif');
+    if(!dif) add('err',`${name}: no tiene disyuntor diferencial aguas arriba.`);
+    else if(dif.sens>30) add('err',`${name}: el diferencial que lo protege es de ${dif.sens} mA; para circuitos terminales de vivienda va de 30 mA.`);
+    if(b.tension==='mono' && c.tipo==='tm' && c.polos<2) add('err',`${name}: en monofásica de vivienda la protección debe ser bipolar (corta fase y neutro).`);
+    const iz=IZ[ci.sec];
+    if(c.tipo==='tm' && iz && c.amp>iz) add('err',`${name}: ${c.amp} A sobre conductor de ${fmtSec(ci.sec)} mm² (Iz≈${iz} A). Subí la sección o bajá la térmica.`);
+    if(ci.tipo==='IUG'){ if(c.amp>16) add('err',`${name}: IUG admite protección de hasta 16 A.`); if(ci.sec<1.5) add('err',`${name}: sección mínima IUG 1,5 mm².`); if(ci.bocas>15) add('err',`${name}: más de 15 bocas en un circuito IUG.`); }
+    if(ci.tipo==='TUG'){ if(c.amp>20) add('err',`${name}: TUG admite protección de hasta 20 A.`); if(ci.sec<2.5) add('err',`${name}: sección mínima TUG 2,5 mm².`); if(ci.bocas>15) add('err',`${name}: más de 15 bocas en un circuito TUG.`); }
+    if(['TUE','IUE','ACU'].includes(ci.tipo) && ci.sec<2.5) add('warn',`${name}: sección menor a 2,5 mm² para un circuito de uso especial.`);
+    if(!ci.nombre) add('warn',`Hay un circuito sin nombre.`);
+  });
+  b.comps.filter(c=>c.tipo==='dif').forEach(d=>{
+    const up = ancestors(b,d).find(a=>a.tipo==='tm');
+    if(up && d.amp<up.amp) add('warn',`Disyuntor #${I.map[d.id].n} de ${d.amp} A detrás de térmica de ${up.amp} A: conviene In del diferencial ≥ In de la térmica que lo protege.`);
+    const n = descendants(b,d.id).map(id=>b.comps.find(x=>x.id===id)).filter(x=>hasCirc(b,x)).length;
+    if(n>4) add('warn',`Disyuntor #${I.map[d.id].n} protege ${n} circuitos: considerá repartirlos para que una falla no deje sin luz media casa.`);
+  });
+  const g=gens[0];
+  if(g){ const iz=IZ[b.lineaSec]; if(iz && g.amp>iz) add('err',`Llave general de ${g.amp} A sobre línea principal de ${fmtSec(b.lineaSec)} mm² (Iz≈${iz} A).`); }
+  if(b.lineaSec<4) add('err','La línea principal no puede ser menor a 4 mm².');
+  const pat=parseFloat(String(b.pat).replace(',','.'));
+  if(!b.pat) add('warn','Cargá el valor medido de la puesta a tierra (PAT).');
+  else if(pat>40) add('err',`PAT de ${b.pat} Ω: supera el máximo de 40 Ω.`);
+  else if(pat>10) add('warn',`PAT de ${b.pat} Ω: cumple el máximo, pero se recomienda ≤ 10 Ω.`);
+  const usedMods = layoutRows(b).reduce((a,r)=>a+r.reduce((x,it)=>x+it.w,0),0);
+  const rowsNeeded = layoutRows(b).length*ROW;
+  if(rowsNeeded > (b.modulos||0)) add('warn',`Los equipos no entran en un gabinete de ${b.modulos} módulos (usan ${usedMods}). Elegí uno más grande.`);
+  else if(usedMods/(b.modulos||1)>0.8) add('warn',`Queda menos del 20 % de reserva en el gabinete.`);
+  if(!out.filter(x=>x.lv!=='ok').length) add('ok','Todo en orden según el chequeo rápido. ✔');
+  return out;
+}
+
+// =====================================================================
+//  RENDER EDITOR
+// =====================================================================
+function fillSelect(el, arr, fmt, val){ el.innerHTML = arr.map(v=>`<option value="${v}" ${String(v)===String(val)?'selected':''}>${fmt?fmt(v):v}</option>`).join(''); }
+function renderBoardSel(){
+  document.getElementById('boardSel').innerHTML = S.boards.map(b=>`<option value="${b.id}" ${b.id===S.current?'selected':''}>${esc((b.cliente||'Sin cliente')+' — '+(b.nombre||'Tablero'))}</option>`).join('');
+}
+function renderDatos(){
+  const b=B();
+  ['cliente','direccion','nombre','fecha','pat','notas'].forEach(k=>{ const el=document.getElementById('b-'+k); if(document.activeElement!==el) el.value=b[k]||''; });
+  fillSelect(document.getElementById('b-modulos'), MODULOS, v=>v+' mód.', b.modulos);
+  fillSelect(document.getElementById('b-lineaSec'), SECS.filter(s=>s>=2.5), v=>fmtSec(v)+' mm²', b.lineaSec);
+  document.querySelectorAll('#segTension button').forEach(x=>x.classList.toggle('sel', x.dataset.v===b.tension));
+  document.getElementById('datosResumen').textContent = ' · '+(b.cliente||'sin cliente')+' · '+(b.tension==='tri'?'trifásica':'monofásica');
+  ['nombre','tel','mat'].forEach(k=>{ const el=document.getElementById('i-'+k); if(document.activeElement!==el) el.value=S.inst[k]||''; });
+}
+function renderPanel(){
+  const b=B(); const box=document.getElementById('editPanel');
+  box.innerHTML = panelSVG(b);
+  box.querySelectorAll('[data-id]').forEach(g=>g.addEventListener('click',()=>openDev(g.dataset.id)));
+}
+function renderTree(){
+  const b=B(); const I=info(b);
+  const el=document.getElementById('tree');
+  if(!I.order.length){ el.innerHTML='<div class="hint">Sin protecciones. Tocá “Agregar protección”.</div>'; return; }
+  el.innerHTML = I.order.map(({c,depth})=>{
+    const m=I.map[c.id];
+    return `<div class="it" style="padding-left:${6+depth*16}px">
+      <div class="num" style="border-color:${m.color};color:${m.color}">${m.n}</div>
+      <div class="tx" onclick="openDev('${c.id}')"><div class="t1">${esc(devTitle(b,c,m))}${m.code?` <span style="color:var(--muted);font-weight:400">${m.code}</span>`:''}</div><div class="t2">${devSpec(b,c)}${hasCirc(b,c)?` · ${fmtSec(c.circ.sec)} mm² · ${c.circ.bocas||0} bocas`:''}</div></div>
+      <div class="ac"><button onclick="moveDev('${c.id}',-1)" title="Subir">↑</button><button onclick="moveDev('${c.id}',1)" title="Bajar">↓</button><button onclick="openDev('${c.id}')" title="Editar">✎</button></div>
+    </div>`;
+  }).join('');
+}
+function renderValidation(){
+  document.getElementById('validation').innerHTML = validate(B()).map(v=>`<div class="val ${v.lv}">${v.lv==='err'?'⛔ ':v.lv==='warn'?'⚠️ ':''}${v.t}</div>`).join('');
+}
+function renderAll(){
+  renderBoardSel(); renderDatos();
+  if(curTab==='armar'){ renderPanel(); renderTree(); renderValidation(); }
+  if(curTab==='cliente') document.getElementById('sheetCliente').innerHTML = sheetCliente(B(), S.inst);
+  if(curTab==='plano') document.getElementById('sheetPlano').innerHTML = sheetPlano(B(), S.inst);
+}
+let rT=null;
+function softRender(){ clearTimeout(rT); rT=setTimeout(()=>{ save(); renderBoardSel(); if(curTab==='armar'){ renderPanel(); renderValidation(); renderTree(); } document.getElementById('datosResumen').textContent=' · '+(B().cliente||'sin cliente')+' · '+(B().tension==='tri'?'trifásica':'monofásica'); },250); }
+function setB(k,v){ B()[k]=v; softRender(); }
+function setInst(k,v){ S.inst[k]=v; save(); }
+function setTension(v){
+  const b=B(); b.tension=v;
+  b.comps.forEach(c=>{
+    if(v==='tri' && (c.general || c.tipo==='dif')) c.polos=4;
+    if(v==='mono' && (c.polos||2)>2) c.polos=2;
+  });
+  save(); renderAll();
+}
+function switchTab(t){
+  curTab=t;
+  document.querySelectorAll('#editorApp .tab').forEach(x=>x.classList.toggle('active', x.dataset.t===t));
+  ['armar','cliente','plano','qr'].forEach(k=>document.getElementById('t-'+k).classList.toggle('hide', k!==t));
+  document.getElementById('fab').classList.toggle('hide', t!=='armar');
+  renderAll(); window.scrollTo(0,0);
+}
+function selectBoard(id){ S.current=id; save(); document.getElementById('qrOut').innerHTML=''; renderAll(); }
+function newBoard(){ const b=emptyBoard(); S.boards.unshift(b); S.current=b.id; save(); document.getElementById('datosCard').open=true; switchTab('armar'); toast('Tablero nuevo: cargá los datos del cliente'); }
+function dupBoard(){ const b=JSON.parse(JSON.stringify(B())); b.id=uid(10); b.nombre=(b.nombre||'Tablero')+' (copia)'; delete b.qrUrl; S.boards.unshift(b); S.current=b.id; save(); renderAll(); toast('Tablero duplicado'); }
+function delBoard(){
+  ask('¿Borrar este tablero? No se puede deshacer.', ()=>{
+    S.boards=S.boards.filter(b=>b.id!==S.current);
+    if(!S.boards.length) S.boards.push(emptyBoard());
+    S.current=S.boards[0].id; save(); renderAll(); toast('Tablero borrado');
+  });
+}
+function loadExample(){ ask('¿Reemplazar este tablero por el ejemplo?', ()=>{ const ex=exampleBoard(); const b=B(); ex.id=b.id; Object.assign(b, ex); save(); renderAll(); toast('Ejemplo cargado'); }); }
+function moveDev(id,dir){
+  const b=B(); const c=b.comps.find(x=>x.id===id);
+  const sib=b.comps.filter(x=>x.de===c.de); const i=sib.indexOf(c); const j=i+dir;
+  if(j<0||j>=sib.length) return;
+  const a=b.comps.indexOf(sib[i]), z=b.comps.indexOf(sib[j]);
+  [b.comps[a],b.comps[z]]=[b.comps[z],b.comps[a]];
+  save(); renderAll();
+}
+
+// =====================================================================
+//  FORMULARIO DE PROTECCIÓN (bottom sheet)
+// =====================================================================
+function openDev(id){
+  const b=B();
+  if(id){ editing = JSON.parse(JSON.stringify(b.comps.find(c=>c.id===id))); editing._new=false; }
+  else {
+    // por defecto: térmica de circuito colgada del último disyuntor
+    const difs=b.comps.filter(c=>c.tipo==='dif'); const last=difs[difs.length-1];
+    const p=PRESETS[0];
+    editing = mk('tm',{de:last?last.id:(b.comps.find(c=>c.general)||{}).id||null, polos:b.tension==='tri'?2:2, amp:p.amp, curva:'C', ka:4.5, circ:circ(p), _new:true, _preset:p.k});
+  }
+  renderDevForm();
+  document.getElementById('devModal').classList.add('open');
+}
+function closeDev(){ document.getElementById('devModal').classList.remove('open'); editing=null; }
+function setE(k,v){ editing[k]=v; renderDevForm(); }
+function setC(k,v){ editing.circ=editing.circ||{}; editing.circ[k]=v; }
+function setType(t){
+  const b=B(); const e=editing;
+  e.tipo=t; delete e.general;
+  if(t==='tm'){ e.polos=2; e.amp=16; e.curva='C'; e.ka=4.5; e.circ=e.circ||circ(PRESETS[1]); }
+  if(t==='dif'){ e.polos=b.tension==='tri'?4:2; e.amp=40; e.sens=30; e.clase='A'; delete e.circ; }
+  if(t==='ptm'){ e.amp=40; delete e.circ; }
+  if(t==='dps'){ e.polos=b.tension==='tri'?4:2; delete e.circ; }
+  if(t==='cont'){ e.polos=2; e.amp=25; e.circ=e.circ||circ(PRESETS[8]); }
+  renderDevForm();
+}
+function applyPreset(k){
+  const p=PRESETS.find(x=>x.k===k); const e=editing;
+  e._preset=k; e.amp=p.amp; e.circ=circ(p,{fase:(e.circ&&e.circ.fase)||'R'}); renderDevForm();
+}
+function setRole(general){
+  const e=editing;
+  if(general){ e.general=true; e.amp=40; e.de=null; e.polos=B().tension==='tri'?4:2; }
+  else { delete e.general; e.circ=e.circ||circ(PRESETS[0]); }
+  renderDevForm();
+}
+function renderDevForm(){
+  const b=B(), e=editing, I=info(b);
+  const isNew=e._new;
+  const willHaveKids = !isNew && children(b,e.id).length>0;
+  const circMode = (e.tipo==='tm'||e.tipo==='cont') && !e.general && !willHaveKids;
+  const excl = isNew ? [] : [e.id, ...descendants(b,e.id)];
+  const parents = I.order.filter(({c})=>!excl.includes(c.id) && c.tipo!=='dps');
+  const sel = (arr,val,fn,fmt)=>`<select onchange="${fn}">${arr.map(v=>`<option value="${v}" ${String(v)===String(val)?'selected':''}>${fmt?fmt(v):v}</option>`).join('')}</select>`;
+  let h = `<h3>${isNew?'Agregar protección':'Editar protección'}</h3>`;
+  h += `<div class="types">${Object.entries(DEV_TYPES).map(([k,v])=>`<button class="${e.tipo===k?'sel':''}" onclick="setType('${k}')"><span style="font-size:20px">${v.em}</span>${v.t}</button>`).join('')}</div>`;
+  if(e.tipo==='tm' && !willHaveKids){
+    h += `<div class="seg" style="margin:8px 0"><button class="${!e.general?'sel':''}" onclick="setRole(false)">Circuito</button><button class="${e.general?'sel':''}" onclick="setRole(true)">Llave general</button></div>`;
+  }
+  if(circMode){
+    h += `<label class="f">¿Qué va a alimentar? (completa todo solo)</label><div class="presets">${PRESETS.map(p=>`<button class="${e._preset===p.k?'sel':''}" onclick="applyPreset('${p.k}')"><span class="em">${p.em}</span>${p.t}</button>`).join('')}</div>`;
+  }
+  // conectado a
+  if(!e.general){
+    h += `<label class="f">Conectado después de</label><select onchange="editing.de=this.value||null">
+      <option value="" ${!e.de?'selected':''}>Medidor (entrada del tablero)</option>
+      ${parents.map(({c,depth})=>`<option value="${c.id}" ${e.de===c.id?'selected':''}>${'— '.repeat(depth)}#${I.map[c.id].n} ${esc(devTitle(b,c,I.map[c.id]))} (${devSpec(b,c).split(' · ')[0]})</option>`).join('')}
+    </select>`;
+  }
+  // datos eléctricos
+  if(e.tipo==='tm'){
+    h += `<div class="row2"><div><label class="f">Polos</label>${sel([1,2,3,4],e.polos,"setE('polos',+this.value)",v=>v+'P')}</div><div><label class="f">Corriente</label>${sel(AMPS,e.amp,"setE('amp',+this.value)",v=>v+' A')}</div></div>
+      <div class="row2"><div><label class="f">Curva</label>${sel(['B','C','D'],e.curva,"setE('curva',this.value)")}</div><div><label class="f">Poder de corte</label>${sel([3,4.5,6,10],e.ka,"setE('ka',+this.value)",v=>fmtSec(v)+' kA')}</div></div>`;
+  }
+  if(e.tipo==='dif'){
+    h += `<div class="row2"><div><label class="f">Polos</label>${sel([2,4],e.polos,"setE('polos',+this.value)",v=>v+'P')}</div><div><label class="f">Corriente</label>${sel([25,40,63,80,100],e.amp,"setE('amp',+this.value)",v=>v+' A')}</div></div>
+      <div class="row2"><div><label class="f">Sensibilidad</label>${sel([10,30,300],e.sens,"setE('sens',+this.value)",v=>v+' mA')}</div><div><label class="f">Clase</label>${sel(['AC','A'],e.clase,"setE('clase',this.value)")}</div></div>`;
+  }
+  if(e.tipo==='ptm'){ h += `<label class="f">Corriente</label>${sel([25,32,40,63],e.amp||40,"setE('amp',+this.value)",v=>v+' A')}`; }
+  if(e.tipo==='cont'){ h += `<div class="row2"><div><label class="f">Polos</label>${sel([2,4],e.polos,"setE('polos',+this.value)",v=>v+'P')}</div><div><label class="f">Corriente</label>${sel([16,25,40,63],e.amp,"setE('amp',+this.value)",v=>v+' A')}</div></div>`; }
+  if(circMode){
+    const ci=e.circ||{};
+    h += `<label class="f">Nombre del circuito</label><input value="${esc(ci.nombre)}" oninput="setC('nombre',this.value)">
+      <label class="f">Qué alimenta (lo lee el cliente)</label><textarea oninput="setC('desc',this.value)">${esc(ci.desc)}</textarea>
+      <div class="row3"><div><label class="f">Tipo AEA</label><select onchange="setC('tipo',this.value)">${Object.keys(CIRC_TIPOS).map(k=>`<option value="${k}" ${ci.tipo===k?'selected':''}>${k}</option>`).join('')}</select></div>
+      <div><label class="f">Sección</label><select onchange="setC('sec',+this.value)">${SECS.map(v=>`<option value="${v}" ${ci.sec==v?'selected':''}>${fmtSec(v)} mm²</option>`).join('')}</select></div>
+      <div><label class="f">Bocas</label><input type="number" min="0" max="40" value="${ci.bocas||0}" oninput="setC('bocas',+this.value)"></div></div>
+      ${b.tension==='tri'?`<label class="f">Fase</label><div class="seg">${['R','S','T'].map(f=>`<button class="${(ci.fase||'R')===f?'sel':''}" onclick="setC('fase','${f}');renderDevForm()">${f}</button>`).join('')}</div>`:''}
+      <label class="f">Ícono</label><div class="presets" style="grid-template-columns:repeat(6,1fr)">${[...new Set(PRESETS.map(p=>p.em))].map(em=>`<button class="${ci.icono===em?'sel':''}" onclick="setC('icono','${em}');renderDevForm()"><span class="em">${em}</span></button>`).join('')}</div>`;
+  }
+  h += `<div class="btns" style="margin-top:14px">${!isNew?`<button class="btn-d" onclick="deleteDev()">🗑 Quitar</button>`:''}<button class="btn-s" onclick="closeDev()">Cancelar</button><button class="btn-p" onclick="saveDev()">✔ ${isNew?'Agregar':'Guardar'}</button></div>`;
+  const box=document.getElementById('devForm'); const st=box.scrollTop; box.innerHTML=h; box.scrollTop=st;
+}
+function saveDev(){
+  const b=B(); const e=editing; const isNew=e._new;
+  delete e._new; delete e._preset;
+  if(!((e.tipo==='tm'||e.tipo==='cont') && !e.general)) delete e.circ;
+  if(e.general){ b.comps.forEach(c=>{ if(c.id!==e.id) delete c.general; }); }
+  if(isNew){
+    // insertar después del último hermano para que quede agrupado
+    const sib=b.comps.filter(c=>c.de===e.de); const last=sib[sib.length-1];
+    const idx = last ? Math.max(b.comps.indexOf(last), ...descendants(b,last.id).map(id=>b.comps.findIndex(c=>c.id===id))) + 1 : b.comps.length;
+    if(e.general){ b.comps.filter(c=>c.de===null).forEach(c=>c.de=e.id); b.comps.unshift(e); }
+    else b.comps.splice(idx,0,e);
+  } else {
+    const i=b.comps.findIndex(c=>c.id===e.id); b.comps[i]=e;
+  }
+  save(); closeDev(); renderAll(); toast(isNew?'Protección agregada':'Guardado');
+}
+function deleteDev(){
+  const b=B(), e=editing;
+  const kids=children(b,e.id);
+  ask(kids.length?`Lo que estaba conectado después (${kids.length}) pasa a colgar de la protección anterior. ¿Quitar?`:'¿Quitar esta protección?', ()=>{
+    kids.forEach(k=>k.de=e.de||null);
+    if(e.general && kids[0]) {/* sin general: queda avisado en el control */}
+    b.comps=b.comps.filter(c=>c.id!==e.id); save(); closeDev(); renderAll(); toast('Protección quitada');
+  });
+}
+
+// =====================================================================
+//  QR + NUBE
+// =====================================================================
+async function cloudSave(b){
+  const id='tab_'+b.id;
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/pv_data`,{method:'POST',
+    headers:{apikey:SUPABASE_ANON_KEY, Authorization:'Bearer '+SUPABASE_ANON_KEY,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},
+    body:JSON.stringify({id, payload:{tipo:'tablero', v:1, board:b, inst:S.inst}, updated_at:new Date().toISOString()})});
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  return id;
+}
+async function cloudLoad(id){
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/pv_data?id=eq.${encodeURIComponent(id)}&select=payload`,{headers:{apikey:SUPABASE_ANON_KEY, Authorization:'Bearer '+SUPABASE_ANON_KEY}});
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  const j=await r.json(); if(!j.length) throw new Error('no existe'); return j[0].payload;
+}
+async function pack(obj){
+  const s=new Blob([JSON.stringify(obj)]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+  const u=new Uint8Array(await new Response(s).arrayBuffer()); let bin=''; u.forEach(x=>bin+=String.fromCharCode(x));
+  return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+async function unpack(str){
+  const bin=atob(str.replace(/-/g,'+').replace(/_/g,'/')); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i);
+  const s=new Blob([u]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  return JSON.parse(await new Response(s).text());
+}
+function baseUrl(){ return location.origin + location.pathname.replace(/index\.html$/,'').replace(/[^/]*$/,'') + 'tableros.html'; }
+function qrCanvas(text, px){
+  let q; try{ q=qrcode(0,'M'); q.addData(text); q.make(); }catch(e){ q=qrcode(0,'L'); q.addData(text); q.make(); }
+  const n=q.getModuleCount(), cell=Math.max(2,Math.floor(px/(n+8))), size=cell*(n+8);
+  const cv=document.createElement('canvas'); cv.width=cv.height=size; const g=cv.getContext('2d');
+  g.fillStyle='#fff'; g.fillRect(0,0,size,size); g.fillStyle='#000';
+  for(let r=0;r<n;r++) for(let c=0;c<n;c++) if(q.isDark(r,c)) g.fillRect((c+4)*cell,(r+4)*cell,cell,cell);
+  return cv;
+}
+function labelCanvas(b, url){
+  // etiqueta para imprimir y pegar en la puerta del tablero (≈ 7×10 cm)
+  const W=700, H=1000, cv=document.createElement('canvas'); cv.width=W; cv.height=H; const g=cv.getContext('2d');
+  g.fillStyle='#fff'; g.fillRect(0,0,W,H);
+  g.fillStyle='#1e5a3f'; g.fillRect(0,0,W,150);
+  g.fillStyle='#f5c518'; g.font='800 54px "Barlow Condensed", Arial'; g.textAlign='center'; g.fillText('⚡ PATAGONIA VOLT',W/2,80);
+  g.fillStyle='#fff'; g.font='500 26px Barlow, Arial'; g.fillText('Información de tu tablero eléctrico',W/2,124);
+  const q=qrCanvas(url, 520); g.imageSmoothingEnabled=false; g.drawImage(q,(W-520)/2,175,520,520);
+  g.fillStyle='#1b2a22'; g.font='700 38px Barlow, Arial'; g.fillText('📷 Escaneá con la cámara',W/2,750);
+  g.font='500 27px Barlow, Arial'; g.fillStyle='#3d4a40';
+  g.fillText('Qué hace cada protección y qué hacer si salta',W/2,792);
+  g.font='700 30px Barlow, Arial'; g.fillStyle='#1e5a3f';
+  g.fillText(((b.cliente||'')+' · '+(b.nombre||'Tablero')).slice(0,44),W/2,858);
+  g.font='500 25px Barlow, Arial'; g.fillStyle='#5b6657';
+  g.fillText([S.inst.nombre, S.inst.tel?('Tel. '+S.inst.tel):''].filter(Boolean).join(' · ').slice(0,52),W/2,900);
+  g.strokeStyle='#1e5a3f'; g.lineWidth=8; g.strokeRect(4,4,W-8,H-8);
+  return cv;
+}
+async function makeQR(){
+  const b=B(); const btn=document.getElementById('qrBtn'); const out=document.getElementById('qrOut');
+  btn.disabled=true; btn.textContent='Guardando…';
+  let url, online=true;
+  try{ const id=await cloudSave(b); url=baseUrl()+'?t='+encodeURIComponent(id); }
+  catch(e){ online=false; url=baseUrl()+'#d='+await pack({board:b,inst:S.inst}); }
+  b.qrUrl=url; save();
+  btn.disabled=false; btn.textContent='🔄 Actualizar QR (mismo código)';
+  const lab=labelCanvas(b,url); const dataUrl=lab.toDataURL('image/png');
+  const msg=`Hola${b.cliente?' '+b.cliente.replace(/\s*\(ejemplo\)/,''):''}! Te dejo la información de tu tablero eléctrico: qué hace cada protección y qué hacer si salta. ${url}`;
+  out.innerHTML = `<div class="qrbox"><img src="${dataUrl}" alt="Etiqueta QR"></div>
+    ${online?'<div class="val ok" style="margin-top:8px">Guardado en la nube. Si cambiás el tablero, tocá Actualizar y el mismo QR muestra lo nuevo.</div>'
+            :'<div class="val warn" style="margin-top:8px">Sin conexión con la nube: el QR lleva el tablero adentro (funciona igual, pero si lo cambiás tenés que imprimir uno nuevo).</div>'}
+    <div class="linkbox">${esc(url)}</div>
+    <div class="btns"><button class="btn-p" onclick="downloadDataUrl(document.querySelector('#qrOut img').src,'etiqueta-qr-${slug(b)}.png')">⬇ Etiqueta PNG</button>
+    <button class="btn-s" onclick="copyText(B().qrUrl)">📋 Copiar link</button></div>
+    <a class="btn-s btn-full" style="display:block;text-align:center;margin-top:8px;text-decoration:none" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">💬 Enviar al cliente por WhatsApp</a>
+    <div class="hint">Tip: imprimí la etiqueta en papel autoadhesivo o plastificala y pegala del lado de adentro de la puerta del tablero.</div>`;
+}
+
+// =====================================================================
+//  EXPORTAR
+// =====================================================================
+const slug = b => ((b.cliente||'tablero')+'-'+(b.nombre||'')).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+function loadH2C(){ return window.html2canvas ? Promise.resolve() : new Promise((ok,ko)=>{ const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'; s.onload=ok; s.onerror=()=>ko(new Error('sin conexión')); document.head.appendChild(s); }); }
+async function sheetCanvas(elId){
+  await loadH2C();
+  const el=document.getElementById(elId).querySelector('.sheet');
+  // render a ancho fijo para que la imagen salga igual en cualquier celular
+  const clone=el.cloneNode(true); const holder=document.createElement('div');
+  holder.style.cssText='position:fixed;left:-10000px;top:0;width:900px;background:#fff'; holder.appendChild(clone); document.body.appendChild(holder);
+  clone.querySelectorAll('.svgbox svg').forEach(s=>{ s.style.maxWidth='none'; const w=+s.getAttribute('width'); if(w>860){ s.setAttribute('width',860); s.setAttribute('height', Math.round(+s.getAttribute('height')*860/w)); } });
+  try{ return await html2canvas(clone,{scale:2,backgroundColor:'#fff',useCORS:true,logging:false}); }
+  finally{ holder.remove(); }
+}
+async function exportPNG(elId,kind){
+  toast('Generando imagen…');
+  try{ const cv=await sheetCanvas(elId); downloadDataUrl(cv.toDataURL('image/png'), `${kind}-${slug(B())}.png`); toast('Imagen lista'); }
+  catch(e){ toast('No se pudo generar la imagen: '+e.message); }
+}
+async function shareImage(elId,kind){
+  try{
+    const cv=await sheetCanvas(elId);
+    const blob=await new Promise(r=>cv.toBlob(r,'image/png'));
+    const file=new File([blob],`${kind}-${slug(B())}.png`,{type:'image/png'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:'Tablero '+(B().cliente||'')}); }
+    else { downloadDataUrl(cv.toDataURL('image/png'), file.name); toast('Tu navegador no comparte archivos: se descargó la imagen'); }
+  }catch(e){ if(e.name!=='AbortError') toast('No se pudo compartir: '+e.message); }
+}
+function exportPDF(elId){
+  const pa=document.getElementById('printArea');
+  pa.innerHTML=document.getElementById(elId).innerHTML;
+  pa.querySelectorAll('.svgbox svg').forEach(s=>{ s.removeAttribute('width'); s.removeAttribute('height'); s.style.width='100%'; s.style.maxWidth='100%'; });
+  toast('Elegí “Guardar como PDF” en la impresora');
+  setTimeout(()=>{ try{ window.print(); }catch(e){ toast('Este navegador no permite imprimir'); } },300);
+}
+function downloadDataUrl(u,name){ const a=document.createElement('a'); a.href=u; a.download=name; document.body.appendChild(a); a.click(); a.remove(); }
+async function copyText(t){ try{ await navigator.clipboard.writeText(t); toast('Link copiado'); }catch(e){ toast('No se pudo copiar'); } }
+
+// =====================================================================
+//  UI helpers
+// =====================================================================
+let tT=null;
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.style.display='block'; clearTimeout(tT); tT=setTimeout(()=>t.style.display='none',2600); }
+function ask(msg, onYes){
+  const md=document.getElementById('devModal'), f=document.getElementById('devForm');
+  f.innerHTML=`<h3>Confirmar</h3><p style="margin-bottom:14px;line-height:1.4">${msg}</p><div class="btns"><button class="btn-s" id="askNo">Cancelar</button><button class="btn-d" id="askYes">Sí, seguir</button></div>`;
+  md.classList.add('open');
+  document.getElementById('askNo').onclick=()=>md.classList.remove('open');
+  document.getElementById('askYes').onclick=()=>{ md.classList.remove('open'); onYes(); };
+}
+
+// =====================================================================
+//  MODO CLIENTE (desde el QR)
+// =====================================================================
+function viewerTab(t){
+  document.querySelectorAll('#viewerApp .tab').forEach(x=>x.classList.toggle('active', x.dataset.v===t));
+  document.getElementById('vCliente').classList.toggle('hide', t!=='cliente');
+  document.getElementById('vPlano').classList.toggle('hide', t!=='plano');
+}
+function showViewer(data){
+  VIEW=data; const b=data.board, inst=Object.assign({nombre:'Patagonia Volt',tel:'',mat:''}, data.inst||{});
+  document.getElementById('editorApp').classList.add('hide');
+  document.getElementById('viewerApp').classList.remove('hide');
+  document.title = (b.nombre||'Tablero')+' · '+(b.cliente||'');
+  document.getElementById('vSub').textContent = [b.nombre, b.cliente].filter(Boolean).join(' · ');
+  document.getElementById('vCliente').innerHTML = sheetCliente(b, inst);
+  document.getElementById('vPlano').innerHTML = sheetPlano(b, inst);
+  const tel=(inst.tel||'').replace(/\D/g,'');
+  document.getElementById('vActions').innerHTML = tel ? `<a class="btn-p" style="text-align:center;text-decoration:none" href="https://wa.me/549${tel.replace(/^0/,'').replace(/^54/,'').replace(/^9/,'')}?text=${encodeURIComponent('Hola! Te escribo por mi tablero eléctrico ('+(b.cliente||'')+')')}">💬 Escribir al electricista</a>` : '';
+}
+async function boot(){
+  const qs=new URLSearchParams(location.search);
+  const t=qs.get('t'); const hm=location.hash.match(/^#d=(.+)$/);
+  if(t||hm){
+    document.getElementById('editorApp').classList.add('hide');
+    document.getElementById('viewerApp').classList.remove('hide');
+    document.getElementById('vCliente').innerHTML='<div class="card">Cargando tablero…</div>';
+    try{ const data = t ? await cloudLoad(t) : await unpack(hm[1]); showViewer(data); }
+    catch(e){ document.getElementById('vCliente').innerHTML='<div class="card">No se pudo cargar el tablero. Revisá la conexión a internet y volvé a escanear el QR.</div>'; }
+    return;
+  }
+  load(); renderAll();
+}
+boot();
+</script>
+</body>
+</html>

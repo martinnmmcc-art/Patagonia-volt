@@ -1,4 +1,4 @@
-// Patagonia Volt — Service Worker v5
+// Patagonia Volt — Service Worker v6
 //
 // REGLA DE ORO: el service worker SOLO guarda archivos de la app (código, íconos,
 // fuentes, librerías). NUNCA toca pedidos a la base de datos (Supabase) ni a ninguna
@@ -9,9 +9,9 @@
 // - Íconos, fuentes y librerías: caché primero (casi nunca cambian).
 // - Cambiar CACHE_NAME borra todas las copias viejas al activarse.
 
-const CACHE_NAME = 'patagonia-volt-v5';
+const CACHE_NAME = 'patagonia-volt-v6';
 
-const CORE_ASSETS = ['./', './index.html', './app.js', './style.css', './manifest.json'];
+const CORE_ASSETS = ['./', './index.html', './app.js', './style.css', './manifest.json', './tableros.html'];
 const STATIC_ASSETS = [
   './icon-192.png',
   './icon-512.png',
@@ -43,7 +43,7 @@ self.addEventListener('activate', event => {
 function isCoreRequest(request, url) {
   if (request.mode === 'navigate') return true;
   if (url.origin !== self.location.origin) return false;
-  return /\/(index\.html|app\.js|style\.css)$/.test(url.pathname);
+  return /\/(index\.html|tableros\.html|app\.js|style\.css)$/.test(url.pathname);
 }
 
 self.addEventListener('fetch', event => {
@@ -67,7 +67,7 @@ self.addEventListener('fetch', event => {
         }
         return response;
       }).catch(() =>
-        caches.match(request).then(cached => cached || caches.match('./index.html'))
+        caches.match(request, { ignoreSearch: true }).then(cached => cached || caches.match('./index.html'))
       )
     );
     return;
