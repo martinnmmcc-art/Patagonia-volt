@@ -22,12 +22,17 @@ header{background:var(--surface);border-bottom:2px solid var(--accent);padding:1
 .brand{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:19px;letter-spacing:1px;color:var(--accent);line-height:1}
 .sub{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
 .hbtn{background:var(--s2);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:8px;font-size:12px;white-space:nowrap;text-decoration:none}
-.boardbar{background:var(--s2);border-bottom:1px solid var(--border);padding:8px 14px;display:flex;gap:6px;align-items:center}
-.boardbar select{flex:1;min-width:0}
-nav.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;position:sticky;top:60px;z-index:40}
-.tab{flex:1;text-align:center;padding:11px 8px;font-size:13px;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;white-space:nowrap;cursor:pointer;user-select:none}
+.obrabar{background:var(--s2);border-bottom:1px solid var(--border);padding:8px 14px 6px}
+.obrarow{display:flex;gap:6px;align-items:center}
+.obrarow select{flex:1;min-width:0}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px;scrollbar-width:none}
+.chip{flex-shrink:0;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:20px;padding:6px 12px;font-size:13px;font-weight:600;white-space:nowrap}
+.chip.sel{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.chip.add{border-style:dashed;color:var(--accent)}
+nav.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;position:sticky;top:60px;z-index:40;scrollbar-width:none}
+.tab{flex:1;text-align:center;padding:11px 10px;font-size:13px;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;white-space:nowrap;cursor:pointer;user-select:none}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
-main{padding:12px;max-width:980px;margin:0 auto}
+main{padding:12px;max-width:1000px;margin:0 auto}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:12px}
 .card h3{font-family:'Barlow Condensed',sans-serif;font-size:17px;letter-spacing:.5px;margin-bottom:8px;color:var(--accent)}
 label.f{display:block;font-size:11px;color:var(--muted);margin:8px 0 3px;text-transform:uppercase;letter-spacing:.8px}
@@ -45,33 +50,35 @@ details.card summary{cursor:pointer;font-weight:600;list-style:none}
 details.card summary::after{content:' ▾';color:var(--muted)}
 .panelwrap{background:#0b100e;border:1px solid var(--border);border-radius:var(--r);padding:8px;overflow-x:auto;text-align:center}
 .panelwrap svg{max-width:100%;height:auto}
-.hint{font-size:12px;color:var(--muted);margin-top:6px}
+.hint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.35}
 .tree .it{display:flex;align-items:center;gap:8px;padding:9px 6px;border-bottom:1px solid var(--border)}
 .tree .it:last-child{border-bottom:none}
-.tree .num{width:24px;height:24px;border-radius:50%;background:var(--s2);border:2px solid var(--muted);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
-.tree .tx{flex:1;min-width:0}
+.tree .grp{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:10px 6px 4px}
+.tree .num{width:26px;height:26px;border-radius:50%;background:var(--s2);border:2px solid var(--muted);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.tree .tx{flex:1;min-width:0;cursor:pointer}
 .tree .t1{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tree .t2{font-size:12px;color:var(--muted)}
 .tree .ac{display:flex;gap:4px}
 .tree .ac button{background:var(--s2);border:1px solid var(--border);color:var(--text);border-radius:7px;width:32px;height:32px;font-size:14px}
-.fab{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:60;box-shadow:0 6px 20px rgba(0,0,0,.5);border-radius:30px;padding:14px 22px;font-size:16px}
+.fab{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:60;box-shadow:0 6px 20px rgba(0,0,0,.5);border-radius:30px;padding:14px 22px;font-size:16px;white-space:nowrap}
 .val{font-size:13px;padding:8px 10px;border-radius:8px;margin-bottom:6px;line-height:1.35}
 .val.err{background:var(--danger-bg);color:#f3b2a5;border-left:3px solid var(--danger)}
 .val.warn{background:var(--warn-bg);color:#f2d29a;border-left:3px solid var(--warn)}
 .val.ok{background:var(--ok-bg);color:#a9dcb7;border-left:3px solid var(--green)}
-/* hoja (cliente / plano): siempre clara, como papel */
 .sheet{background:#fff;color:#1b2a22;border-radius:10px;padding:18px;margin-bottom:12px;font-family:'Barlow',sans-serif}
 .sheet .sh-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;border-bottom:3px solid #1e5a3f;padding-bottom:10px;margin-bottom:12px}
 .sheet .sh-brand{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:22px;color:#1e5a3f;letter-spacing:1px}
 .sheet .sh-brand span{color:#d4a20a}
 .sheet h2{font-family:'Barlow Condensed',sans-serif;font-size:22px;color:#1b2a22;margin-bottom:2px}
+.sheet h3.st{font-family:'Barlow Condensed',sans-serif;font-size:18px;color:#1e5a3f;margin:14px 0 6px}
 .sheet .meta{font-size:13px;color:#5b6657}
 .sheet .svgbox{overflow-x:auto;text-align:center;margin:8px 0 14px}
 .sheet .svgbox svg{max-width:100%;height:auto}
+.sheet .from{background:#ede7d8;border-radius:8px;padding:8px 10px;font-size:13px;margin-bottom:8px}
 .legend{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
 .lc{border:1px solid #d3c9b3;border-radius:10px;padding:10px;display:flex;gap:10px;background:#fffdf7;break-inside:avoid}
 .lc .ico{flex-shrink:0}
-.lc .n{display:inline-flex;width:22px;height:22px;border-radius:50%;color:#fff;font-weight:700;font-size:12px;align-items:center;justify-content:center;margin-right:6px;vertical-align:middle}
+.lc .n{display:inline-flex;min-width:22px;height:22px;border-radius:11px;color:#fff;font-weight:700;font-size:12px;align-items:center;justify-content:center;margin-right:6px;padding:0 4px}
 .lc h4{font-size:15px;margin-bottom:3px;display:flex;align-items:center}
 .lc .spec{font-size:12px;color:#5b6657;margin-bottom:4px}
 .lc p{font-size:13px;line-height:1.35;margin-bottom:4px}
@@ -80,31 +87,35 @@ details.card summary::after{content:' ▾';color:var(--muted)}
 .guide h3{font-family:'Barlow Condensed',sans-serif;color:#1e5a3f;font-size:18px;margin-bottom:6px}
 .guide li{font-size:13px;margin:0 0 5px 18px;line-height:1.35}
 .ctable{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
-.ctable th,.ctable td{border:1px solid #c9c2ae;padding:5px 6px;text-align:left}
+.ctable th,.ctable td{border:1px solid #c9c2ae;padding:5px 6px;text-align:left;vertical-align:top}
 .ctable th{background:#1e5a3f;color:#fff;font-weight:600}
 .ctable tr:nth-child(even) td{background:#f6f2e8}
 .notes{font-size:12px;color:#3d4a40;margin-top:10px;line-height:1.45}
 .sh-foot{font-size:11px;color:#7a826f;margin-top:12px;border-top:1px solid #d3c9b3;padding-top:8px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
-/* modal */
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;display:none;align-items:flex-end;justify-content:center}
 .modal.open{display:flex}
 .sheetm{background:var(--surface);border-top:2px solid var(--accent);border-radius:16px 16px 0 0;width:100%;max-width:640px;max-height:92vh;overflow-y:auto;padding:14px 14px 24px}
 .sheetm h3{font-family:'Barlow Condensed',sans-serif;font-size:20px;color:var(--accent);margin-bottom:8px}
-.types{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px}
-.types button,.presets button{background:var(--s2);border:2px solid var(--border);color:var(--text);border-radius:10px;padding:8px 4px;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:4px;line-height:1.1}
+.sheetm h4{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:10px 0 5px}
+.types{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:4px}
+.types button,.presets button{background:var(--s2);border:2px solid var(--border);color:var(--text);border-radius:10px;padding:7px 3px;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1.1}
 .types button.sel,.presets button.sel{border-color:var(--accent);background:#2a2a14}
+.types .em,.presets .em{font-size:19px}
 .presets{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.presets button{font-size:11px;padding:7px 2px}
-.presets .em{font-size:20px}
+.btypes{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.btypes button{background:var(--s2);border:2px solid var(--border);color:var(--text);border-radius:12px;padding:12px 8px;text-align:left;font-size:13px;line-height:1.25}
+.btypes button b{display:block;font-size:15px;margin-bottom:2px}
+.btypes button.sel{border-color:var(--accent);background:#2a2a14}
 .seg{display:flex;border:1px solid var(--border);border-radius:9px;overflow:hidden}
 .seg button{flex:1;background:var(--bg);border:none;color:var(--muted);padding:9px 4px;font-size:13px;font-weight:600}
 .seg button.sel{background:var(--accent);color:var(--on-accent)}
 .qrbox{background:#fff;border-radius:12px;padding:14px;text-align:center;color:#1b2a22}
-.qrbox img{width:240px;max-width:100%;image-rendering:pixelated}
+.qrbox img{width:260px;max-width:100%}
 .linkbox{word-break:break-all;font-size:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px;margin:8px 0;color:var(--muted)}
-.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#000c;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;z-index:200;display:none;max-width:90vw;text-align:center}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#000d;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;z-index:200;display:none;max-width:90vw;text-align:center}
 .viewer-top{background:#1e5a3f;color:#fff;padding:14px;text-align:center}
 .viewer-top .brand{color:#f5c518}
+.vchips{display:flex;gap:6px;overflow-x:auto;padding:10px 12px;background:#13201a}
 .hide{display:none!important}
 #printArea{display:none}
 @media print{
@@ -129,27 +140,61 @@ details.card summary::after{content:' ▾';color:var(--muted)}
   </div>
   <a class="hbtn" href="index.html">← Presupuestos</a>
 </header>
-<div class="boardbar">
-  <select id="boardSel" onchange="selectBoard(this.value)"></select>
-  <button class="hbtn" onclick="newBoard()">＋ Nuevo</button>
-  <button class="hbtn" onclick="dupBoard()" title="Duplicar">⧉</button>
+<div class="obrabar">
+  <div class="obrarow">
+    <select id="obraSel" onchange="selectObra(this.value)"></select>
+    <button class="hbtn" onclick="newObra()">＋ Cliente</button>
+  </div>
+  <div class="chips" id="boardChips"></div>
 </div>
 <nav class="tabs">
+  <div class="tab" data-t="obra" onclick="switchTab('obra')">🏠 Obra</div>
   <div class="tab active" data-t="armar" onclick="switchTab('armar')">🔧 Armar</div>
   <div class="tab" data-t="cliente" onclick="switchTab('cliente')">👤 Cliente</div>
-  <div class="tab" data-t="plano" onclick="switchTab('plano')">📐 Plano</div>
+  <div class="tab" data-t="plano" onclick="switchTab('plano')">📐 Unifilar</div>
+  <div class="tab" data-t="mando" onclick="switchTab('mando')">🎛 Mando</div>
   <div class="tab" data-t="qr" onclick="switchTab('qr')">📲 QR</div>
 </nav>
 
 <main>
+  <!-- OBRA -->
+  <section id="t-obra" class="hide">
+    <div class="card">
+      <h3>Cliente / obra</h3>
+      <label class="f">Cliente</label><input id="o-cliente" oninput="setO('cliente',this.value)" placeholder="Ej: Familia Gómez">
+      <label class="f">Dirección</label><input id="o-direccion" oninput="setO('direccion',this.value)" placeholder="Ej: Los Coihues 250, El Bolsón">
+    </div>
+    <div class="card">
+      <h3>Esquema de la instalación</h3>
+      <div class="panelwrap" id="obraDiagram" style="background:#fff"></div>
+      <div class="hint">Tocá un tablero para abrirlo. Las flechas son las salidas de un tablero a otro, con su protección y su cable.</div>
+      <button class="btn-p btn-full" style="margin-top:10px" onclick="openNewBoard()">＋ Agregar tablero a esta obra</button>
+    </div>
+    <div class="card">
+      <h3>Mis datos de instalador</h3>
+      <div class="row2">
+        <div><label class="f">Nombre / empresa</label><input id="i-nombre" oninput="setInst('nombre',this.value)"></div>
+        <div><label class="f">WhatsApp / teléfono</label><input id="i-tel" inputmode="tel" oninput="setInst('tel',this.value)" placeholder="Ej: 2944 123456"></div>
+      </div>
+      <label class="f">Matrícula / certificación</label><input id="i-mat" oninput="setInst('mat',this.value)" placeholder="Ej: Instalador ERSEP cat. III">
+      <div class="hint">Aparece en las hojas, el plano y la etiqueta QR.</div>
+    </div>
+    <div class="btns">
+      <button class="btn-s" onclick="loadExampleObra()">⭐ Cargar obra de ejemplo</button>
+      <button class="btn-d" onclick="delObra()">🗑 Borrar cliente</button>
+    </div>
+  </section>
+
   <!-- ARMAR -->
   <section id="t-armar">
     <details class="card" id="datosCard">
       <summary>📋 Datos del tablero <span id="datosResumen" style="color:var(--muted);font-weight:400;font-size:13px"></span></summary>
-      <label class="f">Cliente</label><input id="b-cliente" oninput="setB('cliente',this.value)" placeholder="Ej: Familia Gómez">
-      <label class="f">Dirección</label><input id="b-direccion" oninput="setB('direccion',this.value)" placeholder="Ej: Av. San Martín 1234, El Bolsón">
       <div class="row2">
-        <div><label class="f">Nombre del tablero</label><input id="b-nombre" oninput="setB('nombre',this.value)"></div>
+        <div><label class="f">Nombre</label><input id="b-nombre" oninput="setB('nombre',this.value)"></div>
+        <div><label class="f">Tipo</label><select id="b-tipo" onchange="setB('tipo',this.value);renderAll()"></select></div>
+      </div>
+      <div class="row2">
+        <div><label class="f">Ubicación</label><input id="b-ubic" oninput="setB('ubic',this.value)" placeholder="Ej: Lavadero"></div>
         <div><label class="f">Fecha</label><input id="b-fecha" type="date" oninput="setB('fecha',this.value)"></div>
       </div>
       <label class="f">Alimentación</label>
@@ -158,13 +203,15 @@ details.card summary::after{content:' ▾';color:var(--muted)}
         <button data-v="tri" onclick="setTension('tri')">Trifásica 3×380/220 V</button>
       </div>
       <div class="row3">
-        <div><label class="f">Gabinete (módulos)</label><select id="b-modulos" onchange="setB('modulos',+this.value)"></select></div>
-        <div><label class="f">Línea principal</label><select id="b-lineaSec" onchange="setB('lineaSec',+this.value)"></select></div>
-        <div><label class="f">PAT medida (Ω)</label><input id="b-pat" inputmode="decimal" oninput="setB('pat',this.value)" placeholder="Ej: 8"></div>
+        <div><label class="f">Gabinete</label><select id="b-modulos" onchange="setB('modulos',+this.value)"></select></div>
+        <div><label class="f">Montaje</label><select id="b-gabinete" onchange="setB('gabinete',this.value)"><option value="embutir">Embutir</option><option value="estanco">Estanco IP65</option></select></div>
+        <div><label class="f">PAT (Ω)</label><input id="b-pat" inputmode="decimal" oninput="setB('pat',this.value)" placeholder="Ej: 8"></div>
       </div>
-      <label class="f">Notas para el plano</label><textarea id="b-notas" oninput="setB('notas',this.value)" placeholder="Ej: Jabalina 1,5 m con cámara de inspección junto al pilar"></textarea>
+      <label class="f" id="lblLinea">Línea de alimentación</label><select id="b-lineaSec" onchange="setB('lineaSec',+this.value)"></select>
+      <div class="hint" id="fedHint"></div>
+      <label class="f">Notas para el plano</label><textarea id="b-notas" oninput="setB('notas',this.value)" placeholder="Ej: Jabalina 1,5 m con cámara de inspección"></textarea>
       <div class="btns" style="margin-top:10px">
-        <button class="btn-s" onclick="loadExample()">⭐ Cargar ejemplo</button>
+        <button class="btn-s" onclick="dupBoard()">⧉ Duplicar</button>
         <button class="btn-d" onclick="delBoard()">🗑 Borrar tablero</button>
       </div>
     </details>
@@ -172,32 +219,21 @@ details.card summary::after{content:' ▾';color:var(--muted)}
     <div class="card">
       <h3>Vista del tablero</h3>
       <div class="panelwrap" id="editPanel"></div>
-      <div class="hint">Tocá cualquier protección para editarla. Los colores agrupan lo que protege cada disyuntor.</div>
+      <div class="hint">Tocá cualquier equipo para editarlo. Los colores agrupan lo que protege cada disyuntor. Pilotos, pulsadores y selectores van en la puerta.</div>
     </div>
 
     <div class="card">
-      <h3>Protecciones y circuitos</h3>
+      <h3>Equipos y circuitos</h3>
       <div class="tree" id="tree"></div>
     </div>
 
     <div class="card">
-      <h3>Control según AEA 90364-7-771</h3>
+      <h3>Control según AEA 90364</h3>
       <div id="validation"></div>
       <div class="hint">Chequeo orientativo para no olvidarse de nada; el cálculo final y la firma son del instalador.</div>
     </div>
-
-    <div class="card">
-      <h3>Mis datos de instalador</h3>
-      <div class="row2">
-        <div><label class="f">Nombre / empresa</label><input id="i-nombre" oninput="setInst('nombre',this.value)"></div>
-        <div><label class="f">WhatsApp / teléfono</label><input id="i-tel" inputmode="tel" oninput="setInst('tel',this.value)" placeholder="Ej: 2944 123456"></div>
-      </div>
-      <label class="f">Matrícula / certificación</label><input id="i-mat" oninput="setInst('mat',this.value)" placeholder="Ej: Instalador ERSEP cat. III">
-      <div class="hint">Aparece en la hoja del cliente, en el plano y en la etiqueta QR.</div>
-    </div>
   </section>
 
-  <!-- CLIENTE -->
   <section id="t-cliente" class="hide">
     <div class="btns" style="margin-bottom:10px">
       <button class="btn-p" onclick="exportPNG('sheetCliente','cliente')">🖼 Imagen</button>
@@ -207,47 +243,50 @@ details.card summary::after{content:' ▾';color:var(--muted)}
     <div id="sheetCliente"></div>
   </section>
 
-  <!-- PLANO -->
   <section id="t-plano" class="hide">
     <div class="btns" style="margin-bottom:10px">
-      <button class="btn-p" onclick="exportPNG('sheetPlano','plano')">🖼 Imagen</button>
+      <button class="btn-p" onclick="exportPNG('sheetPlano','unifilar')">🖼 Imagen</button>
       <button class="btn-s" onclick="exportPDF('sheetPlano')">📄 PDF</button>
-      <button class="btn-s" onclick="shareImage('sheetPlano','plano')">📤 Compartir</button>
+      <button class="btn-s" onclick="shareImage('sheetPlano','unifilar')">📤 Compartir</button>
     </div>
     <div id="sheetPlano"></div>
   </section>
 
-  <!-- QR -->
+  <section id="t-mando" class="hide">
+    <div class="btns" style="margin-bottom:10px">
+      <button class="btn-p" onclick="exportPNG('sheetMando','mando')">🖼 Imagen</button>
+      <button class="btn-s" onclick="exportPDF('sheetMando')">📄 PDF</button>
+      <button class="btn-s" onclick="shareImage('sheetMando','mando')">📤 Compartir</button>
+    </div>
+    <div id="sheetMando"></div>
+  </section>
+
   <section id="t-qr" class="hide">
     <div class="card">
       <h3>QR para pegar en el tablero</h3>
-      <p style="font-size:14px;line-height:1.4;margin-bottom:10px">El cliente escanea el QR con la cámara del celular y ve su tablero: qué hace cada protección, qué alimenta y qué hacer si salta. Si después cambiás algo y tocás <b>Actualizar</b>, el mismo QR muestra la versión nueva.</p>
+      <p style="font-size:14px;line-height:1.4;margin-bottom:10px">El cliente escanea el QR y ve <b>este tablero</b> y además puede pasar a los otros tableros de su casa. Si después cambiás algo y tocás <b>Actualizar</b>, el mismo QR muestra la versión nueva.</p>
       <button class="btn-p btn-full" id="qrBtn" onclick="makeQR()">📲 Generar / actualizar QR</button>
       <div id="qrOut" style="margin-top:12px"></div>
     </div>
   </section>
 </main>
-<button class="btn-p fab" id="fab" onclick="openDev(null)">＋ Agregar protección</button>
+<button class="btn-p fab" id="fab" onclick="openDev(null)">＋ Agregar equipo</button>
 </div>
 
 <!-- ======== MODO CLIENTE (abre desde el QR) ======== -->
 <div id="viewerApp" class="hide">
   <div class="viewer-top">
-    <div class="brand" id="vBrand">⚡ PATAGONIA VOLT</div>
+    <div class="brand">⚡ PATAGONIA VOLT</div>
     <div style="font-size:13px;opacity:.9;margin-top:4px" id="vSub"></div>
   </div>
-  <nav class="tabs" style="top:0">
-    <div class="tab active" data-v="cliente" onclick="viewerTab('cliente')">👤 Mi tablero</div>
-    <div class="tab" data-v="plano" onclick="viewerTab('plano')">📐 Plano técnico</div>
-  </nav>
+  <div class="vchips chips" id="vChips"></div>
+  <nav class="tabs" style="top:0" id="vTabs"></nav>
   <main>
-    <div id="vCliente"></div>
-    <div id="vPlano" class="hide"></div>
+    <div id="vBody"></div>
     <div class="btns" id="vActions" style="margin-top:6px"></div>
   </main>
 </div>
 
-<!-- MODAL protección -->
 <div class="modal" id="devModal" onclick="if(event.target===this)closeDev()">
   <div class="sheetm" id="devForm"></div>
 </div>
@@ -263,19 +302,34 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 // =====================================================================
 const SUPABASE_URL = 'https://kmkprbnwcbavonfnyput.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtta3ByYm53Y2Jhdm9uZm55cHV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzODUyMjgsImV4cCI6MjEwMDk2MTIyOH0.A-d1FquQftEcXheF7uTnEHJ-Z1UULb5VSIqq9e1cR8c';
-const LS_KEY = 'pv_tableros_v1';
+const LS_KEY = 'pv_tableros_v2', LS_OLD = 'pv_tableros_v1';
 
-const AMPS = [6,10,16,20,25,32,40,50,63,80,100];
+const AMPS = [2,4,6,10,16,20,25,32,40,50,63,80,100];
 const SECS = [1,1.5,2.5,4,6,10,16,25,35];
-const MODULOS = [8,12,24,36,48];
-const ROW = 12;                       // módulos por riel
-// Corriente admisible orientativa (A) — conductores de Cu/PVC en cañería embutida, 2 conductores cargados
+const MODULOS = [4,8,12,24,36,48];
+const ROW = 12;
+// Corriente admisible orientativa (A) — Cu/PVC en cañería embutida, 2 conductores cargados
 const IZ = {1:11,1.5:15,2.5:21,4:28,6:36,10:50,16:66,25:88,35:109};
 const GROUP_COLORS = ['#2f80ed','#e67e22','#9b51e0','#16a085','#d6336c','#7f8c1a'];
-
+const GM_RANGOS = ['0,63-1','1-1,6','1,6-2,5','2,5-4','4-6,3','6-10','9-14','13-18','17-23','20-25','24-32'];
+const LUZ_COLORS = {verde:'#2ecc40',rojo:'#e8322b',amarillo:'#f5c518',azul:'#2f80ed',blanco:'#f4f4f4'};
+const SEN_KINDS = {
+  flotante:{t:'Flotante', em:'🛟'}, electrodos:{t:'Control de nivel (electrodos)', em:'💧'}, presostato:{t:'Presostato', em:'⏲'},
+  fotocelula:{t:'Fotocélula', em:'🌗'}, termostato:{t:'Termostato', em:'🌡'}, fincarrera:{t:'Fin de carrera', em:'⛔'},
+  movimiento:{t:'Sensor de movimiento', em:'🏃'}, otro:{t:'Contacto externo', em:'🔘'}
+};
+const BOARD_TYPES = {
+  pilar:      {em:'🏗', t:'Pilar',        code:'TPi', desc:'Junto al medidor'},
+  principal:  {em:'🏠', t:'Principal',    code:'TP',  desc:'Toda la casa'},
+  seccional:  {em:'🔀', t:'Seccional',    code:'TS',  desc:'Un sector (planta alta, quincho…)'},
+  bomba:      {em:'💧', t:'Bomba de agua',code:'TB',  desc:'Bomba con flotante, M-0-A y pilotos'},
+  automatismo:{em:'🎛', t:'Automatismo',  code:'TA',  desc:'Contactor, horario, fotocélula…'},
+  otro:       {em:'📦', t:'Otro',         code:'T',   desc:'Tablero vacío'}
+};
 const CIRC_TIPOS = {
   IUG:'Iluminación de uso general', TUG:'Tomacorrientes de uso general', IUE:'Iluminación de uso especial',
-  TUE:'Tomacorrientes de uso especial', ACU:'Alimentación de carga única', OTRO:'Otro'
+  TUE:'Tomacorrientes de uso especial', ACU:'Alimentación de carga única', MOT:'Motor', LS:'Línea seccional (a otro tablero)',
+  MANDO:'Circuito de mando', OTRO:'Otro'
 };
 const PRESETS = [
   {k:'luz',  em:'💡', t:'Iluminación', tipo:'IUG', amp:10, sec:1.5, bocas:8, nombre:'Iluminación', desc:'Luces y bocas de techo'},
@@ -285,70 +339,148 @@ const PRESETS = [
   {k:'aire', em:'❄️', t:'Aire acond.', tipo:'TUE', amp:20, sec:4,   bocas:1, nombre:'Aire acondicionado', desc:'Equipo split'},
   {k:'horno',em:'🔥', t:'Horno/anafe', tipo:'TUE', amp:25, sec:4,   bocas:1, nombre:'Horno y anafe eléctrico', desc:'Horno empotrado y anafe'},
   {k:'calef',em:'♨️', t:'Calefacción', tipo:'TUE', amp:20, sec:4,   bocas:2, nombre:'Calefacción eléctrica', desc:'Estufas / paneles calefactores'},
-  {k:'bomba',em:'💧', t:'Bomba agua',  tipo:'ACU', amp:16, sec:2.5, bocas:1, nombre:'Bomba de agua', desc:'Bomba presurizadora / de pozo'},
   {k:'ext',  em:'🌳', t:'Exterior',    tipo:'IUE', amp:10, sec:2.5, bocas:4, nombre:'Luces exteriores', desc:'Parque, galería y frente'},
+  {k:'bomba',em:'💧', t:'Bomba/motor', tipo:'MOT', amp:16, sec:2.5, bocas:1, nombre:'Bomba de agua', desc:'Bomba presurizadora / de pozo'},
   {k:'porton',em:'🚗',t:'Portón',      tipo:'ACU', amp:10, sec:2.5, bocas:1, nombre:'Portón automático', desc:'Motor del portón'},
+  {k:'tab',  em:'➡️', t:'Otro tablero',tipo:'LS',  amp:25, sec:4,   bocas:0, nombre:'Salida a tablero', desc:''},
+  {k:'mando',em:'🎛', t:'Mando',       tipo:'MANDO',amp:6, sec:1,   bocas:0, nombre:'Circuito de mando', desc:'Alimenta bobinas, pilotos y pulsadores'},
   {k:'gar',  em:'🛠', t:'Taller',      tipo:'TUG', amp:20, sec:2.5, bocas:6, nombre:'Garaje / taller', desc:'Tomas del garaje y herramientas'},
   {k:'otro', em:'📦', t:'Otro',        tipo:'OTRO',amp:16, sec:2.5, bocas:1, nombre:'Circuito', desc:''}
 ];
-const DEV_TYPES = {
-  tm:  {em:'⚡', t:'Térmica',            full:'Interruptor termomagnético'},
-  dif: {em:'🛡', t:'Disyuntor',          full:'Interruptor diferencial'},
-  ptm: {em:'📟', t:'Prot. tensión',      full:'Protector de tensión'},
-  dps: {em:'🌩', t:'Descargador',        full:'Descargador de sobretensión (DPS)'},
-  cont:{em:'🔁', t:'Contactor',          full:'Contactor'}
+// cat: power = árbol de fuerza (unifilar) · rail = mando en riel · door = puerta · field = afuera del tablero
+const DEV = {
+  tm:   {em:'⚡', t:'Térmica',      full:'Interruptor termomagnético', cat:'power', tag:'Q'},
+  dif:  {em:'🛡', t:'Disyuntor',    full:'Interruptor diferencial',    cat:'power', tag:'ID'},
+  ptm:  {em:'📟', t:'Prot. tensión',full:'Protector de tensión',       cat:'power', tag:'FV'},
+  dps:  {em:'🌩', t:'Descargador',  full:'Descargador de sobretensión (DPS)', cat:'power', tag:'FS'},
+  gm:   {em:'⚙️', t:'Guardamotor',  full:'Guardamotor',                cat:'power', tag:'QM'},
+  cont: {em:'🔁', t:'Contactor',    full:'Contactor',                  cat:'power', tag:'KM'},
+  rt:   {em:'🌡', t:'Relé térmico', full:'Relé térmico',               cat:'power', tag:'F'},
+  temp: {em:'⏱', t:'Temporizador', full:'Temporizador',               cat:'rail',  tag:'KT'},
+  ih:   {em:'🕒', t:'Horario',      full:'Interruptor horario',        cat:'rail',  tag:'KH'},
+  sel:  {em:'🎚', t:'Selector',     full:'Selector',                   cat:'door',  tag:'SA'},
+  pul:  {em:'🔘', t:'Pulsador',     full:'Pulsador',                   cat:'door',  tag:'S'},
+  emerg:{em:'🛑', t:'Emergencia',   full:'Parada de emergencia',       cat:'door',  tag:'S0'},
+  luz:  {em:'🟢', t:'Señalizador',  full:'Señalizador luminoso',       cat:'door',  tag:'H'},
+  sen:  {em:'🛟', t:'Sensor',       full:'Sensor / contacto externo',  cat:'field', tag:'B'}
 };
+const DEV_GROUPS = [['Protecciones',['tm','dif','ptm','dps']],['Fuerza motriz',['gm','cont','rt']],['Mando y señalización',['sel','pul','emerg','luz','temp','ih','sen']]];
+const isPower = c => DEV[c.tipo] && DEV[c.tipo].cat==='power';
 
 // =====================================================================
 //  ESTADO
 // =====================================================================
-let S = { boards:[], current:null, inst:{nombre:'Patagonia Volt', tel:'', mat:''} };
-let VIEW = null;           // en modo cliente: {board, inst}
+let S = { obras:[], cur:{o:null,b:null}, inst:{nombre:'Patagonia Volt', tel:'', mat:''} };
+let VIEW = null;
 let curTab = 'armar';
-let editing = null;        // borrador de la protección que se edita
+let editing = null;
 
 const uid = (n=10) => { let s=''; const a='abcdefghijkmnpqrstuvwxyz23456789'; const r=crypto.getRandomValues(new Uint8Array(n)); r.forEach(x=>s+=a[x%a.length]); return s; };
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtSec = v => String(v).replace('.',',');
 const today = () => new Date().toISOString().slice(0,10);
 const fmtDate = d => { if(!d) return ''; const [y,m,dd]=d.split('-'); return `${dd}/${m}/${y}`; };
+const num = v => parseFloat(String(v==null?'':v).replace(',','.'));
 
 function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(S)); }catch(e){} }
-function load(){
-  try{ const raw = localStorage.getItem(LS_KEY); if(raw){ const o=JSON.parse(raw); if(o && Array.isArray(o.boards)) S = Object.assign(S,o); } }catch(e){}
-  if(!S.boards.length){ const b = exampleBoard(); S.boards.push(b); S.current=b.id; save(); }
-  if(!S.boards.find(b=>b.id===S.current)) S.current = S.boards[0].id;
+function migrateBoard(b){
+  // v1 → v2: cliente/dirección pasan a la obra
+  const o = {id:b.id, cliente:b.cliente||'', direccion:b.direccion||'', boards:[]};
+  delete b.cliente; delete b.direccion; delete b.qrUrl;
+  b.tipo = b.tipo||'principal'; b.gabinete=b.gabinete||'embutir';
+  o.boards.push(b); return o;
 }
-const B = () => S.boards.find(b=>b.id===S.current);
+function load(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(raw){ const o=JSON.parse(raw); if(o && Array.isArray(o.obras)) S = Object.assign(S,o); }
+    else {
+      const old = localStorage.getItem(LS_OLD);
+      if(old){ const o=JSON.parse(old); if(o && Array.isArray(o.boards)){ S.obras = o.boards.map(migrateBoard); if(o.inst) S.inst=o.inst; } }
+    }
+  }catch(e){}
+  if(!S.obras.length){ const o=exampleObra(); S.obras.push(o); }
+  if(!O()) S.cur.o = S.obras[0].id;
+  if(!B()) S.cur.b = O().boards[0] && O().boards[0].id;
+  if(!B()){ const b=makeBoard('principal'); O().boards.push(b); S.cur.b=b.id; }
+  save();
+}
+const O = () => S.obras.find(o=>o.id===S.cur.o);
+const B = () => { const o=O(); return o && o.boards.find(b=>b.id===S.cur.b); };
 
 // =====================================================================
-//  MODELOS
+//  MODELOS Y PLANTILLAS
 // =====================================================================
 function mk(tipo, o){ return Object.assign({id:uid(6), tipo, de:null}, o); }
-function baseBoard(){
-  return {id:uid(10), nombre:'Tablero principal', cliente:'', direccion:'', fecha:today(), tension:'mono',
-          modulos:24, lineaSec:6, pat:'', notas:'', comps:[]};
-}
-function emptyBoard(){
-  const b = baseBoard();
-  const g = mk('tm',{polos:2, amp:32, curva:'C', ka:4.5, general:true});
-  const d = mk('dif',{de:g.id, polos:2, amp:40, sens:30, clase:'A'});
-  b.comps.push(g,d);
+function circ(p, extra){ return Object.assign({tipo:p.tipo, nombre:p.nombre, sec:p.sec, bocas:p.bocas, icono:p.em, desc:p.desc, fase:'R'}, extra||{}); }
+const P = k => PRESETS.find(p=>p.k===k);
+function makeBoard(tipo){
+  const bt = BOARD_TYPES[tipo]||BOARD_TYPES.otro;
+  const b = {id:uid(10), tipo, nombre:(tipo==='otro'?'Tablero':'Tablero '+bt.t.toLowerCase()), ubic:'', fecha:today(), tension:'mono',
+             gabinete:'embutir', modulos:24, lineaSec:6, pat:'', notas:'', comps:[]};
+  const add = (...cs)=>{ b.comps.push(...cs); return cs[0]; };
+  if(tipo==='pilar'){
+    b.nombre='Tablero de pilar'; b.ubic='Pilar de medición'; b.gabinete='estanco'; b.modulos=4; b.lineaSec=10;
+    add(mk('tm',{polos:2, amp:40, curva:'C', ka:4.5, general:true, circ:circ(P('tab'),{nombre:'Salida a tablero principal', sec:10})}));
+  }
+  else if(tipo==='principal'){
+    b.nombre='Tablero principal';
+    const g=add(mk('tm',{polos:2, amp:32, curva:'C', ka:4.5, general:true}));
+    add(mk('dif',{de:g.id, polos:2, amp:40, sens:30, clase:'A'}));
+  }
+  else if(tipo==='seccional'){
+    b.nombre='Tablero seccional'; b.modulos=12; b.lineaSec=4;
+    const g=add(mk('tm',{polos:2, amp:25, curva:'C', ka:4.5, general:true}));
+    const d=add(mk('dif',{de:g.id, polos:2, amp:25, sens:30, clase:'A'}));
+    add(mk('tm',{de:d.id, polos:2, amp:10, curva:'C', ka:4.5, circ:circ(P('luz'))}), mk('tm',{de:d.id, polos:2, amp:16, curva:'C', ka:4.5, circ:circ(P('tomas'))}));
+  }
+  else if(tipo==='bomba'){
+    b.nombre='Tablero de bomba'; b.ubic='Sala de bombas'; b.gabinete='estanco'; b.modulos=24; b.lineaSec=4;
+    const g=add(mk('tm',{polos:2, amp:16, curva:'C', ka:4.5, general:true}));
+    const d=add(mk('dif',{de:g.id, polos:2, amp:25, sens:30, clase:'A'}));
+    const qm=add(mk('gm',{de:d.id, polos:2, rango:'6-10', ajuste:7.5}));
+    const km=add(mk('cont',{de:qm.id, polos:2, amp:25, bobina:'220 V', circ:circ(P('bomba'),{nombre:'Bomba de agua', desc:'Bomba elevadora al tanque', sec:2.5})}));
+    add(mk('tm',{de:d.id, polos:2, amp:6, curva:'B', ka:4.5, circ:circ(P('mando'))}));
+    add(mk('sel',{pos:'M-0-A', ctrl:km.id}),
+        mk('pul',{rol:'marcha', color:'verde', ctrl:km.id}),
+        mk('pul',{rol:'parada', color:'rojo', ctrl:km.id}),
+        mk('luz',{rol:'tension', color:'blanco', texto:'Tablero con tensión', ctrl:km.id}),
+        mk('luz',{rol:'marcha', color:'verde', texto:'Bomba en marcha', ctrl:km.id}),
+        mk('luz',{rol:'falla', color:'rojo', texto:'Falla: saltó el guardamotor', ctrl:km.id}),
+        mk('sen',{kind:'flotante', contacto:'NO', texto:'Flotante del tanque elevado (pide agua cuando baja)', ctrl:km.id}));
+  }
+  else if(tipo==='automatismo'){
+    b.nombre='Tablero de automatismo'; b.ubic='Galería'; b.modulos=24; b.lineaSec=2.5;
+    const g=add(mk('tm',{polos:2, amp:16, curva:'C', ka:4.5, general:true}));
+    const d=add(mk('dif',{de:g.id, polos:2, amp:25, sens:30, clase:'A'}));
+    const km=add(mk('cont',{de:d.id, polos:2, amp:25, bobina:'220 V', circ:circ(P('ext'),{nombre:'Iluminación de parque', desc:'Farolas del parque y luz del frente', bocas:6})}));
+    add(mk('tm',{de:d.id, polos:2, amp:6, curva:'B', ka:4.5, circ:circ(P('mando'))}));
+    add(mk('ih',{programa:'Encendido 19:00 a 01:00', ctrl:km.id}),
+        mk('sel',{pos:'M-0-A', ctrl:km.id}),
+        mk('luz',{rol:'marcha', color:'verde', texto:'Luces encendidas', ctrl:km.id}),
+        mk('sen',{kind:'fotocelula', contacto:'NO', texto:'Fotocélula en el frente (cierra al oscurecer)', ctrl:km.id}));
+  }
+  else {
+    b.modulos=12;
+    add(mk('tm',{polos:2, amp:25, curva:'C', ka:4.5, general:true}));
+  }
   return b;
 }
-function circ(p, extra){ return Object.assign({tipo:p.tipo, nombre:p.nombre, sec:p.sec, bocas:p.bocas, icono:p.em, desc:p.desc, fase:'R'}, extra||{}); }
-function exampleBoard(){
-  const b = baseBoard();
-  b.nombre='Tablero principal'; b.cliente='Familia Gómez (ejemplo)'; b.direccion='Calle Los Coihues 250, El Bolsón';
-  b.modulos=36; b.lineaSec=6; b.pat='8'; b.notas='Jabalina de 1,5 m con cámara de inspección junto al pilar. Línea principal subterránea en caño PVC 1".';
-  const P = k => PRESETS.find(p=>p.k===k);
-  const g  = mk('tm', {polos:2, amp:32, curva:'C', ka:4.5, general:true});
-  const pt = mk('ptm',{de:g.id, amp:40});
+function exampleObra(){
+  const o = {id:uid(10), cliente:'Familia Gómez (ejemplo)', direccion:'Los Coihues 250, El Bolsón', boards:[]};
+  const pil = makeBoard('pilar'); pil.pat='8';
+  const tp = makeBoard('principal'); tp.modulos=36; tp.lineaSec=10; tp.ubic='Pasillo'; tp.pat='8';
+  tp.notas='Jabalina de 1,5 m con cámara de inspección junto al pilar.';
+  // principal completo
+  const g=tp.comps[0]; g.amp=32; tp.comps=[g];
   const sp = mk('dps',{de:g.id, polos:2});
+  const pt = mk('ptm',{de:g.id, amp:40});
   const d1 = mk('dif',{de:pt.id, polos:2, amp:40, sens:30, clase:'A'});
   const d2 = mk('dif',{de:pt.id, polos:2, amp:40, sens:30, clase:'A'});
   const c = (d, k, amp, extra) => mk('tm',{de:d.id, polos:2, amp, curva:'C', ka:4.5, circ:circ(P(k), extra)});
-  b.comps.push(g, sp, pt, d1,
+  const bomba = makeBoard('bomba');
+  const sec = makeBoard('seccional'); sec.nombre='Tablero quincho'; sec.ubic='Quincho';
+  tp.comps.push(sp, pt, d1,
     c(d1,'luz',10,{nombre:'Iluminación planta baja', desc:'Luces de cocina, living-comedor y pasillo', bocas:9}),
     c(d1,'coc',20,{desc:'Heladera, microondas, pava y mesada de cocina', bocas:6}),
     c(d1,'tomas',16,{nombre:'Tomas living-comedor', desc:'Enchufes de living, comedor y TV', bocas:8}),
@@ -356,52 +488,73 @@ function exampleBoard(){
     c(d2,'luz',10,{nombre:'Iluminación dormitorios y baño', desc:'Luces de los 3 dormitorios y el baño', bocas:7}),
     c(d2,'tomas',16,{nombre:'Tomas dormitorios', desc:'Enchufes de los dormitorios', bocas:10}),
     c(d2,'term',20,{}),
-    c(d2,'ext',10,{desc:'Farolas del parque, galería y luz del frente'})
+    mk('tm',{de:pt.id, polos:2, amp:16, curva:'C', ka:4.5, circ:circ(P('tab'),{nombre:'Salida a tablero de bomba', sec:4, alimenta:bomba.id})}),
+    mk('tm',{de:pt.id, polos:2, amp:25, curva:'C', ka:4.5, circ:circ(P('tab'),{nombre:'Salida a tablero quincho', sec:6, alimenta:sec.id})})
   );
-  return b;
+  pil.comps[0].circ.alimenta = tp.id;
+  o.boards.push(pil, tp, sec, bomba);
+  return o;
 }
 
 // =====================================================================
 //  ÁRBOL / NUMERACIÓN
 // =====================================================================
-function children(b, id){ return b.comps.filter(c=>c.de===id); }
+const powerComps = b => b.comps.filter(isPower);
+function children(b, id){ return b.comps.filter(c=>isPower(c) && c.de===id); }
 function dfs(b){
   const out=[]; const seen=new Set();
   const walk=(id,depth)=>{ children(b,id).forEach(c=>{ if(seen.has(c.id)) return; seen.add(c.id); out.push({c,depth}); walk(c.id,depth+1); }); };
   walk(null,0);
-  b.comps.forEach(c=>{ if(!seen.has(c.id)){ c.de=null; out.push({c,depth:0}); seen.add(c.id);} }); // huérfanos
+  powerComps(b).forEach(c=>{ if(!seen.has(c.id)){ c.de=null; out.push({c,depth:0}); seen.add(c.id);} });
   return out;
 }
 function isLeaf(b,c){ return !children(b,c.id).length; }
-function hasCirc(b,c){ return (c.tipo==='tm'||c.tipo==='cont') && isLeaf(b,c) && !c.general; }
+function hasCirc(b,c){ return ['tm','cont','gm','rt'].includes(c.tipo) && isLeaf(b,c) && (!c.general || (c.circ && c.circ.tipo==='LS')); }
 function descendants(b,id){ const r=[]; children(b,id).forEach(c=>{ r.push(c.id); r.push(...descendants(b,c.id)); }); return r; }
-function ancestors(b,c){ const r=[]; let p=b.comps.find(x=>x.id===c.de); while(p){ r.push(p); p=b.comps.find(x=>x.id===p.de); } return r; }
+function ancestors(b,c){ const r=[]; let p=b.comps.find(x=>x.id===c.de); let g=0; while(p && g++<50){ r.push(p); p=b.comps.find(x=>x.id===p.de); } return r; }
+const ctrlOf = (b,c) => b.comps.find(x=>x.id===c.ctrl && x.tipo==='cont');
+const conts = b => b.comps.filter(c=>c.tipo==='cont');
 function info(b){
-  // número, código de circuito y color de grupo para cada protección
-  const order = dfs(b); const map={}; const cnt={}; let gi=0;
-  order.forEach(({c,depth},i)=>{ map[c.id]={n:i+1, depth}; });
-  order.forEach(({c})=>{ if(c.tipo==='dif'){ map[c.id].color = GROUP_COLORS[gi++ % GROUP_COLORS.length]; } });
+  const order = dfs(b); const map={}; const cnt={}; const tagc={}; let gi=0; let n=0;
+  const others = ['rail','door','field'].flatMap(cat=>b.comps.filter(c=>DEV[c.tipo] && DEV[c.tipo].cat===cat));
+  order.forEach(({c,depth})=>{ map[c.id]={n:++n, depth}; });
+  others.forEach(c=>{ map[c.id]={n:++n, depth:0}; });
+  order.forEach(({c})=>{ if(c.tipo==='dif') map[c.id].color = GROUP_COLORS[gi++ % GROUP_COLORS.length]; });
   order.forEach(({c})=>{
     const dif = c.tipo==='dif' ? c : ancestors(b,c).find(a=>a.tipo==='dif');
     map[c.id].color = map[c.id].color || (dif ? map[dif.id].color : '#8a8f86');
     map[c.id].dif = dif ? dif.id : null;
-    if(hasCirc(b,c)){ const t=(c.circ&&c.circ.tipo)||'OTRO'; cnt[t]=(cnt[t]||0)+1; map[c.id].code = (t==='OTRO'?'C':t)+cnt[t]; }
+    if(hasCirc(b,c)){ const t=(c.circ&&c.circ.tipo)||'OTRO'; cnt[t]=(cnt[t]||0)+1; map[c.id].code = (t==='OTRO'?'C':t==='MANDO'?'M':t)+cnt[t]; }
   });
-  return {order, map};
+  [...order.map(o=>o.c), ...others].forEach(c=>{
+    const t=DEV[c.tipo].tag; tagc[t]=(tagc[t]||0)+1; map[c.id].tag = t==='S0' ? 'S0'+(tagc[t]>1?'.'+tagc[t]:'') : t+tagc[t];
+  });
+  others.forEach(c=>{ const k=ctrlOf(b,c); map[c.id].color = c.tipo==='luz' ? (LUZ_COLORS[c.color]==='#f4f4f4'?'#9aa0a6':LUZ_COLORS[c.color]||'#555') : '#5d6d7e'; map[c.id].ctrlTag = k ? map[k.id].tag : ''; });
+  return {order, others, map};
 }
 function modsOf(b,c){
-  if(c.tipo==='tm'||c.tipo==='dif') return c.polos||2;
-  if(c.tipo==='dps') return b.tension==='tri' ? 4 : 2;
-  if(c.tipo==='cont') return (c.polos||2)>2 ? 3 : 2;
-  if(c.tipo==='ptm') return b.tension==='tri' ? 4 : 2;
+  const p=c.polos||2;
+  if(c.tipo==='tm'||c.tipo==='dif') return p;
+  if(c.tipo==='dps'||c.tipo==='ptm') return b.tension==='tri' ? 4 : 2;
+  if(c.tipo==='gm') return 3;
+  if(c.tipo==='cont') return p>2 ? 3 : 2;
+  if(c.tipo==='rt') return 2;
+  if(c.tipo==='temp') return 1;
+  if(c.tipo==='ih') return 2;
   return 2;
 }
-function devTitle(b,c,m){
+const onRail = c => ['power','rail'].includes(DEV[c.tipo].cat);
+function devTitle(b,c){
+  if(hasCirc(b,c) && c.circ.tipo==='LS'){ const t=boardById(c.circ.alimenta); return '➡️ Salida a '+(t?t.nombre:'otro tablero'); }
   if(c.tipo==='tm' && c.general) return 'Llave general';
   if(hasCirc(b,c)) return (c.circ.icono||'')+' '+(c.circ.nombre||'Circuito');
-  if(c.tipo==='dif') return 'Disyuntor diferencial'+(m&&m.color?'':'');
+  if(c.tipo==='dif') return 'Disyuntor diferencial';
   if(c.tipo==='tm') return 'Térmica seccional';
-  return DEV_TYPES[c.tipo].full;
+  if(c.tipo==='pul') return 'Pulsador de '+({marcha:'marcha',parada:'parada'}[c.rol]||'mando');
+  if(c.tipo==='luz') return 'Piloto '+(c.color||'')+(c.texto?': '+c.texto:'');
+  if(c.tipo==='sel') return 'Selector '+(c.pos||'M-0-A');
+  if(c.tipo==='sen') return (SEN_KINDS[c.kind]||SEN_KINDS.otro).t;
+  return DEV[c.tipo].full;
 }
 function devSpec(b,c){
   const p = c.polos||2;
@@ -409,16 +562,30 @@ function devSpec(b,c){
   if(c.tipo==='dif') return `${p}×${c.amp} A · ${c.sens} mA · clase ${c.clase}`;
   if(c.tipo==='ptm') return `${c.amp||40} A · corte por sobre/baja tensión`;
   if(c.tipo==='dps') return `Clase II · Uc 275 V`;
-  if(c.tipo==='cont')return `${p} polos · ${c.amp||25} A · bobina 220 V`;
+  if(c.tipo==='gm')  return `${p}P · rango ${c.rango} A · ajustado a ${fmtSec(c.ajuste)} A`;
+  if(c.tipo==='cont')return `${p} polos · ${c.amp||25} A AC-3 · bobina ${c.bobina||'220 V'}`;
+  if(c.tipo==='rt')  return `rango ${c.rango} A · ajustado a ${fmtSec(c.ajuste)} A`;
+  if(c.tipo==='temp')return `${c.funcion||'Retardo a la conexión'} · ${c.tiempo||''}`;
+  if(c.tipo==='ih')  return c.programa||'Interruptor horario';
+  if(c.tipo==='sel') return `${c.pos||'M-0-A'} · 22 mm`;
+  if(c.tipo==='pul') return `${c.color||'verde'} · ${c.rol==='parada'?'NC':'NA'} · 22 mm`;
+  if(c.tipo==='emerg')return 'Hongo rojo con retención · NC';
+  if(c.tipo==='luz') return `LED ${c.color} · 220 V · 22 mm`;
+  if(c.tipo==='sen') return `Contacto ${c.contacto==='NC'?'NC':'NA'} · fuera del tablero`;
   return '';
 }
+// tableros
+const boardById = id => { for(const o of S.obras.concat(VIEW?[VIEW.obra]:[])) { const b=o.boards.find(x=>x.id===id); if(b) return b; } return null; };
+const boardCode = (o,b) => { const bt=BOARD_TYPES[b.tipo]||BOARD_TYPES.otro; const same=o.boards.filter(x=>x.tipo===b.tipo); return bt.code+(same.length>1?(same.indexOf(b)+1):''); };
+function feederOf(o,b){ for(const ob of o.boards){ if(ob.id===b.id) continue; for(const c of ob.comps){ if(c.circ && c.circ.tipo==='LS' && c.circ.alimenta===b.id) return {board:ob, comp:c}; } } return null; }
+function upstreamBoards(o,b){ const r=[]; let f=feederOf(o,b), g=0; while(f && g++<20){ r.push(f.board.id); f=feederOf(o,f.board); } return r; }
 
 // =====================================================================
 //  DIBUJO REALISTA DEL TABLERO (SVG)
 // =====================================================================
-const MW=30, DH=140, RH=196, PADX=36, TOP=58;
+const MW=30, DH=140, RH=196, PADX=36;
 let SVGN=0;
-const uniqIds = str => { const k=++SVGN; return str.replace(/pv(Body|LeverB|Lever|Cover|Rail|Box|Screw|Sh)\b/g, (m)=>m+'_'+k); };
+const uniqIds = str => { const k=++SVGN; return str.replace(/pv(Body|LeverB|Lever|Cover|Rail|Box|Screw|Sh|Lens|Mush)\b/g, m=>m+'_'+k); };
 function svgDefs(){
   return `<defs>
   <linearGradient id="pvBody" x1="0" x2="1"><stop offset="0" stop-color="#e4e4df"/><stop offset=".15" stop-color="#fbfbf8"/><stop offset=".85" stop-color="#f1f1ec"/><stop offset="1" stop-color="#d4d4ce"/></linearGradient>
@@ -428,60 +595,97 @@ function svgDefs(){
   <linearGradient id="pvRail" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cfd3d6"/><stop offset=".5" stop-color="#9ea4a9"/><stop offset="1" stop-color="#c4c8cc"/></linearGradient>
   <linearGradient id="pvBox" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e9e9e4"/><stop offset="1" stop-color="#c9c9c2"/></linearGradient>
   <radialGradient id="pvScrew"><stop offset="0" stop-color="#f4f4f4"/><stop offset="1" stop-color="#8d9196"/></radialGradient>
+  <radialGradient id="pvLens" cx=".35" cy=".35" r=".7"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset=".35" stop-color="#fff" stop-opacity=".15"/><stop offset="1" stop-color="#000" stop-opacity=".25"/></radialGradient>
+  <radialGradient id="pvMush" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#ff7b6b"/><stop offset=".6" stop-color="#d62c1f"/><stop offset="1" stop-color="#8e1a12"/></radialGradient>
   <filter id="pvSh" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity=".35"/></filter>
   </defs>`;
 }
-function drawDevice(b,c,x,y,w,m,numbered){
+const T = (x,y,t,o='') => `<text x="${x}" y="${y}" text-anchor="middle" font-family="Arial" ${o}>${t}</text>`;
+function drawDevice(b,c,x,y,w,m){
   const col = m.color;
   let s = `<g data-id="${c.id}" style="cursor:pointer" filter="url(#pvSh)">`;
-  s += `<rect x="${x+.5}" y="${y}" width="${w-1}" height="${DH}" rx="4" fill="url(#pvBody)" stroke="#8f8f8a"/>`;
-  // bornes (quedan tapados por la tapa, pero suman realismo si se ve el borde)
-  for(let i=0;i<w/MW;i++){ const cx=x+MW/2+i*MW;
+  const dark = c.tipo==='cont'||c.tipo==='rt'||c.tipo==='gm';
+  s += `<rect x="${x+.5}" y="${y}" width="${w-1}" height="${DH}" rx="4" fill="${dark?'#e9e9e6':'url(#pvBody)'}" stroke="#8f8f8a"/>`;
+  for(let i=0;i<Math.round(w/MW);i++){ const cx=x+MW/2+i*MW;
     s+=`<circle cx="${cx}" cy="${y+13}" r="5" fill="url(#pvScrew)" stroke="#6d7176"/><line x1="${cx-3.5}" y1="${y+13}" x2="${cx+3.5}" y2="${y+13}" stroke="#55595e" stroke-width="1.4"/>`;
     s+=`<circle cx="${cx}" cy="${y+DH-13}" r="5" fill="url(#pvScrew)" stroke="#6d7176"/><line x1="${cx}" y1="${y+DH-16.5}" x2="${cx}" y2="${y+DH-9.5}" stroke="#55595e" stroke-width="1.4"/>`; }
   s += `<rect x="${x+3}" y="${y+30}" width="${w-6}" height="${DH-60}" rx="3" fill="#fdfdfb" stroke="#cfcfc9"/>`;
   s += `<rect x="${x+3}" y="${y+30}" width="${w-6}" height="5" rx="2" fill="${col}"/>`;
   const cx = x+w/2;
   if(c.tipo==='tm' || c.tipo==='dif'){
-    // palanca (ON = arriba)
     const lw = Math.min(w-10, 14+ (w/MW-1)*MW*.9);
     s += `<rect x="${cx-lw/2}" y="${y+40}" width="${lw}" height="28" rx="3" fill="#2a2d31"/>`;
     s += `<rect x="${cx-lw/2+2}" y="${y+41}" width="${lw-4}" height="17" rx="2" fill="url(#${c.tipo==='dif'?'pvLeverB':'pvLever'})"/>`;
-    s += `<text x="${cx}" y="${y+54}" font-size="7" fill="#fff" text-anchor="middle" font-family="Arial" font-weight="700">I-ON</text>`;
+    s += T(cx,y+54,'I-ON','font-size="7" fill="#fff" font-weight="700"');
     if(c.tipo==='tm'){
-      s += `<text x="${cx}" y="${y+86}" font-size="${w>MW?15:12}" font-weight="800" fill="#1b1b1b" text-anchor="middle" font-family="Arial">${c.curva}${c.amp}</text>`;
-      s += `<rect x="${cx-12}" y="${y+92}" width="24" height="11" fill="none" stroke="#333" stroke-width=".8"/><text x="${cx}" y="${y+100.5}" font-size="7.5" fill="#222" text-anchor="middle" font-family="Arial">${Math.round(c.ka*1000)}</text>`;
+      s += T(cx,y+86,`${c.curva}${c.amp}`,`font-size="${w>MW?15:12}" font-weight="800" fill="#1b1b1b"`);
+      s += `<rect x="${cx-12}" y="${y+92}" width="24" height="11" fill="none" stroke="#333" stroke-width=".8"/>`+T(cx,y+100.5,Math.round(c.ka*1000),'font-size="7.5" fill="#222"');
     } else {
-      s += `<text x="${cx-(w>MW*2?10:0)}" y="${y+84}" font-size="11" font-weight="800" fill="#1b1b1b" text-anchor="middle" font-family="Arial">${c.amp}A</text>`;
-      s += `<text x="${cx-(w>MW*2?10:0)}" y="${y+96}" font-size="9" font-weight="700" fill="#c0392b" text-anchor="middle" font-family="Arial">${c.sens}mA</text>`;
-      s += `<circle cx="${x+w-13}" cy="${y+101}" r="6.5" fill="#f4c20d" stroke="#9a7a00"/><text x="${x+w-13}" y="${y+104.5}" font-size="9" font-weight="800" text-anchor="middle" font-family="Arial" fill="#333">T</text>`;
+      const off = w>MW*2?10:0;
+      s += T(cx-off,y+84,`${c.amp}A`,'font-size="11" font-weight="800" fill="#1b1b1b"');
+      s += T(cx-off,y+96,`${c.sens}mA`,'font-size="9" font-weight="700" fill="#c0392b"');
+      s += `<circle cx="${x+w-13}" cy="${y+101}" r="6.5" fill="#f4c20d" stroke="#9a7a00"/>`+T(x+w-13,y+104.5,'T','font-size="9" font-weight="800" fill="#333"');
       s += `<text x="${x+10}" y="${y+104}" font-size="8" fill="#444" font-family="Arial">${c.clase==='A'?'A ∿':'AC'}</text>`;
     }
   } else if(c.tipo==='ptm'){
     s += `<rect x="${x+8}" y="${y+42}" width="${w-16}" height="22" rx="2" fill="#11291c" stroke="#333"/>`;
     s += `<text x="${cx}" y="${y+58}" font-size="13" fill="#7dff9e" text-anchor="middle" font-family="monospace" font-weight="700">${b.tension==='tri'?'380V':'220V'}</text>`;
     s += `<circle cx="${x+12}" cy="${y+74}" r="3" fill="#2ecc71"/><circle cx="${x+22}" cy="${y+74}" r="3" fill="#555"/>`;
-    s += `<text x="${cx}" y="${y+92}" font-size="7.5" fill="#222" text-anchor="middle" font-family="Arial" font-weight="700">PROTECTOR</text><text x="${cx}" y="${y+101}" font-size="7.5" fill="#222" text-anchor="middle" font-family="Arial" font-weight="700">TENSIÓN</text>`;
+    s += T(cx,y+92,'PROTECTOR','font-size="7.5" fill="#222" font-weight="700"')+T(cx,y+101,'TENSIÓN','font-size="7.5" fill="#222" font-weight="700"');
   } else if(c.tipo==='dps'){
     s += `<rect x="${cx-9}" y="${y+44}" width="18" height="10" rx="1" fill="#27ae60" stroke="#1d7a44"/>`;
-    s += `<text x="${cx}" y="${y+74}" font-size="12" font-weight="800" fill="#1b1b1b" text-anchor="middle" font-family="Arial">DPS</text>`;
-    s += `<text x="${cx}" y="${y+86}" font-size="7.5" fill="#333" text-anchor="middle" font-family="Arial">Uc 275V</text>`;
-    s += `<path d="M${cx} ${y+90}v5m-7 0h14m-10 3h6m-3 3h0" stroke="#333" stroke-width="1.2"/>`;
+    s += T(cx,y+74,'DPS','font-size="12" font-weight="800" fill="#1b1b1b"')+T(cx,y+86,'Uc 275V','font-size="7.5" fill="#333"');
+    s += `<path d="M${cx} ${y+90}v5m-7 0h14m-10 3h6" stroke="#333" stroke-width="1.2"/>`;
+  } else if(c.tipo==='gm'){
+    // guardamotor: perilla giratoria + dial de regulación
+    s += `<rect x="${x+5}" y="${y+36}" width="${w-10}" height="70" rx="4" fill="#ededea" stroke="#b5b5ae"/>`;
+    s += `<circle cx="${cx}" cy="${y+60}" r="16" fill="#26292d" stroke="#111"/><rect x="${cx-4}" y="${y+45}" width="8" height="30" rx="3" fill="#3c4046"/><path d="M${cx} ${y+46}v8" stroke="#f5c518" stroke-width="2"/>`;
+    s += T(cx-27,y+52,'I','font-size="8" fill="#222" font-weight="700"')+T(cx+27,y+52,'O','font-size="8" fill="#222" font-weight="700"');
+    s += `<circle cx="${cx+24}" cy="${y+92}" r="8" fill="#fff" stroke="#555"/><path d="M${cx+24} ${y+92}l4 -5" stroke="#c0392b" stroke-width="1.6"/>`;
+    s += T(cx-8,y+92,`${c.rango}A`,'font-size="8" font-weight="700" fill="#222"')+T(cx-8,y+102,'QM','font-size="8" fill="#555"');
   } else if(c.tipo==='cont'){
     s += `<text x="${x+8}" y="${y+46}" font-size="7" fill="#333" font-family="Arial">A1</text><text x="${x+w-18}" y="${y+46}" font-size="7" fill="#333" font-family="Arial">A2</text>`;
-    s += `<rect x="${cx-10}" y="${y+52}" width="20" height="16" rx="2" fill="#dcdcd6" stroke="#888"/><text x="${cx}" y="${y+63}" font-size="8" text-anchor="middle" font-family="Arial" fill="#333">I O</text>`;
-    s += `<text x="${cx}" y="${y+86}" font-size="12" font-weight="800" fill="#1b1b1b" text-anchor="middle" font-family="Arial">KM</text>`;
-    s += `<text x="${cx}" y="${y+98}" font-size="7.5" fill="#333" text-anchor="middle" font-family="Arial">${c.amp||25}A</text>`;
+    s += `<rect x="${cx-10}" y="${y+52}" width="20" height="16" rx="2" fill="#dcdcd6" stroke="#888"/>`+T(cx,y+63,'I O','font-size="8" fill="#333"');
+    s += T(cx,y+86,`${m.tag||'KM'}`,'font-size="12" font-weight="800" fill="#1b1b1b"')+T(cx,y+98,`${c.amp||25}A`,'font-size="7.5" fill="#333"');
+  } else if(c.tipo==='rt'){
+    s += `<circle cx="${cx-8}" cy="${y+56}" r="9" fill="#fff" stroke="#555"/><path d="M${cx-8} ${y+56}l5 -5" stroke="#c0392b" stroke-width="1.6"/>`;
+    s += `<rect x="${cx+5}" y="${y+48}" width="14" height="14" rx="3" fill="#2a6fdb" stroke="#1b4a96"/>`+T(cx+12,y+72,'R','font-size="7" fill="#333"');
+    s += T(cx,y+88,`${c.rango}A`,'font-size="9" font-weight="700" fill="#222"')+T(cx,y+100,'95 96 97 98','font-size="6" fill="#555"');
+  } else if(c.tipo==='temp'){
+    s += `<circle cx="${cx}" cy="${y+55}" r="9" fill="#fff" stroke="#555"/><path d="M${cx} ${y+55}l0 -7" stroke="#2a6fdb" stroke-width="1.6"/>`;
+    s += `<circle cx="${cx-6}" cy="${y+72}" r="2.5" fill="#2ecc71"/><circle cx="${cx+6}" cy="${y+72}" r="2.5" fill="#e67e22"/>`;
+    s += T(cx,y+88,'KT','font-size="10" font-weight="800" fill="#222"')+T(cx,y+99,'⏱','font-size="9"');
+  } else if(c.tipo==='ih'){
+    s += `<rect x="${x+6}" y="${y+42}" width="${w-12}" height="20" rx="2" fill="#c9d6c3" stroke="#555"/>`;
+    s += `<text x="${cx}" y="${y+57}" font-size="12" fill="#1b2a22" text-anchor="middle" font-family="monospace" font-weight="700">19:00</text>`;
+    s += `<rect x="${x+8}" y="${y+70}" width="10" height="7" rx="1" fill="#888"/><rect x="${x+22}" y="${y+70}" width="10" height="7" rx="1" fill="#888"/><rect x="${x+36}" y="${y+70}" width="10" height="7" rx="1" fill="#888"/>`;
+    s += T(cx,y+96,'HORARIO','font-size="7.5" font-weight="700" fill="#222"');
   }
   s += `</g>`;
   return s;
 }
+// equipos de puerta (22 mm)
+function drawDoorDevice(c,cx,cy,m){
+  let s=`<g data-id="${c.id}" style="cursor:pointer">`;
+  s+=`<circle cx="${cx}" cy="${cy}" r="17" fill="#b8b9b5" stroke="#6f706b"/><circle cx="${cx}" cy="${cy}" r="14.5" fill="#d9dad6" stroke="#9a9b96"/>`;
+  if(c.tipo==='luz'){ const col=LUZ_COLORS[c.color]||'#2ecc40'; s+=`<circle cx="${cx}" cy="${cy}" r="11.5" fill="${col}" stroke="#555"/><circle cx="${cx}" cy="${cy}" r="11.5" fill="url(#pvLens)"/>`; }
+  else if(c.tipo==='pul'){ const col=LUZ_COLORS[c.color]||'#2ecc40'; s+=`<circle cx="${cx}" cy="${cy}" r="11.5" fill="#444"/><circle cx="${cx}" cy="${cy}" r="9.5" fill="${col}" stroke="#333"/><circle cx="${cx}" cy="${cy}" r="9.5" fill="url(#pvLens)"/>`+(c.rol==='marcha'?T(cx,cy+3.5,'I','font-size="10" font-weight="800" fill="#fff"'):c.rol==='parada'?T(cx,cy+3.5,'O','font-size="10" font-weight="800" fill="#fff"'):''); }
+  else if(c.tipo==='emerg'){ s+=`<circle cx="${cx}" cy="${cy}" r="17" fill="#f5c518" stroke="#9a7a00"/><circle cx="${cx}" cy="${cy}" r="13" fill="url(#pvMush)" stroke="#6d140e"/>`; }
+  else if(c.tipo==='sel'){
+    const pos=(c.pos||'M-0-A').split('-');
+    s+=`<circle cx="${cx}" cy="${cy}" r="11.5" fill="#222"/><rect x="${cx-3.5}" y="${cy-12}" width="7" height="24" rx="2" fill="#3c4046" transform="rotate(0 ${cx} ${cy})"/><path d="M${cx} ${cy-11}v5" stroke="#fff" stroke-width="2"/>`;
+    if(pos.length===3){ s+=T(cx-20,cy-14,pos[0],'font-size="8" font-weight="700" fill="#222"')+T(cx,cy-20,pos[1],'font-size="8" font-weight="700" fill="#222"')+T(cx+20,cy-14,pos[2],'font-size="8" font-weight="700" fill="#222"'); }
+    else { s+=T(cx-18,cy-15,pos[0],'font-size="8" font-weight="700" fill="#222"')+T(cx+18,cy-15,pos[1]||'','font-size="8" font-weight="700" fill="#222"'); }
+  }
+  s+=`<circle cx="${cx+19}" cy="${cy-19}" r="8" fill="${m.color}" stroke="#fff" stroke-width="1.5"/>`+T(cx+19,cy-15.5,m.n,'font-size="9" font-weight="800" fill="#fff"');
+  s+='</g>'; return s;
+}
 function layoutRows(b){
-  const {order} = info(b);
+  const I = info(b);
+  const items = [...I.order.map(o=>o.c), ...I.others.filter(c=>DEV[c.tipo].cat==='rail')];
   const rows=[[]]; let used=0;
-  order.forEach(({c})=>{
+  items.forEach(c=>{
     const w = modsOf(b,c);
-    // cada disyuntor arranca riel nuevo con sus térmicas si así entra entero (como se arma en la realidad)
     if(c.tipo==='dif' && used>0){
       const gw = w + descendants(b,c.id).reduce((a,id)=>a+modsOf(b,b.comps.find(x=>x.id===id)),0);
       if(gw<=ROW && used+gw>ROW){ rows.push([]); used=0; }
@@ -493,72 +697,131 @@ function layoutRows(b){
   while(rows.length<minRows) rows.push([]);
   return rows;
 }
-function panelSVG(b, opts={}){
-  const {map} = info(b);
+function panelSVG(b){
+  const I = info(b), map=I.map;
   const rows = layoutRows(b);
-  const W = PADX*2 + ROW*MW, H = TOP + rows.length*RH + 30;
+  const door = I.others.filter(c=>DEV[c.tipo].cat==='door');
+  const W = PADX*2 + ROW*MW;
+  const perRow = Math.max(1, Math.floor((W-40)/62));
+  const doorRows = Math.ceil(door.length/perRow);
+  const DOORH = doorRows ? doorRows*84 + 10 : 0;
+  const TOP = 58 + DOORH;
+  const H = TOP + rows.length*RH + 30;
+  const est = b.gabinete==='estanco';
   let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="Barlow, Arial, sans-serif">${svgDefs()}`;
-  // gabinete
-  s += `<rect x="4" y="4" width="${W-8}" height="${H-8}" rx="14" fill="url(#pvBox)" stroke="#9c9c94" stroke-width="2"/>`;
+  s += `<rect x="4" y="4" width="${W-8}" height="${H-8}" rx="14" fill="${est?'#9aa3ab':'url(#pvBox)'}" stroke="${est?'#5f6870':'#9c9c94'}" stroke-width="2"/>`;
   s += `<rect x="12" y="12" width="${W-24}" height="${H-24}" rx="9" fill="#3b3f43"/>`;
-  // rieles + equipos
   rows.forEach((r,ri)=>{
     const ry = TOP + ri*RH + 14;
     s += `<rect x="20" y="${ry+DH/2-9}" width="${W-40}" height="18" fill="url(#pvRail)" stroke="#7d8388"/>`;
     for(let k=26;k<W-30;k+=22) s+=`<rect x="${k}" y="${ry+DH/2-3}" width="12" height="6" rx="3" fill="#6f757a"/>`;
     let used=0;
     r.forEach(it=>{ const x=PADX+it.m0*MW; s+=drawDevice(b,it.c,x,ry,it.w*MW,map[it.c.id]); used=it.m0+it.w; });
-    // tapas ciegas
     for(let k=used;k<ROW;k++){ const x=PADX+k*MW; s+=`<rect x="${x+1}" y="${ry+28}" width="${MW-2}" height="${DH-56}" fill="#e7e6e1" stroke="#c7c6bf"/><line x1="${x+MW/2}" y1="${ry+40}" x2="${x+MW/2}" y2="${ry+DH-40}" stroke="#d3d2cc"/>`; }
   });
-  // tapa frontal con ventanas (evenodd)
   let d = `M12 12H${W-12}V${H-12}H12Z`;
   rows.forEach((r,ri)=>{ const ry=TOP+ri*RH+14; d+=`M${PADX-2} ${ry+28}H${PADX+ROW*MW+2}V${ry+DH-28}H${PADX-2}Z`; });
-  s += `<path d="${d}" fill="url(#pvCover)" fill-rule="evenodd" stroke="#b9b8b1"/>`;
+  s += `<path d="${d}" fill="${est?'#c9ced2':'url(#pvCover)'}" fill-rule="evenodd" stroke="#b9b8b1"/>`;
   rows.forEach((r,ri)=>{ const ry=TOP+ri*RH+14; s+=`<rect x="${PADX-2}" y="${ry+28}" width="${ROW*MW+4}" height="${DH-56}" fill="none" stroke="#8f8e87" stroke-width="1.5"/>`; });
-  // tornillos de la tapa
   [[22,22],[W-22,22],[22,H-22],[W-22,H-22]].forEach(([x,y])=>s+=`<circle cx="${x}" cy="${y}" r="4.5" fill="url(#pvScrew)" stroke="#888"/><path d="M${x-3} ${y}h6M${x} ${y-3}v6" stroke="#666"/>`);
-  // título en la tapa
   s += `<text x="${W/2}" y="34" text-anchor="middle" font-size="15" font-weight="700" fill="#2b3a31" letter-spacing="1">${esc((b.nombre||'Tablero').toUpperCase())}</text>`;
-  s += `<text x="${W/2}" y="48" text-anchor="middle" font-size="9" fill="#6b7468" letter-spacing="2">PATAGONIA VOLT · ${b.tension==='tri'?'3×380/220 V':'220 V'}</text>`;
-  // portaetiquetas con número e ícono, y número sobre el equipo
+  s += `<text x="${W/2}" y="48" text-anchor="middle" font-size="9" fill="#4f584d" letter-spacing="2">PATAGONIA VOLT · ${b.tension==='tri'?'3×380/220 V':'220 V'}${est?' · IP65':''}</text>`;
+  // puerta: pilotos, pulsadores, selectores
+  door.forEach((c,i)=>{
+    const r=Math.floor(i/perRow), k=i%perRow, inRow=Math.min(perRow, door.length-r*perRow);
+    const x0 = W/2 - (inRow-1)*31 + k*62, y0 = 58 + r*84 + 30;
+    s += drawDoorDevice(c,x0,y0,map[c.id]);
+    const lab = c.tipo==='luz' ? (c.texto||'') : c.tipo==='pul' ? (c.rol==='marcha'?'MARCHA':c.rol==='parada'?'PARADA':(c.texto||'')) : c.tipo==='emerg' ? 'EMERGENCIA' : (c.pos||'');
+    s += `<rect x="${x0-28}" y="${y0+22}" width="56" height="24" rx="2" fill="#fff" stroke="#9a9b96"/>`;
+    const ws = wrap(lab.toUpperCase(),11).slice(0,2);
+    ws.forEach((ln,j)=>s+=T(x0,y0+32+j*9-(ws.length===1?-4:0),esc(ln),'font-size="7" font-weight="700" fill="#222"'));
+  });
   rows.forEach((r,ri)=>{
     const ry=TOP+ri*RH+14, ly=ry+DH-22;
     s += `<rect x="${PADX-2}" y="${ly}" width="${ROW*MW+4}" height="22" rx="2" fill="#fff" stroke="#bdbcb4"/>`;
     r.forEach(it=>{
-      const x=PADX+it.m0*MW, w=it.w*MW, m=map[it.c.id];
-      const lab = hasCirc(b,it.c) ? (it.c.circ.icono||'') : (it.c.general?'⏻':it.c.tipo==='dif'?'🛡':it.c.tipo==='ptm'?'📟':it.c.tipo==='dps'?'🌩':'');
+      const x=PADX+it.m0*MW, w=it.w*MW, m=map[it.c.id], c=it.c;
+      const lab = hasCirc(b,c) ? (c.circ.tipo==='LS'?'➡':c.circ.icono||'') : (c.general?'⏻':DEV[c.tipo].em);
       s += `<line x1="${x}" y1="${ly+2}" x2="${x}" y2="${ly+20}" stroke="#ddd"/>`;
-      s += `<text x="${x+w/2}" y="${ly+15}" text-anchor="middle" font-size="10" font-weight="700" fill="#222">${w>MW?m.n+' ':''}${lab}</text>`;
-      if(w<=MW) s+=`<text x="${x+w/2}" y="${ly-3}" text-anchor="middle" font-size="8" font-weight="700" fill="#333">${m.n}</text>`;
-      // chapita numerada arriba
-      s += `<circle cx="${x+w/2}" cy="${ry+18}" r="9" fill="${m.color}" stroke="#fff" stroke-width="1.5"/><text x="${x+w/2}" y="${ry+21.5}" text-anchor="middle" font-size="10" font-weight="800" fill="#fff">${m.n}</text>`;
+      s += T(x+w/2,ly+15,`${w>MW?m.n+' ':''}${lab}`,'font-size="10" font-weight="700" fill="#222"');
+      if(w<=MW) s+=T(x+w/2,ly-3,m.n,'font-size="8" font-weight="700" fill="#333"');
+      s += `<circle cx="${x+w/2}" cy="${ry+18}" r="9" fill="${m.color}" stroke="#fff" stroke-width="1.5"/>`+T(x+w/2,ry+21.5,m.n,'font-size="10" font-weight="800" fill="#fff"');
     });
   });
   s += `</svg>`;
   return uniqIds(s);
 }
-
-// íconos pequeños de cada equipo para las tarjetas del cliente
 function miniDevice(b,c,m){
+  if(DEV[c.tipo].cat==='door') return uniqIds(`<svg viewBox="-24 -24 48 48" width="44" height="44">${svgDefs()}${drawDoorDevice(c,0,0,Object.assign({},m,{n:''}))}</svg>`).replace(/<circle cx="19" cy="-19"[^>]*\/>/,'');
+  if(c.tipo==='sen'){ const k=SEN_KINDS[c.kind]||SEN_KINDS.otro; return `<div style="width:44px;height:44px;border-radius:10px;background:#ede7d8;display:flex;align-items:center;justify-content:center;font-size:24px">${k.em}</div>`; }
   const w = Math.min(modsOf(b,c),4)*MW;
   return uniqIds(`<svg viewBox="-2 26 ${w+4} ${DH-52}" width="${Math.round((w+4)*.7)}" height="${Math.round((DH-52)*.7)}">${svgDefs()}${drawDevice(b,c,0,0,w,m)}</svg>`);
 }
 
 // =====================================================================
+//  ESQUEMA DE LA OBRA (tableros conectados)
+// =====================================================================
+function obraSVG(o, selId){
+  const roots = o.boards.filter(b=>!feederOf(o,b));
+  const kids = b => o.boards.filter(x=>{ const f=feederOf(o,x); return f && f.board.id===b.id; });
+  const BW=150, BH=74, GX=24, GY=70;
+  const pos={}; let col=0; let maxD=0;
+  const place=(b,d)=>{ maxD=Math.max(maxD,d); const ch=kids(b); if(!ch.length){ pos[b.id]={x:col++*(BW+GX), d}; return pos[b.id].x; } const xs=ch.map(k=>place(k,d+1)); pos[b.id]={x:(xs[0]+xs[xs.length-1])/2, d}; return pos[b.id].x; };
+  roots.forEach(r=>place(r,0));
+  const W = Math.max(col*(BW+GX)+20, 340), H = 60 + maxD*(BH+GY) + BH + 14;
+  const yOf = d => 60 + d*(BH+GY);
+  let s=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="Barlow, Arial, sans-serif">`;
+  s+=`<rect x="${W/2-60}" y="8" width="120" height="28" rx="6" fill="#fff" stroke="#1e5a3f" stroke-width="1.5"/>`+T(W/2,27,'⚡ RED / MEDIDOR','font-size="11" font-weight="700" fill="#1e5a3f"');
+  roots.forEach(r=>{ const x=pos[r.id].x+10+BW/2; s+=`<path d="M${W/2} 36 V48 H${x} V${yOf(0)}" fill="none" stroke="#1e5a3f" stroke-width="2"/>`; });
+  o.boards.forEach(b=>{
+    const p=pos[b.id]; if(!p) return; const x=p.x+10, y=yOf(p.d), bt=BOARD_TYPES[b.tipo]||BOARD_TYPES.otro;
+    const g=b.comps.find(c=>c.general);
+    kids(b).forEach(k=>{
+      const f=feederOf(o,k), kx=pos[k.id].x+10+BW/2, ky=yOf(pos[k.id].d);
+      s+=`<path d="M${x+BW/2} ${y+BH} V${y+BH+18} H${kx} V${ky-6}" fill="none" stroke="#1b2a22" stroke-width="2"/><path d="M${kx-5} ${ky-10}l5 8l5 -8" fill="#1b2a22"/>`;
+      s+=`<text x="${kx+6}" y="${ky-28}" font-size="9" fill="#3d4a40">${f.comp.polos}×${f.comp.amp} A · ${fmtSec(f.comp.circ.sec)} mm²</text>`;
+    });
+    const sel = b.id===selId;
+    s+=`<g data-board="${b.id}" style="cursor:pointer"><rect x="${x}" y="${y}" width="${BW}" height="${BH}" rx="10" fill="${sel?'#fff7d1':'#fffdf7'}" stroke="${sel?'#d4a20a':'#1e5a3f'}" stroke-width="${sel?3:1.6}"/>`;
+    s+=`<rect x="${x}" y="${y}" width="${BW}" height="22" rx="10" fill="${sel?'#d4a20a':'#1e5a3f'}"/><rect x="${x}" y="${y+12}" width="${BW}" height="10" fill="${sel?'#d4a20a':'#1e5a3f'}"/>`;
+    s+=T(x+BW/2,y+15,`${bt.em} ${boardCode(o,b)}`,'font-size="11" font-weight="800" fill="#fff"');
+    s+=T(x+BW/2,y+38,esc((b.nombre||'').slice(0,24)),'font-size="11" font-weight="700" fill="#1b2a22"');
+    s+=T(x+BW/2,y+52,esc((b.ubic||'').slice(0,26)),'font-size="9" fill="#5b6657"');
+    s+=T(x+BW/2,y+66,g?`Gral. ${g.polos}×${g.amp} A`:'sin llave general','font-size="9" fill="#5b6657"');
+    s+=`</g>`;
+  });
+  s+='</svg>'; return s;
+}
+
+// =====================================================================
 //  TEXTOS PARA EL CLIENTE
 // =====================================================================
-function clientText(b,c,m,I){
+function clientText(b,c,I){
   const kids = descendants(b,c.id).map(id=>b.comps.find(x=>x.id===id)).filter(x=>hasCirc(b,x));
   const feedsList = kids.map(k=>`${I.map[k.id].n}. ${esc(k.circ.icono||'')} ${esc(k.circ.nombre)}`).join(' · ');
+  const km = ctrlOf(b,c); const kmName = km && km.circ ? esc(km.circ.nombre.toLowerCase()) : 'el equipo';
+  const autoBy = b.comps.filter(x=>x.ctrl===(km&&km.id) && (x.tipo==='sen'||x.tipo==='ih'||x.tipo==='temp')).map(x=>x.tipo==='sen'?(SEN_KINDS[x.kind]||SEN_KINDS.otro).t.toLowerCase():x.tipo==='ih'?'el reloj horario':'el temporizador').join(' y ');
+  if(hasCirc(b,c) && c.circ.tipo==='LS'){ const t=boardById(c.circ.alimenta); return {
+    que:`Alimenta otro tablero: <b>${esc(t?t.nombre:'otro tablero')}</b>${t&&t.ubic?' ('+esc(t.ubic)+')':''}. Si la bajás, se corta todo ese tablero.`,
+    feeds: t?`➡️ ${esc(t.nombre)}`:'', si:'Si salta: revisá primero el tablero de abajo; si no encontrás nada, llamá al electricista.'}; }
   if(c.tipo==='tm' && c.general) return {
-    que:'Es la llave que corta <b>toda la casa</b>. Protege los cables si hay un cortocircuito o si se consume demasiado al mismo tiempo.',
-    feeds:'Toda la instalación', si:'Si salta: desenchufá lo último que conectaste, esperá un minuto y subila. Si vuelve a saltar, llamá al electricista.'};
+    que:'Es la llave que corta <b>todo este tablero</b>. Protege los cables si hay un cortocircuito o si se consume demasiado al mismo tiempo.',
+    feeds:'Todo lo que sale de este tablero', si:'Si salta: desenchufá lo último que conectaste, esperá un minuto y subila. Si vuelve a saltar, llamá al electricista.'};
+  if(hasCirc(b,c) && c.circ.tipo==='MANDO') return {
+    que:'Térmica del <b>circuito de mando</b>: alimenta las lucecitas, los botones y la bobina del contactor.', feeds:'Pilotos, pulsadores y automatismo', si:'Si está baja, la bomba o las luces automáticas no van a funcionar aunque haya luz.'};
+  if(c.tipo==='cont') return {
+    que:`Contactor: es la llave automática que <b>prende y apaga ${kmName}</b>. Lo comandan el selector, los botones${autoBy?' y '+autoBy:''}.`,
+    feeds: c.circ ? esc(c.circ.desc||c.circ.nombre) : '', si:'Hace un “clac” al prender: es normal.'};
+  if(c.tipo==='gm') return {
+    que:'Guardamotor: protege el <b>motor</b> si se recalienta, se traba o hay un cortocircuito. Tiene una perilla para prender y apagar a mano.',
+    feeds: feedsList||'', si:'Si saltó: esperá unos minutos que enfríe y volvé a girar la perilla a I. Si salta seguido, la bomba tiene un problema: llamá al electricista.'};
+  if(c.tipo==='rt') return {
+    que:'Relé térmico: corta el contactor si el motor consume de más.', feeds:feedsList||'', si:'Se rearma apretando el botón azul. Si salta seguido, hay que revisar el motor.'};
   if(hasCirc(b,c)){
     const ci=c.circ; return {
     que:`Térmica del circuito <b>${esc(ci.nombre)}</b>. Protege los cables de ese circuito: corta si hay un cortocircuito o demasiado consumo a la vez.`,
     feeds: esc(ci.desc||ci.nombre) + (ci.bocas?` (${ci.bocas} ${ci.bocas==1?'boca':'bocas'})`:''),
-    si: c.tipo==='cont' ? 'Lo prende y apaga un automático (timer, fotocélula o pulsador).' : 'Si salta: desenchufá algo de ese circuito y volvé a subirla. Si salta enseguida, dejala baja y avisá al electricista.'};
+    si: 'Si salta: desenchufá algo de ese circuito y volvé a subirla. Si salta enseguida, dejala baja y avisá al electricista.'};
   }
   if(c.tipo==='dif') return {
     que:'Disyuntor diferencial: <b>te protege a vos</b> de una descarga. Si se escapa corriente (un cable pelado, un artefacto mojado) corta en milésimas de segundo.',
@@ -566,12 +829,24 @@ function clientText(b,c,m,I){
     si:'<b>Probalo una vez por mes</b> apretando el botón amarillo <b>T</b>: tiene que saltar. Si salta solo: bajá las térmicas de su grupo, subí el disyuntor y subí las térmicas de a una; la que lo hace saltar tiene la falla.'};
   if(c.tipo==='ptm') return {
     que:'Protector de tensión: corta la luz si la tensión de la red sube o baja demasiado, y la reconecta sola cuando se normaliza.',
-    feeds:'Cuida heladera, TV, computadoras y electrónicos de toda la casa', si:'Si ves la pantallita apagada o titilando, es la red: esperá unos minutos.'};
+    feeds:'Cuida heladera, TV, computadoras y electrónicos', si:'Si ves la pantallita apagada o titilando, es la red: esperá unos minutos.'};
   if(c.tipo==='dps') return {
     que:'Descargador de sobretensión: manda a tierra los picos de tensión por rayos o maniobras de la red.',
     feeds:'Protege los equipos de toda la instalación', si:'Si la ventanita pasa de verde a <b>rojo</b>, cumplió su función y hay que reemplazarlo.'};
   if(c.tipo==='tm') return {que:'Térmica que protege a un grupo de circuitos.', feeds: feedsList||'—', si:'Si salta, revisá qué circuito de su grupo está con falla.'};
-  if(c.tipo==='cont') return {que:'Contactor: llave automática que prende y apaga una carga.', feeds:feedsList||'—', si:''};
+  if(c.tipo==='sel'){ const p=(c.pos||'M-0-A'); return p==='M-0-A' ? {
+    que:`Selector de 3 posiciones para ${kmName}: <b>M</b> = manual, <b>0</b> = apagado, <b>A</b> = automático${autoBy?' (lo maneja '+autoBy+')':''}.`,
+    feeds:'', si:'Dejalo normalmente en <b>A</b>. Usá <b>M</b> solo para probar o si falla el automático, y no te olvides de volverlo a A.'} :
+    {que:`Selector ${esc(p)}: elige cómo funciona ${kmName}.`, feeds:'', si:''}; }
+  if(c.tipo==='pul') return c.rol==='parada' ? {que:`Botón de <b>parada</b>: apaga ${kmName}.`, feeds:'', si:''} : c.rol==='marcha' ? {que:`Botón de <b>marcha</b>: prende ${kmName} cuando el selector está en M.`, feeds:'', si:''} : {que:'Pulsador de mando.', feeds:'', si:''};
+  if(c.tipo==='emerg') return {que:'<b>Parada de emergencia</b>: apretala para cortar todo de inmediato.', feeds:'', si:'Para volver a arrancar, girá el hongo para destrabarlo.'};
+  if(c.tipo==='luz'){
+    const k = c.rol==='falla' ? 'Si se prende, algo saltó por protección: mirá el guardamotor/relé térmico.' : c.rol==='tension' ? 'Si está apagada, el tablero no tiene luz: mirá la térmica que lo alimenta.' : '';
+    return {que:`Luz ${esc(c.color||'')}: indica <b>${esc(c.texto||'estado')}</b>.`, feeds:'', si:k};
+  }
+  if(c.tipo==='temp') return {que:`Temporizador: ${esc((c.funcion||'retardo a la conexión').toLowerCase())}${c.tiempo?' ('+esc(c.tiempo)+')':''}.`, feeds:'', si:''};
+  if(c.tipo==='ih') return {que:`Reloj horario: prende y apaga ${kmName} en los horarios programados.`, feeds:c.programa?'⏰ '+esc(c.programa):'', si:'Después de un corte largo de luz, revisá que la hora siga bien.'};
+  if(c.tipo==='sen'){ const k=SEN_KINDS[c.kind]||SEN_KINDS.otro; return {que:`${k.t}: da la orden en automático. Está fuera del tablero.`, feeds:c.texto?esc(c.texto):'', si:''}; }
   return {que:'',feeds:'',si:''};
 }
 
@@ -579,17 +854,26 @@ function clientText(b,c,m,I){
 //  HOJA CLIENTE
 // =====================================================================
 function instLine(inst){ return [inst.nombre, inst.mat, inst.tel?('Tel. '+inst.tel):''].filter(Boolean).map(esc).join(' · '); }
-function sheetCliente(b, inst){
+function sheetHead(o,b,sub){
+  return `<div class="sh-head"><div><div class="sh-brand">⚡ PATAGONIA <span>VOLT</span></div><div class="meta">${sub}</div></div>
+    <div style="text-align:right"><h2>${esc(b.nombre||'Tablero')}</h2><div class="meta">${esc(o.cliente)}${o.direccion?'<br>'+esc(o.direccion):''}${b.ubic?'<br>Ubicación: '+esc(b.ubic):''}${b.fecha?'<br>'+fmtDate(b.fecha):''}</div></div></div>`;
+}
+function fromLine(o,b){
+  const f=feederOf(o,b), I=f?info(f.board):null;
+  const outs = b.comps.filter(c=>c.circ && c.circ.tipo==='LS' && boardById(c.circ.alimenta));
+  let h='';
+  if(f) h+=`<div class="from">⬆️ Este tablero se alimenta desde <b>${esc(f.board.nombre)}</b>${f.board.ubic?' ('+esc(f.board.ubic)+')':''}: protección n.º ${I.map[f.comp.id].n} (${f.comp.polos}×${f.comp.amp} A). Si se queda sin luz, mirá esa térmica.</div>`;
+  if(outs.length) h+=`<div class="from">⬇️ Desde acá salen: ${outs.map(c=>'<b>'+esc(boardById(c.circ.alimenta).nombre)+'</b>').join(', ')}.</div>`;
+  return h;
+}
+function sheetCliente(o, b, inst){
   const I = info(b);
-  let h = `<div class="sheet">
-    <div class="sh-head"><div><div class="sh-brand">⚡ PATAGONIA <span>VOLT</span></div><div class="meta">${esc(inst.nombre&&inst.nombre!=='Patagonia Volt'?inst.nombre:'Instalaciones eléctricas')}</div></div>
-    <div style="text-align:right"><h2>${esc(b.nombre||'Tablero')}</h2><div class="meta">${esc(b.cliente)}${b.direccion?'<br>'+esc(b.direccion):''}${b.fecha?'<br>'+fmtDate(b.fecha):''}</div></div></div>
-    <div class="svgbox">${panelSVG(b)}</div>
-    <div class="legend">`;
-  I.order.forEach(({c})=>{
-    const m=I.map[c.id], t=clientText(b,c,m,I);
+  let h = `<div class="sheet">${sheetHead(o,b,'Instalaciones eléctricas')}${o.boards.length>1?`<h3 class="st">Tu instalación</h3><div class="svgbox">${obraSVG(o,b.id)}</div>`:''}${fromLine(o,b)}
+    <div class="svgbox">${panelSVG(b)}</div><div class="legend">`;
+  [...I.order.map(x=>x.c), ...I.others].forEach(c=>{
+    const m=I.map[c.id], t=clientText(b,c,I);
     h += `<div class="lc" style="border-left:5px solid ${m.color}"><div class="ico">${miniDevice(b,c,m)}</div><div>
-      <h4><span class="n" style="background:${m.color}">${m.n}</span>${esc(devTitle(b,c,m))}</h4>
+      <h4><span class="n" style="background:${m.color}">${m.n}</span>${esc(devTitle(b,c))}</h4>
       <div class="spec">${devSpec(b,c)}${m.code?' · '+m.code:''}</div>
       <p>${t.que}</p>${t.feeds?`<div class="feeds">🔌 ${t.feeds}</div>`:''}${t.si?`<p style="margin-top:5px;font-size:12px;color:#5b6657">${t.si}</p>`:''}
     </div></div>`;
@@ -600,6 +884,7 @@ function sheetCliente(b, inst){
       <li>Abrí el tablero y buscá la protección que quedó <b>baja</b> (palanca abajo).</li>
       <li>Si es una <b>térmica</b>: desenchufá lo último que conectaste en ese circuito y subila.</li>
       <li>Si es un <b>disyuntor</b>: bajá las térmicas de su color, subí el disyuntor y subí las térmicas de a una.</li>
+      ${o.boards.length>1?'<li>Si un tablero entero está sin luz, revisá la térmica del tablero que lo alimenta.</li>':''}
       <li>Si algo vuelve a saltar enseguida, <b>no insistas</b>: dejala baja y llamá al electricista.</li>
       <li>Nunca anules ni puentees un disyuntor: es el que te protege de una descarga.</li>
     </ol></div>
@@ -609,16 +894,17 @@ function sheetCliente(b, inst){
 }
 
 // =====================================================================
-//  PLANO UNIFILAR (para electricistas)
+//  PLANO UNIFILAR
 // =====================================================================
-function symBreaker(x,y,dif,cont){
-  // símbolo IEC de interruptor automático; y = arriba del símbolo, ocupa 70px
+function symBreaker(x,y,kind){
+  // kind: tm | dif | cont | gm
   let s = `<line x1="${x}" y1="${y}" x2="${x}" y2="${y+22}" stroke="#111" stroke-width="1.6"/>`;
-  if(cont) s+=`<path d="M${x-5} ${y+22} a5 5 0 0 0 10 0" fill="none" stroke="#111" stroke-width="1.4"/>`;
+  if(kind==='cont') s+=`<path d="M${x-5} ${y+22} a5 5 0 0 0 10 0" fill="none" stroke="#111" stroke-width="1.4"/>`;
   else s+=`<path d="M${x-4} ${y+18}l8 8M${x+4} ${y+18}l-8 8" stroke="#111" stroke-width="1.4"/>`;
   s += `<line x1="${x}" y1="${y+48}" x2="${x-14}" y2="${y+24}" stroke="#111" stroke-width="1.8"/>`;
   s += `<line x1="${x}" y1="${y+48}" x2="${x}" y2="${y+70}" stroke="#111" stroke-width="1.6"/>`;
-  if(dif){ s+=`<ellipse cx="${x}" cy="${y+58}" rx="9" ry="4" fill="none" stroke="#111" stroke-width="1.3"/><path d="M${x-9} ${y+58}h-9V${y+36}h11" fill="none" stroke="#111" stroke-dasharray="3 2"/>`; }
+  if(kind==='dif'){ s+=`<ellipse cx="${x}" cy="${y+58}" rx="9" ry="4" fill="none" stroke="#111" stroke-width="1.3"/><path d="M${x-9} ${y+58}h-9V${y+36}h11" fill="none" stroke="#111" stroke-dasharray="3 2"/>`; }
+  if(kind==='gm'){ s+=`<rect x="${x-24}" y="${y+52}" width="14" height="10" fill="#fff" stroke="#111"/><path d="M${x-22} ${y+57}h3v-3h4v6h3" fill="none" stroke="#111"/><path d="M${x-17} ${y+52}V${y+36}h10" fill="none" stroke="#111" stroke-dasharray="3 2"/>`; }
   return s;
 }
 function symBox(x,y,label){
@@ -627,14 +913,13 @@ function symBox(x,y,label){
 function symGround(x,y){ return `<path d="M${x} ${y}v8M${x-10} ${y+8}h20M${x-6} ${y+12}h12M${x-2.5} ${y+16}h5" stroke="#1d7a44" stroke-width="1.6"/>`; }
 function ticks(x,y,n){ let s=''; for(let i=0;i<n;i++){ const yy=y+i*4; s+=`<line x1="${x-5}" y1="${yy+3}" x2="${x+5}" y2="${yy-3}" stroke="#111" stroke-width="1.1"/>`; } return s; }
 function wrap(t,max){ const w=String(t||'').split(/\s+/); const out=['']; w.forEach(x=>{ if((out[out.length-1]+' '+x).trim().length>max) out.push(x); else out[out.length-1]=(out[out.length-1]+' '+x).trim(); }); return out.filter(Boolean); }
-function planoSVG(b, inst){
+function planoSVG(o, b, inst){
   const I = info(b);
-  const SLOT=118, LV=118, X0=70, Y0=110;
-  // posiciones
+  const SLOT=118, LV=118, X0=100, Y0=110;
   const pos={}; let leaf=0; let maxDepth=0;
   const place=(id,depth)=>{
     const ch=children(b,id);
-    if(id){ maxDepth=Math.max(maxDepth,depth); }
+    if(id) maxDepth=Math.max(maxDepth,depth);
     if(!ch.length && id){ pos[id]={x:X0+leaf*SLOT, d:depth}; leaf++; return pos[id].x; }
     const xs=ch.map(c=>place(c.id, depth+1));
     const x = xs.length ? (xs[0]+xs[xs.length-1])/2 : X0+(leaf++)*SLOT;
@@ -644,27 +929,31 @@ function planoSVG(b, inst){
   const rootX = place(null,0);
   const nLeaves = Math.max(leaf,1);
   const yOf = d => Y0 + (d-1)*LV;
-  const baseY = yOf(maxDepth)+70+26;
+  const baseY = yOf(Math.max(maxDepth,1))+70+26;
   const W = Math.max(X0*2 + (nLeaves-1)*SLOT + 40, 760);
   const H = baseY + 150 + 120;
   const tri = b.tension==='tri', nCond = tri?4:2;
+  const f = feederOf(o,b);
   let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="Barlow, Arial, sans-serif" fill="#111">`;
   s += `<rect x="1" y="1" width="${W-2}" height="${H-2}" fill="#fff" stroke="#1e5a3f" stroke-width="2"/>`;
-  // acometida
-  s += `<rect x="${rootX-48}" y="14" width="96" height="30" rx="3" fill="#fff" stroke="#111" stroke-width="1.4"/><text x="${rootX}" y="28" font-size="10" text-anchor="middle" font-weight="700">MEDIDOR</text><text x="${rootX}" y="39" font-size="8.5" text-anchor="middle">${tri?'3×380/220 V':'1×220 V'} · 50 Hz</text>`;
+  if(f){
+    const fI=info(f.board);
+    s += `<rect x="${rootX-80}" y="10" width="160" height="34" rx="3" fill="#fff7d1" stroke="#111" stroke-width="1.4"/><text x="${rootX}" y="24" font-size="10" text-anchor="middle" font-weight="700">VIENE DE ${esc((f.board.nombre||'').toUpperCase().slice(0,24))}</text><text x="${rootX}" y="37" font-size="8.5" text-anchor="middle">${fI.map[f.comp.id].tag} · ${f.comp.polos}×${f.comp.amp} A ${f.comp.curva||''}</text>`;
+  } else {
+    s += `<rect x="${rootX-48}" y="14" width="96" height="30" rx="3" fill="#fff" stroke="#111" stroke-width="1.4"/><text x="${rootX}" y="28" font-size="10" text-anchor="middle" font-weight="700">MEDIDOR</text><text x="${rootX}" y="39" font-size="8.5" text-anchor="middle">${tri?'3×380/220 V':'1×220 V'} · 50 Hz</text>`;
+  }
+  const lineSec = f ? f.comp.circ.sec : b.lineaSec;
   s += `<line x1="${rootX}" y1="44" x2="${rootX}" y2="${Y0}" stroke="#111" stroke-width="2.2"/>` + ticks(rootX,62,nCond+1);
-  s += `<text x="${rootX+10}" y="70" font-size="9.5">Línea principal ${nCond}×${fmtSec(b.lineaSec)} mm² + PE ${fmtSec(Math.max(2.5, b.lineaSec>=16?b.lineaSec/2:b.lineaSec))} mm²</text>`;
+  s += `<text x="${rootX+10}" y="70" font-size="9.5">${f?'Línea seccional':'Línea principal'} ${nCond}×${fmtSec(lineSec)} mm² + PE ${fmtSec(Math.max(2.5, lineSec>=16?lineSec/2:lineSec))} mm²</text>`;
   s += `<text x="${rootX+10}" y="82" font-size="9" fill="#555">Cu/PVC IRAM NM 247-3 · L marrón/negro/rojo · N celeste · PE verde-amarillo</text>`;
-  // PAT
   s += `<line x1="${rootX}" y1="96" x2="${rootX-40}" y2="96" stroke="#1d7a44" stroke-width="1.6" stroke-dasharray="4 2"/>` + symGround(rootX-40,96);
-  s += `<text x="${rootX-54}" y="${126}" font-size="9" text-anchor="middle" fill="#1d7a44">PAT ${b.pat?esc(b.pat)+' Ω':'— Ω'}</text>`;
-  // conexiones
+  s += `<text x="${rootX-34}" y="138" font-size="9" text-anchor="end" fill="#1d7a44">${f?'PE desde '+esc(boardCode(o,f.board)):'PAT '+(b.pat?esc(b.pat)+' Ω':'— Ω')}</text>`;
   const drawLinks=(id)=>{
     const ch=children(b,id); if(!ch.length) return;
     const py = id ? yOf(pos[id].d)+70 : Y0;
     const px = id ? pos[id].x : rootX;
     if(ch.length>1){
-      const xs=ch.map(c=>pos[c.id].x); const busY = py+ (id?12:0);
+      const xs=ch.map(c=>pos[c.id].x); const busY = py+(id?12:0);
       if(id) s+=`<line x1="${px}" y1="${py}" x2="${px}" y2="${busY}" stroke="#111" stroke-width="1.6"/>`;
       s+=`<line x1="${Math.min(...xs)}" y1="${busY}" x2="${Math.max(...xs)}" y2="${busY}" stroke="#111" stroke-width="2.6"/>`;
       ch.forEach(c=>{ const cy=yOf(pos[c.id].d); s+=`<line x1="${pos[c.id].x}" y1="${busY}" x2="${pos[c.id].x}" y2="${cy}" stroke="#111" stroke-width="1.6"/><circle cx="${pos[c.id].x}" cy="${busY}" r="2.6"/>`; });
@@ -674,22 +963,22 @@ function planoSVG(b, inst){
     ch.forEach(c=>drawLinks(c.id));
   };
   drawLinks(null);
-  // equipos
   I.order.forEach(({c})=>{
     const p=pos[c.id]; if(!p) return; const x=p.x, y=yOf(p.d), m=I.map[c.id];
-    if(c.tipo==='tm') s+=symBreaker(x,y,false,false);
-    else if(c.tipo==='dif') s+=symBreaker(x,y,true,false);
-    else if(c.tipo==='cont') s+=symBreaker(x,y,false,true);
+    if(c.tipo==='tm') s+=symBreaker(x,y,'tm');
+    else if(c.tipo==='dif') s+=symBreaker(x,y,'dif');
+    else if(c.tipo==='cont') s+=symBreaker(x,y,'cont');
+    else if(c.tipo==='gm') s+=symBreaker(x,y,'gm');
+    else if(c.tipo==='rt') s+=symBox(x,y,'⊐⊏');
     else if(c.tipo==='ptm') s+=symBox(x,y,'U&lt;&gt;');
     else if(c.tipo==='dps') s+=symBox(x,y,'DPS');
     const p2=c.polos||2;
-    const l1 = c.tipo==='tm'?`${p2}×${c.amp} A ${c.curva}` : c.tipo==='dif'?`${p2}×${c.amp} A` : c.tipo==='ptm'?`${c.amp||40} A`:c.tipo==='dps'?'Cl. II':`KM ${c.amp||25} A`;
-    const l2 = c.tipo==='tm'?`${fmtSec(c.ka)} kA` : c.tipo==='dif'?`${c.sens} mA cl.${c.clase}` : c.tipo==='ptm'?'Prot. tensión':c.tipo==='dps'?'Uc 275 V':'Bob. 220 V';
+    const l1 = {tm:`${p2}×${c.amp} A ${c.curva}`, dif:`${p2}×${c.amp} A`, ptm:`${c.amp||40} A`, dps:'Cl. II', cont:`${p2}×${c.amp||25} A`, gm:`${c.rango} A`, rt:`${c.rango} A`}[c.tipo];
+    const l2 = {tm:`${fmtSec(c.ka)} kA`, dif:`${c.sens} mA cl.${c.clase}`, ptm:'Prot. tensión', dps:'Uc 275 V', cont:`AC-3 · bob. ${c.bobina||'220 V'}`, gm:`aj. ${fmtSec(c.ajuste)} A`, rt:`aj. ${fmtSec(c.ajuste)} A`}[c.tipo];
+    const lx = (c.tipo==='ptm'||c.tipo==='dps'||c.tipo==='rt') ? x+20 : x+8;
     s+=`<circle cx="${x-24}" cy="${y+8}" r="8" fill="${m.color}"/><text x="${x-24}" y="${y+11.5}" font-size="9" fill="#fff" text-anchor="middle" font-weight="800">${m.n}</text>`;
-    const lx = (c.tipo==='ptm'||c.tipo==='dps') ? x+20 : x+8;
-    s+=`<text x="${lx}" y="${y+40}" font-size="10" font-weight="700">${l1}</text><text x="${lx}" y="${y+52}" font-size="9" fill="#444">${l2}</text>`;
-    if(c.general) s+=`<text x="${x+8}" y="${y+64}" font-size="8.5" fill="#1e5a3f" font-weight="700">GENERAL</text>`;
-    // hojas: bajada a la línea base + recuadro del circuito
+    s+=`<text x="${lx}" y="${y+28}" font-size="9" font-weight="800" fill="#1e5a3f">${m.tag}</text><text x="${lx}" y="${y+40}" font-size="10" font-weight="700">${l1}</text><text x="${lx}" y="${y+52}" font-size="9" fill="#444">${l2}</text>`;
+    if(c.general) s+=`<text x="${lx}" y="${y+64}" font-size="8.5" fill="#1e5a3f" font-weight="700">GENERAL</text>`;
     if(isLeaf(b,c)){
       const yb=y+70;
       if(c.tipo==='dps'){
@@ -700,34 +989,34 @@ function planoSVG(b, inst){
       s+=`<line x1="${x}" y1="${yb}" x2="${x}" y2="${baseY}" stroke="#111" stroke-width="1.6"/>`;
       const ci=c.circ;
       if(ci){
-        const pe = Math.max(2.5, ci.sec);
+        const pe = Math.max(2.5, ci.sec), ls=ci.tipo==='LS', tgt=ls?boardById(ci.alimenta):null;
         s+=ticks(x, yb+14, 3);
         s+=`<path d="M${x-6} ${baseY}l6 9l6 -9" fill="none" stroke="#111" stroke-width="1.4"/>`;
         const bx=x-SLOT/2+5, bw=SLOT-10, by=baseY+12;
-        s+=`<rect x="${bx}" y="${by}" width="${bw}" height="112" rx="4" fill="#f6f2e8" stroke="#1e5a3f"/>`;
-        s+=`<rect x="${bx}" y="${by}" width="${bw}" height="20" rx="4" fill="${m.color}"/><text x="${x}" y="${by+14}" font-size="11" text-anchor="middle" fill="#fff" font-weight="800">${m.code||''}</text>`;
-        wrap(ci.nombre, 18).slice(0,3).forEach((ln,i)=>s+=`<text x="${x}" y="${by+34+i*11}" font-size="9.5" text-anchor="middle" font-weight="700">${esc(ln)}</text>`);
-        s+=`<text x="${x}" y="${by+75}" font-size="9" text-anchor="middle">2×${fmtSec(ci.sec)} + PE ${fmtSec(pe)} mm²</text>`;
-        s+=`<text x="${x}" y="${by+87}" font-size="9" text-anchor="middle">${ci.bocas||0} ${ci.bocas==1?'boca':'bocas'}${tri?' · fase '+(ci.fase||'R'):''}</text>`;
-        s+=`<text x="${x}" y="${by+99}" font-size="8.5" text-anchor="middle" fill="#555">Iz≈${IZ[ci.sec]||'?'} A · In ${c.amp} A</text>`;
+        s+=`<rect x="${bx}" y="${by}" width="${bw}" height="112" rx="4" fill="${ls?'#fff7d1':'#f6f2e8'}" stroke="#1e5a3f" ${ls?'stroke-width="2"':''}/>`;
+        s+=`<rect x="${bx}" y="${by}" width="${bw}" height="20" rx="4" fill="${ls?'#1b2a22':m.color}"/><text x="${x}" y="${by+14}" font-size="11" text-anchor="middle" fill="#fff" font-weight="800">${ls?'➡ '+esc(tgt?boardCode(o,tgt):'TS'):(m.code||'')}</text>`;
+        wrap(ls?(tgt?tgt.nombre:'Tablero sin vincular'):ci.nombre, 18).slice(0,3).forEach((ln,i)=>s+=`<text x="${x}" y="${by+34+i*11}" font-size="9.5" text-anchor="middle" font-weight="700">${esc(ln)}</text>`);
+        s+=`<text x="${x}" y="${by+75}" font-size="9" text-anchor="middle">${ls&&tri?'4':'2'}×${fmtSec(ci.sec)} + PE ${fmtSec(pe)} mm²</text>`;
+        s+=`<text x="${x}" y="${by+87}" font-size="9" text-anchor="middle">${ls?'Línea seccional':ci.tipo==='MOT'?'Motor M 1~':ci.tipo==='MANDO'?'Mando 220 V':(ci.bocas||0)+' '+(ci.bocas==1?'boca':'bocas')}${tri&&!ls?' · fase '+(ci.fase||'R'):''}</text>`;
+        const In = c.amp || (c.tipo==='gm'||c.tipo==='rt' ? num(c.ajuste) : '');
+        s+=`<text x="${x}" y="${by+99}" font-size="8.5" text-anchor="middle" fill="#555">Iz≈${IZ[ci.sec]||'?'} A${In?' · In '+fmtSec(In)+' A':''}</text>`;
+        if(ci.tipo==='MOT') s+=`<circle cx="${x+bw/2-14}" cy="${by+100}" r="9" fill="#fff" stroke="#111"/><text x="${x+bw/2-14}" y="${by+104}" font-size="10" text-anchor="middle" font-weight="700">M</text>`;
       }
     }
   });
-  // rótulo
   const ry=H-104, rw=Math.min(430,W-20), rx=W-rw-10;
   s+=`<rect x="${rx}" y="${ry}" width="${rw}" height="94" fill="#fff" stroke="#111" stroke-width="1.4"/><line x1="${rx}" y1="${ry+26}" x2="${rx+rw}" y2="${ry+26}" stroke="#111"/>`;
-  s+=`<text x="${rx+8}" y="${ry+18}" font-size="13" font-weight="800" fill="#1e5a3f">PLANO UNIFILAR · ${esc((b.nombre||'').toUpperCase())}</text>`;
-  const lines=[['Cliente',b.cliente],['Dirección',b.direccion],['Instalador',[inst.nombre,inst.mat].filter(Boolean).join(' · ')],['Fecha / Norma',(fmtDate(b.fecha)||'')+' · AEA 90364-7-771']];
+  s+=`<text x="${rx+8}" y="${ry+18}" font-size="13" font-weight="800" fill="#1e5a3f">PLANO UNIFILAR · ${esc((b.nombre||'').toUpperCase())} (${esc(boardCode(o,b))})</text>`;
+  const lines=[['Cliente',o.cliente],['Dirección',o.direccion],['Instalador',[inst.nombre,inst.mat].filter(Boolean).join(' · ')],['Fecha / Norma',(fmtDate(b.fecha)||'')+' · AEA 90364-7-771']];
   lines.forEach(([k,v],i)=>s+=`<text x="${rx+8}" y="${ry+42+i*14}" font-size="9.5"><tspan font-weight="700">${k}: </tspan>${esc(v||'')}</text>`);
-  // referencias
   s+=`<text x="12" y="${H-92}" font-size="10" font-weight="800" fill="#1e5a3f">REFERENCIAS</text>`;
-  s+=symBreaker(30,H-84,false,false)+`<text x="50" y="${H-44}" font-size="9">Termomagnética</text>`;
-  s+=symBreaker(150,H-84,true,false)+`<text x="170" y="${H-44}" font-size="9">Diferencial</text>`;
-  s+=symBox(250,H-84,'U&lt;&gt;')+`<text x="272" y="${H-44}" font-size="9">Prot. tensión</text>`;
+  s+=symBreaker(30,H-84,'tm')+`<text x="50" y="${H-44}" font-size="9">Termomagnética</text>`;
+  s+=symBreaker(150,H-84,'dif')+`<text x="170" y="${H-44}" font-size="9">Diferencial</text>`;
+  if(W>900){ s+=symBreaker(260,H-84,'gm')+`<text x="280" y="${H-44}" font-size="9">Guardamotor</text>`; s+=symBreaker(370,H-84,'cont')+`<text x="390" y="${H-44}" font-size="9">Contactor</text>`; }
   s+=`</svg>`;
   return s;
 }
-function sheetPlano(b, inst){
+function sheetPlano(o, b, inst){
   const I=info(b);
   const tri=b.tension==='tri';
   let rowsH='';
@@ -735,46 +1024,211 @@ function sheetPlano(b, inst){
     const m=I.map[c.id];
     const difC = m.dif ? b.comps.find(x=>x.id===m.dif) : null;
     if(hasCirc(b,c)){
-      const ci=c.circ;
-      rowsH+=`<tr><td><b>${m.n}</b></td><td><b>${m.code}</b> ${esc(ci.nombre)}</td><td>${CIRC_TIPOS[ci.tipo]||''}</td><td>${c.polos}×${c.amp} A ${c.curva||''}</td><td>${difC?`#${I.map[difC.id].n} ${difC.amp}A/${difC.sens}mA`:'<b style="color:#b3432e">SIN DIF.</b>'}</td><td>2×${fmtSec(ci.sec)} + PE ${fmtSec(Math.max(2.5,ci.sec))}</td><td>${ci.bocas||''}</td>${tri?`<td>${ci.fase||'R'}</td>`:''}</tr>`;
+      const ci=c.circ, ls=ci.tipo==='LS', tgt=ls?boardById(ci.alimenta):null;
+      const prot = c.tipo==='tm' ? `${c.polos}×${c.amp} A ${c.curva||''}` : c.tipo==='cont' ? `${m.tag} ${c.amp} A` + ancestors(b,c).filter(a=>a.tipo==='gm').map(g=>` · QM ${g.rango} A`).join('') : `${c.rango||''} A`;
+      rowsH+=`<tr><td><b>${m.n}</b></td><td><b>${ls?'➡ '+esc(tgt?boardCode(o,tgt):''):m.code}</b> ${esc(ls&&tgt?tgt.nombre:ci.nombre)}</td><td>${CIRC_TIPOS[ci.tipo]||''}</td><td>${prot}</td><td>${difC?`#${I.map[difC.id].n} ${difC.amp}A/${difC.sens}mA`:(ls?'en tablero destino':'<b style="color:#b3432e">SIN DIF.</b>')}</td><td>${ls&&tri?4:2}×${fmtSec(ci.sec)} + PE ${fmtSec(Math.max(2.5,ci.sec))}</td><td>${ls||ci.tipo==='MANDO'?'—':ci.bocas||''}</td>${tri?`<td>${ls?'RST':ci.fase||'R'}</td>`:''}</tr>`;
     }
   });
-  const v = validate(b);
-  return `<div class="sheet">
-    <div class="sh-head"><div><div class="sh-brand">⚡ PATAGONIA <span>VOLT</span></div><div class="meta">Plano unifilar para instaladores</div></div>
-    <div style="text-align:right"><h2>${esc(b.nombre||'Tablero')}</h2><div class="meta">${esc(b.cliente)}${b.direccion?'<br>'+esc(b.direccion):''}</div></div></div>
-    <div class="svgbox">${planoSVG(b,inst)}</div>
-    <h2 style="font-size:18px">Planilla de circuitos</h2>
+  const v = validate(o,b);
+  const lineSec = (feederOf(o,b)||{comp:{circ:{sec:b.lineaSec}}}).comp.circ.sec;
+  return `<div class="sheet">${sheetHead(o,b,'Plano unifilar para instaladores')}${fromLine(o,b)}
+    <div class="svgbox">${planoSVG(o,b,inst)}</div>
+    <h3 class="st">Planilla de circuitos</h3>
     <div style="overflow-x:auto"><table class="ctable"><tr><th>N°</th><th>Circuito</th><th>Tipo</th><th>Protección</th><th>Diferencial</th><th>Conductor mm²</th><th>Bocas</th>${tri?'<th>Fase</th>':''}</tr>${rowsH}</table></div>
-    <div class="notes"><b>Datos:</b> ${tri?'Trifásica 3×380/220 V':'Monofásica 220 V'} · Línea principal ${tri?4:2}×${fmtSec(b.lineaSec)} mm² · Gabinete ${b.modulos} módulos · PAT medida: ${b.pat?esc(b.pat)+' Ω':'sin dato'}.<br>
+    <div class="notes"><b>Datos:</b> ${tri?'Trifásica 3×380/220 V':'Monofásica 220 V'} · Alimentación ${tri?4:2}×${fmtSec(lineSec)} mm² · Gabinete ${b.modulos} módulos${b.gabinete==='estanco'?' estanco IP65':''} · PAT: ${b.pat?esc(b.pat)+' Ω':'sin dato'}.<br>
     <b>Control AEA:</b> ${v.filter(x=>x.lv==='err').length} errores · ${v.filter(x=>x.lv==='warn').length} advertencias.${b.notas?'<br><b>Notas:</b> '+esc(b.notas):''}<br>
-    <span style="color:#7a826f">Valores de corriente admisible (Iz) orientativos para Cu/PVC en cañería embutida; verificar con las tablas de la AEA 90364 según método de instalación y agrupamiento.</span></div>
+    <span style="color:#7a826f">Corriente admisible (Iz) orientativa para Cu/PVC en cañería embutida; verificar con las tablas de la AEA 90364 según método de instalación y agrupamiento.</span></div>
     <div class="sh-foot"><span>${instLine(inst)}</span><span>${fmtDate(b.fecha)}</span></div>
   </div>`;
 }
 
 // =====================================================================
-//  VALIDACIÓN (orientativa) AEA 90364-7-771
+//  ESQUEMA DE MANDO (se arma solo con los equipos cargados)
 // =====================================================================
-function validate(b){
+const CW=124, UH=58;
+function ladderFor(b, km, I){
+  const tag = c => I.map[c.id].tag;
+  const mine = b.comps.filter(c=>c.ctrl===km.id);
+  const of = t => mine.filter(c=>c.tipo===t);
+  const ktag = tag(km);
+  // protección térmica del motor: relé térmico debajo del KM o guardamotor arriba
+  const rt = descendants(b,km.id).map(id=>b.comps.find(x=>x.id===id)).find(x=>x.tipo==='rt');
+  const gm = ancestors(b,km).find(a=>a.tipo==='gm');
+  const prot = rt ? {t:tag(rt), nc:'95-96', no:'97-98', act:'rt'} : gm ? {t:tag(gm), nc:'21-22', no:'13-14', act:'aux'} : null;
+  const C = (t,f,nc,act) => ({k:'c', t, f, nc, act});
+  const series = [];
+  of('emerg').forEach(e=>series.push(C(tag(e),'Emergencia',true,'emerg')));
+  if(prot) series.push(C(prot.t, prot.act==='rt'?'Térmico '+prot.nc:'Aux. '+prot.nc, true, prot.act));
+  of('pul').filter(p=>p.rol==='parada').forEach(p=>series.push(C(tag(p),'Parada',true,'pul')));
+  const marcha = of('pul').filter(p=>p.rol==='marcha');
+  const manual = marcha.length ? {par:[ {ser:marcha.map(p=>C(tag(p),'Marcha',false,'pul'))}, C(ktag,'Retención 13-14',false,'aux') ]} : null;
+  const autoC = [...of('sen').map(s=>C(tag(s), (SEN_KINDS[s.kind]||SEN_KINDS.otro).t, s.contacto==='NC', s.kind)),
+                 ...of('ih').map(h=>C(tag(h),'Horario',false,'clock')),
+                 ...of('temp').map(t=>C(tag(t),'Temporizado',false,'timer'))];
+  const auto = autoC.length ? (autoC.length>1?{ser:autoC}:autoC[0]) : null;
+  const sel = of('sel')[0];
+  let branch=null;
+  if(sel && (sel.pos||'M-0-A')==='M-0-A'){
+    const bM = {ser:[C(tag(sel),'Pos. M',false,'sel'), ...(manual?[manual]:[])]};
+    const bA = {ser:[C(tag(sel),'Pos. A',false,'sel'), ...(auto?[auto]:[])]};
+    branch = {par:[bM,bA]};
+  } else if(sel){
+    branch = {ser:[C(tag(sel),'Pos. 1',false,'sel'), ...(manual?[manual]:[]), ...(auto?[auto]:[])]};
+  } else if(manual && auto) branch={par:[manual,auto]};
+  else branch = manual || auto;
+  const rungs = [];
+  rungs.push({ser:[...series, ...(branch?[branch]:[]), {k:'coil', t:ktag, f:'Bobina A1-A2'}]});
+  of('temp').forEach(t=>rungs.push({ser:[...series.filter(x=>x.act!=='pul'), {k:'coil', t:tag(t), f:'Temporizador'}]}));
+  let aux=43;
+  of('luz').forEach(l=>{
+    const L = {k:'lamp', t:tag(l), f:l.texto||l.color, color:LUZ_COLORS[l.color]||'#2ecc40'};
+    if(l.rol==='marcha'){ rungs.push({ser:[C(ktag, `Aux. ${aux}-${aux+1}`, false,'aux'), L]}); aux+=10; }
+    else if(l.rol==='falla' && prot) rungs.push({ser:[C(prot.t, (prot.act==='rt'?'Térmico ':'Aux. ')+prot.no, false, prot.act), L]});
+    else rungs.push({ser:[L]});
+  });
+  return rungs;
+}
+function Lmeas(e){
+  if(e.ser){ let w=0,h=0; e.ser.forEach(x=>{ const m=Lmeas(x); w=Math.max(w,m.w); h+=m.h; }); return e._m={w,h}; }
+  if(e.par){ let w=0,h=0; e.par.forEach(x=>{ const m=Lmeas(x); w+=m.w; h=Math.max(h,m.h); }); return e._m={w,h:h+0.5}; }
+  return e._m={w:1,h:1};
+}
+const wire=(x,y1,y2)=>y2>y1?`<line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" stroke="#111" stroke-width="1.5"/>`:'';
+function actGlyph(act,x,y){
+  // actuador a la izquierda del contacto
+  const dash=`<line x1="${x}" y1="${y}" x2="${x-16}" y2="${y}" stroke="#111" stroke-dasharray="3 2"/>`;
+  if(!act||act==='aux') return '';
+  if(act==='pul') return dash+`<path d="M${x-16} ${y-6}v12M${x-16} ${y}h-4" stroke="#111" stroke-width="1.4"/>`;
+  if(act==='emerg') return dash+`<path d="M${x-16} ${y-7}v14" stroke="#111" stroke-width="1.4"/><path d="M${x-17} ${y-7}a7 7 0 0 0 0 14" fill="none" stroke="#c0392b" stroke-width="1.6"/>`;
+  if(act==='sel') return dash+`<path d="M${x-16} ${y-6}h-4v12h4" fill="none" stroke="#111" stroke-width="1.3"/>`;
+  if(act==='rt') return dash+`<rect x="${x-26}" y="${y-5}" width="10" height="10" fill="#fff" stroke="#111"/><path d="M${x-25} ${y}h2v-3h4v6h2" fill="none" stroke="#111"/>`;
+  if(act==='flotante') return dash+`<circle cx="${x-21}" cy="${y}" r="5" fill="#fff" stroke="#111"/><path d="M${x-28} ${y+7}h14" stroke="#2f80ed"/>`;
+  if(act==='electrodos') return dash+`<path d="M${x-18} ${y-6}v12M${x-23} ${y-6}v12" stroke="#2f80ed" stroke-width="1.4"/>`;
+  if(act==='presostato') return dash+`<text x="${x-22}" y="${y+4}" font-size="11" font-weight="700" text-anchor="middle">P</text>`;
+  if(act==='fotocelula') return dash+`<path d="M${x-28} ${y-8}l6 5M${x-30} ${y-2}l6 3" stroke="#d4a20a" stroke-width="1.4"/><circle cx="${x-20}" cy="${y}" r="3" fill="#d4a20a"/>`;
+  if(act==='termostato') return dash+`<text x="${x-22}" y="${y+4}" font-size="11" font-weight="700" text-anchor="middle">θ</text>`;
+  if(act==='clock') return dash+`<circle cx="${x-22}" cy="${y}" r="6" fill="#fff" stroke="#111"/><path d="M${x-22} ${y}v-4M${x-22} ${y}h3" stroke="#111"/>`;
+  if(act==='timer') return dash+`<rect x="${x-28}" y="${y-5}" width="12" height="10" fill="#fff" stroke="#111"/><path d="M${x-25} ${y-5}v10M${x-19} ${y-5}v10" stroke="#111"/>`;
+  return dash+`<path d="M${x-16} ${y-5}v10" stroke="#111" stroke-width="1.3"/>`;
+}
+function Ldraw(e,LX,col,y,H){
+  const cx = LX + col*CW + 24;
+  let s='';
+  if(e.ser){
+    const extra = H - e._m.h; let yy=y;
+    e.ser.forEach((x,i)=>{ if(i===e.ser.length-1 && extra>0){ s+=wire(cx,yy,yy+extra*UH); yy+=extra*UH; } s+=Ldraw(x,LX,col,yy,x._m.h); yy+=x._m.h*UH; });
+    return s;
+  }
+  if(e.par){
+    const top=y+UH*.25, bot=y+H*UH-UH*.25; let c=col; const xs=[];
+    e.par.forEach(x=>{ xs.push(LX+c*CW+24); s+=Ldraw(x,LX,c,top,H-.5); c+=x._m.w; });
+    s+=wire(cx,y,top)+`<line x1="${xs[0]}" y1="${top}" x2="${xs[xs.length-1]}" y2="${top}" stroke="#111" stroke-width="1.5"/><line x1="${xs[0]}" y1="${bot}" x2="${xs[xs.length-1]}" y2="${bot}" stroke="#111" stroke-width="1.5"/>`+wire(cx,bot,y+H*UH);
+    xs.forEach(x=>s+=`<circle cx="${x}" cy="${top}" r="2.4"/><circle cx="${x}" cy="${bot}" r="2.4"/>`);
+    return s;
+  }
+  const lbl = (t,f)=>`<text x="${cx+13}" y="${y+22}" font-size="10" font-weight="800" fill="#1e5a3f">${esc(t)}</text>`+wrap(String(f),13).slice(0,2).map((ln,i)=>`<text x="${cx+13}" y="${y+33+i*10}" font-size="8.5" fill="#333">${esc(ln)}</text>`).join('');
+  if(e.k==='c'){
+    s+=wire(cx,y,y+16)+wire(cx,y+42,y+UH);
+    if(e.nc){ s+=`<line x1="${cx}" y1="${y+16}" x2="${cx-12}" y2="${y+16}" stroke="#111" stroke-width="1.5"/><line x1="${cx}" y1="${y+42}" x2="${cx-15}" y2="${y+12}" stroke="#111" stroke-width="1.8"/>`; }
+    else { s+=`<line x1="${cx}" y1="${y+42}" x2="${cx-12}" y2="${y+18}" stroke="#111" stroke-width="1.8"/>`; }
+    s+=actGlyph(e.act, cx-7, y+29)+lbl(e.t,e.f);
+  } else if(e.k==='coil'){
+    s+=wire(cx,y,y+15)+`<rect x="${cx-12}" y="${y+15}" width="24" height="26" fill="#fff" stroke="#111" stroke-width="1.6"/>`+wire(cx,y+41,y+UH)+lbl(e.t,e.f);
+  } else if(e.k==='lamp'){
+    s+=wire(cx,y,y+17)+`<circle cx="${cx}" cy="${y+29}" r="12" fill="${e.color}" fill-opacity=".35" stroke="#111" stroke-width="1.6"/><path d="M${cx-8.5} ${y+20.5}l17 17M${cx+8.5} ${y+20.5}l-17 17" stroke="#111" stroke-width="1.3"/>`+wire(cx,y+41,y+UH)+lbl(e.t,e.f);
+  }
+  return s;
+}
+function mandoSVG(o,b,km,I){
+  const rungs = ladderFor(b,km,I);
+  rungs.forEach(Lmeas);
+  const H = Math.max(...rungs.map(r=>r._m.h));
+  const LX=30, cols = rungs.reduce((a,r)=>a+r._m.w,0);
+  const W = Math.max(LX*2 + cols*CW + 40, 420), Y0=56, Y1 = Y0 + H*UH;
+  const qm = b.comps.find(c=>hasCirc(b,c) && c.circ.tipo==='MANDO');
+  let s=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${Y1+70}" width="${W}" height="${Y1+70}" font-family="Barlow, Arial, sans-serif" fill="#111">`;
+  s+=`<rect x="1" y="1" width="${W-2}" height="${Y1+68}" fill="#fff" stroke="#1e5a3f" stroke-width="2"/>`;
+  s+=`<text x="12" y="20" font-size="12" font-weight="800" fill="#1e5a3f">ESQUEMA DE MANDO · ${esc(I.map[km.id].tag)} ${esc(km.circ?km.circ.nombre:'')}</text>`;
+  s+=`<text x="12" y="34" font-size="9" fill="#444">L ${qm?'desde '+I.map[qm.id].tag+' ('+qm.polos+'×'+qm.amp+' A)':'(mando 220 V)'} · bobinas ${esc(km.bobina||'220 V')} · N</text>`;
+  s+=`<line x1="${LX-10}" y1="${Y0}" x2="${W-20}" y2="${Y0}" stroke="#c0392b" stroke-width="2.4"/><text x="${LX-14}" y="${Y0+4}" font-size="11" font-weight="800" text-anchor="end" fill="#c0392b">L</text>`;
+  s+=`<line x1="${LX-10}" y1="${Y1}" x2="${W-20}" y2="${Y1}" stroke="#2f80ed" stroke-width="2.4"/><text x="${LX-14}" y="${Y1+4}" font-size="11" font-weight="800" text-anchor="end" fill="#2f80ed">N</text>`;
+  let col=0;
+  rungs.forEach((r,i)=>{ const x=LX+col*CW+24; s+=`<circle cx="${x}" cy="${Y0}" r="3"/><circle cx="${x}" cy="${Y1}" r="3"/>`+Ldraw(r,LX,col,Y0,H)+`<text x="${x}" y="${Y1+18}" font-size="9" text-anchor="middle" fill="#666">${i+1}</text>`; col+=r._m.w; });
+  s+=`<text x="12" y="${Y1+40}" font-size="8.5" fill="#555">Contactos dibujados en reposo (sin tensión). NA = normal abierto · NC = normal cerrado.</text>`;
+  s+='</svg>'; return s;
+}
+function mandoText(b,km,I){
+  const mine=b.comps.filter(c=>c.ctrl===km.id), name=km.circ?km.circ.nombre.toLowerCase():'la carga';
+  const sel=mine.find(c=>c.tipo==='sel'), marcha=mine.some(c=>c.tipo==='pul'&&c.rol==='marcha'), parada=mine.some(c=>c.tipo==='pul'&&c.rol==='parada');
+  const autos=mine.filter(c=>['sen','ih','temp'].includes(c.tipo)).map(c=>c.tipo==='sen'?(SEN_KINDS[c.kind]||SEN_KINDS.otro).t.toLowerCase()+(c.contacto==='NC'?' (NC)':''):c.tipo==='ih'?'el interruptor horario':'el temporizador');
+  const li=[];
+  if(sel && (sel.pos||'M-0-A')==='M-0-A'){
+    li.push(`<b>Manual (M):</b> ${marcha?`con el pulsador de marcha arranca ${esc(name)} y queda retenido por el contacto auxiliar del ${I.map[km.id].tag}${parada?'; se apaga con parada':''}.`:`${esc(name)} queda prendida mientras el selector esté en M.`}`);
+    li.push(`<b>0:</b> todo apagado.`);
+    li.push(`<b>Automático (A):</b> ${autos.length?`la manda ${autos.join(' + ')}.`:'falta cargar el sensor u horario que lo comanda.'}`);
+  } else if(autos.length) li.push(`Funciona en automático según ${autos.join(' + ')}.`);
+  else if(marcha) li.push('Marcha y parada por pulsadores con retención.');
+  if(mine.some(c=>c.tipo==='emerg')) li.push('La parada de emergencia corta la bobina en cualquier modo.');
+  const prot = descendants(b,km.id).map(id=>b.comps.find(x=>x.id===id)).find(x=>x.tipo==='rt') || ancestors(b,km).find(a=>a.tipo==='gm');
+  if(prot) li.push(`Si actúa la protección del motor (${I.map[prot.id].tag}) se abre el mando${mine.some(c=>c.tipo==='luz'&&c.rol==='falla')?' y se prende el piloto de falla':''}.`);
+  return '<ul style="margin:6px 0 0 18px;font-size:13px;line-height:1.45">'+li.map(x=>'<li>'+x+'</li>').join('')+'</ul>';
+}
+function sheetMando(o,b,inst){
+  const I=info(b); const ks=conts(b);
+  if(!ks.length) return `<div class="sheet">${sheetHead(o,b,'Esquema de mando')}<p style="font-size:14px;line-height:1.45">Este tablero no tiene contactores. Para un tablero de automatismo agregá en <b>Armar</b>: un <b>contactor</b> (y guardamotor o relé térmico si es motor), el <b>circuito de mando</b>, y en la puerta <b>selector, pulsadores y señalizadores</b>; afuera los <b>sensores</b> (flotante, presostato, fotocélula…). El esquema se dibuja solo.</p></div>`;
+  let h=`<div class="sheet">${sheetHead(o,b,'Esquema de mando')}`;
+  ks.forEach(km=>{ h+=`<div class="svgbox">${mandoSVG(o,b,km,I)}</div><h3 class="st">Cómo funciona ${esc(I.map[km.id].tag)}</h3>${mandoText(b,km,I)}`; });
+  const ms = [...I.order.map(x=>x.c).filter(c=>['gm','cont','rt'].includes(c.tipo)), ...I.others];
+  h+=`<h3 class="st">Lista de equipos de mando</h3><div style="overflow-x:auto"><table class="ctable"><tr><th>Ref.</th><th>Equipo</th><th>Datos</th><th>Comanda</th></tr>${ms.map(c=>{const m=I.map[c.id]; return `<tr><td><b>${m.tag}</b></td><td>${esc(devTitle(b,c))}</td><td>${esc(devSpec(b,c))}</td><td>${m.ctrlTag||''}</td></tr>`;}).join('')}</table></div>`;
+  h+=`<div class="sh-foot"><span>${instLine(inst)}</span><span>${fmtDate(b.fecha)}</span></div></div>`;
+  return h;
+}
+
+// =====================================================================
+//  VALIDACIÓN (orientativa) AEA 90364
+// =====================================================================
+function rangeOf(r){ const [a,z]=String(r||'').split('-').map(num); return [a,z]; }
+function validate(o,b){
   const out=[]; const I=info(b); const add=(lv,t)=>out.push({lv,t});
   const gens=b.comps.filter(c=>c.general);
+  const f=feederOf(o,b);
   if(!gens.length) add('err','Falta la <b>llave general</b> (termomagnética de cabecera).');
   const circs=b.comps.filter(c=>hasCirc(b,c));
   if(!circs.length) add('warn','Todavía no cargaste circuitos.');
   circs.forEach(c=>{
-    const m=I.map[c.id], ci=c.circ, name=`<b>${m.code}</b> ${esc(ci.nombre)}`;
+    const m=I.map[c.id], ci=c.circ, name=`<b>${m.code||m.tag}</b> ${esc(ci.nombre)}`;
     const dif = ancestors(b,c).find(a=>a.tipo==='dif');
-    if(!dif) add('err',`${name}: no tiene disyuntor diferencial aguas arriba.`);
-    else if(dif.sens>30) add('err',`${name}: el diferencial que lo protege es de ${dif.sens} mA; para circuitos terminales de vivienda va de 30 mA.`);
+    if(ci.tipo==='LS'){
+      const t=boardById(ci.alimenta);
+      if(!t) add('warn',`${name}: no está vinculada a ningún tablero de la obra.`);
+      const tg = t && t.comps.find(x=>x.general);
+      if(tg && c.amp && tg.amp>c.amp) add('warn',`${name}: alimenta un tablero con llave general de ${tg.amp} A desde una térmica de ${c.amp} A. La de abajo debería ser igual o menor para que corte primero (selectividad).`);
+    } else if(ci.tipo!=='MANDO'){
+      if(!dif) add('err',`${name}: no tiene disyuntor diferencial aguas arriba.`);
+      else if(dif.sens>30) add('err',`${name}: el diferencial que lo protege es de ${dif.sens} mA; para circuitos terminales de vivienda va de 30 mA.`);
+    }
     if(b.tension==='mono' && c.tipo==='tm' && c.polos<2) add('err',`${name}: en monofásica de vivienda la protección debe ser bipolar (corta fase y neutro).`);
     const iz=IZ[ci.sec];
-    if(c.tipo==='tm' && iz && c.amp>iz) add('err',`${name}: ${c.amp} A sobre conductor de ${fmtSec(ci.sec)} mm² (Iz≈${iz} A). Subí la sección o bajá la térmica.`);
+    const tmUp = c.tipo==='tm' ? c : ancestors(b,c).find(a=>a.tipo==='tm' && !a.general);
+    if(tmUp && iz && tmUp.amp>iz) add('err',`${name}: ${tmUp.amp} A sobre conductor de ${fmtSec(ci.sec)} mm² (Iz≈${iz} A). Subí la sección o bajá la protección.`);
+    const motorProt = c.tipo==='gm'||c.tipo==='rt' ? c : ancestors(b,c).find(a=>a.tipo==='gm') || descendants(b,c.id).map(id=>b.comps.find(x=>x.id===id)).find(x=>x&&x.tipo==='rt');
+    if(motorProt && iz && num(motorProt.ajuste)>iz) add('err',`${name}: ajuste ${fmtSec(motorProt.ajuste)} A mayor que Iz≈${iz} A del conductor.`);
+    if(ci.tipo==='MOT' && !motorProt) add('warn',`${name}: motor sin guardamotor ni relé térmico (protección contra sobrecarga del motor).`);
     if(ci.tipo==='IUG'){ if(c.amp>16) add('err',`${name}: IUG admite protección de hasta 16 A.`); if(ci.sec<1.5) add('err',`${name}: sección mínima IUG 1,5 mm².`); if(ci.bocas>15) add('err',`${name}: más de 15 bocas en un circuito IUG.`); }
     if(ci.tipo==='TUG'){ if(c.amp>20) add('err',`${name}: TUG admite protección de hasta 20 A.`); if(ci.sec<2.5) add('err',`${name}: sección mínima TUG 2,5 mm².`); if(ci.bocas>15) add('err',`${name}: más de 15 bocas en un circuito TUG.`); }
-    if(['TUE','IUE','ACU'].includes(ci.tipo) && ci.sec<2.5) add('warn',`${name}: sección menor a 2,5 mm² para un circuito de uso especial.`);
+    if(['TUE','IUE','ACU','MOT'].includes(ci.tipo) && ci.sec<2.5) add('warn',`${name}: sección menor a 2,5 mm² para un circuito de uso especial.`);
     if(!ci.nombre) add('warn',`Hay un circuito sin nombre.`);
   });
+  b.comps.filter(c=>c.tipo==='gm'||c.tipo==='rt').forEach(g=>{ const [a,z]=rangeOf(g.rango), aj=num(g.ajuste); if(!(aj>=a && aj<=z)) add('err',`${I.map[g.id].tag}: el ajuste ${fmtSec(g.ajuste)} A está fuera del rango ${g.rango} A.`); });
+  conts(b).forEach(k=>{
+    const mine=b.comps.filter(c=>c.ctrl===k.id);
+    if(!mine.length) add('warn',`${I.map[k.id].tag}: contactor sin equipos de mando (selector, pulsadores, sensores…).`);
+    if(!b.comps.some(c=>hasCirc(b,c)&&c.circ.tipo==='MANDO')) add('warn',`Falta la térmica del <b>circuito de mando</b> (preset 🎛 Mando).`);
+    if(mine.some(c=>c.tipo==='luz'&&c.rol==='falla') && !(ancestors(b,k).some(a=>a.tipo==='gm') || descendants(b,k.id).some(id=>b.comps.find(x=>x.id===id).tipo==='rt'))) add('warn',`${I.map[k.id].tag}: hay piloto de falla pero no hay guardamotor ni relé térmico que lo active.`);
+    const sel=mine.find(c=>c.tipo==='sel');
+    if(sel && (sel.pos||'M-0-A')==='M-0-A' && !mine.some(c=>['sen','ih','temp'].includes(c.tipo))) add('warn',`${I.map[k.id].tag}: el selector tiene posición A pero no cargaste qué lo comanda en automático (flotante, presostato, horario…).`);
+  });
+  b.comps.filter(c=>DEV[c.tipo].cat!=='power' && !ctrlOf(b,c)).forEach(c=>add('warn',`${I.map[c.id].tag} ${esc(devTitle(b,c))}: no está asignado a ningún contactor.`));
   b.comps.filter(c=>c.tipo==='dif').forEach(d=>{
     const up = ancestors(b,d).find(a=>a.tipo==='tm');
     if(up && d.amp<up.amp) add('warn',`Disyuntor #${I.map[d.id].n} de ${d.amp} A detrás de térmica de ${up.amp} A: conviene In del diferencial ≥ In de la térmica que lo protege.`);
@@ -782,17 +1236,20 @@ function validate(b){
     if(n>4) add('warn',`Disyuntor #${I.map[d.id].n} protege ${n} circuitos: considerá repartirlos para que una falla no deje sin luz media casa.`);
   });
   const g=gens[0];
-  if(g){ const iz=IZ[b.lineaSec]; if(iz && g.amp>iz) add('err',`Llave general de ${g.amp} A sobre línea principal de ${fmtSec(b.lineaSec)} mm² (Iz≈${iz} A).`); }
-  if(b.lineaSec<4) add('err','La línea principal no puede ser menor a 4 mm².');
-  const pat=parseFloat(String(b.pat).replace(',','.'));
-  if(!b.pat) add('warn','Cargá el valor medido de la puesta a tierra (PAT).');
-  else if(pat>40) add('err',`PAT de ${b.pat} Ω: supera el máximo de 40 Ω.`);
-  else if(pat>10) add('warn',`PAT de ${b.pat} Ω: cumple el máximo, pero se recomienda ≤ 10 Ω.`);
-  const usedMods = layoutRows(b).reduce((a,r)=>a+r.reduce((x,it)=>x+it.w,0),0);
-  const rowsNeeded = layoutRows(b).length*ROW;
-  if(rowsNeeded > (b.modulos||0)) add('warn',`Los equipos no entran en un gabinete de ${b.modulos} módulos (usan ${usedMods}). Elegí uno más grande.`);
-  else if(usedMods/(b.modulos||1)>0.8) add('warn',`Queda menos del 20 % de reserva en el gabinete.`);
-  if(!out.filter(x=>x.lv!=='ok').length) add('ok','Todo en orden según el chequeo rápido. ✔');
+  const lineSec = f ? f.comp.circ.sec : b.lineaSec;
+  if(g){ const iz=IZ[lineSec]; if(iz && g.amp>iz) add('err',`Llave general de ${g.amp} A sobre línea de ${fmtSec(lineSec)} mm² (Iz≈${iz} A).`); }
+  if(!f && b.lineaSec<4) add('err','La línea principal no puede ser menor a 4 mm².');
+  if(!f){
+    const pat=num(b.pat);
+    if(!b.pat) add('warn','Cargá el valor medido de la puesta a tierra (PAT).');
+    else if(pat>40) add('err',`PAT de ${b.pat} Ω: supera el máximo de 40 Ω.`);
+    else if(pat>10) add('warn',`PAT de ${b.pat} Ω: cumple el máximo, pero se recomienda ≤ 10 Ω.`);
+  }
+  const rows=layoutRows(b);
+  const usedMods = rows.reduce((a,r)=>a+r.reduce((x,it)=>x+it.w,0),0);
+  if(rows.length*ROW > Math.max(b.modulos||0,ROW) && usedMods>(b.modulos||0)) add('warn',`Los equipos no entran en un gabinete de ${b.modulos} módulos (usan ${usedMods}). Elegí uno más grande.`);
+  else if(usedMods/(b.modulos||1)>0.8 && b.tipo!=='pilar') add('warn',`Queda menos del 20 % de reserva en el gabinete.`);
+  if(!out.length) add('ok','Todo en orden según el chequeo rápido. ✔');
   return out;
 }
 
@@ -800,53 +1257,70 @@ function validate(b){
 //  RENDER EDITOR
 // =====================================================================
 function fillSelect(el, arr, fmt, val){ el.innerHTML = arr.map(v=>`<option value="${v}" ${String(v)===String(val)?'selected':''}>${fmt?fmt(v):v}</option>`).join(''); }
-function renderBoardSel(){
-  document.getElementById('boardSel').innerHTML = S.boards.map(b=>`<option value="${b.id}" ${b.id===S.current?'selected':''}>${esc((b.cliente||'Sin cliente')+' — '+(b.nombre||'Tablero'))}</option>`).join('');
+function renderTop(){
+  document.getElementById('obraSel').innerHTML = S.obras.map(o=>`<option value="${o.id}" ${o.id===S.cur.o?'selected':''}>${esc(o.cliente||'Sin nombre')} (${o.boards.length})</option>`).join('');
+  const o=O();
+  document.getElementById('boardChips').innerHTML = o.boards.map(b=>`<button class="chip ${b.id===S.cur.b?'sel':''}" onclick="selectBoard('${b.id}')">${(BOARD_TYPES[b.tipo]||BOARD_TYPES.otro).em} ${esc(boardCode(o,b))} · ${esc((b.nombre||'').replace(/^Tablero\s*(de\s+)?/i,'')||'Tablero')}</button>`).join('') + `<button class="chip add" onclick="openNewBoard()">＋ Tablero</button>`;
 }
 function renderDatos(){
-  const b=B();
-  ['cliente','direccion','nombre','fecha','pat','notas'].forEach(k=>{ const el=document.getElementById('b-'+k); if(document.activeElement!==el) el.value=b[k]||''; });
+  const b=B(), o=O();
+  ['nombre','ubic','fecha','pat','notas'].forEach(k=>{ const el=document.getElementById('b-'+k); if(document.activeElement!==el) el.value=b[k]||''; });
+  fillSelect(document.getElementById('b-tipo'), Object.keys(BOARD_TYPES), k=>BOARD_TYPES[k].em+' '+BOARD_TYPES[k].t, b.tipo);
   fillSelect(document.getElementById('b-modulos'), MODULOS, v=>v+' mód.', b.modulos);
-  fillSelect(document.getElementById('b-lineaSec'), SECS.filter(s=>s>=2.5), v=>fmtSec(v)+' mm²', b.lineaSec);
+  document.getElementById('b-gabinete').value = b.gabinete||'embutir';
+  const f=feederOf(o,b);
+  document.getElementById('b-lineaSec').disabled = !!f;
+  fillSelect(document.getElementById('b-lineaSec'), SECS.filter(s=>s>=2.5), v=>fmtSec(v)+' mm²', f?f.comp.circ.sec:b.lineaSec);
+  document.getElementById('lblLinea').textContent = f ? 'Línea seccional (se edita en la salida)' : 'Línea principal';
+  document.getElementById('fedHint').innerHTML = f ? `Se alimenta desde <b>${esc(f.board.nombre)}</b> (${f.comp.polos}×${f.comp.amp} A). Para cambiar el cable, editá esa salida.` : '';
   document.querySelectorAll('#segTension button').forEach(x=>x.classList.toggle('sel', x.dataset.v===b.tension));
-  document.getElementById('datosResumen').textContent = ' · '+(b.cliente||'sin cliente')+' · '+(b.tension==='tri'?'trifásica':'monofásica');
+  document.getElementById('datosResumen').textContent = ' · '+(BOARD_TYPES[b.tipo]||BOARD_TYPES.otro).t+' · '+(b.tension==='tri'?'trifásica':'monofásica');
+  ['cliente','direccion'].forEach(k=>{ const el=document.getElementById('o-'+k); if(document.activeElement!==el) el.value=o[k]||''; });
   ['nombre','tel','mat'].forEach(k=>{ const el=document.getElementById('i-'+k); if(document.activeElement!==el) el.value=S.inst[k]||''; });
 }
 function renderPanel(){
-  const b=B(); const box=document.getElementById('editPanel');
-  box.innerHTML = panelSVG(b);
+  const box=document.getElementById('editPanel');
+  box.innerHTML = panelSVG(B());
   box.querySelectorAll('[data-id]').forEach(g=>g.addEventListener('click',()=>openDev(g.dataset.id)));
 }
 function renderTree(){
   const b=B(); const I=info(b);
   const el=document.getElementById('tree');
-  if(!I.order.length){ el.innerHTML='<div class="hint">Sin protecciones. Tocá “Agregar protección”.</div>'; return; }
-  el.innerHTML = I.order.map(({c,depth})=>{
-    const m=I.map[c.id];
-    return `<div class="it" style="padding-left:${6+depth*16}px">
+  const row=(c,depth)=>{ const m=I.map[c.id]; return `<div class="it" style="padding-left:${6+depth*16}px">
       <div class="num" style="border-color:${m.color};color:${m.color}">${m.n}</div>
-      <div class="tx" onclick="openDev('${c.id}')"><div class="t1">${esc(devTitle(b,c,m))}${m.code?` <span style="color:var(--muted);font-weight:400">${m.code}</span>`:''}</div><div class="t2">${devSpec(b,c)}${hasCirc(b,c)?` · ${fmtSec(c.circ.sec)} mm² · ${c.circ.bocas||0} bocas`:''}</div></div>
-      <div class="ac"><button onclick="moveDev('${c.id}',-1)" title="Subir">↑</button><button onclick="moveDev('${c.id}',1)" title="Bajar">↓</button><button onclick="openDev('${c.id}')" title="Editar">✎</button></div>
-    </div>`;
-  }).join('');
+      <div class="tx" onclick="openDev('${c.id}')"><div class="t1">${esc(devTitle(b,c))} <span style="color:var(--muted);font-weight:400">${m.code||m.tag}</span></div><div class="t2">${esc(devSpec(b,c))}${hasCirc(b,c)?` · ${fmtSec(c.circ.sec)} mm²${c.circ.bocas?' · '+c.circ.bocas+' bocas':''}`:''}${m.ctrlTag?' · comanda '+m.ctrlTag:''}</div></div>
+      <div class="ac"><button onclick="moveDev('${c.id}',-1)" title="Subir">↑</button><button onclick="moveDev('${c.id}',1)" title="Bajar">↓</button></div>
+    </div>`; };
+  let h = I.order.length ? '<div class="grp">Fuerza y protecciones</div>'+I.order.map(({c,depth})=>row(c,depth)).join('') : '<div class="hint">Sin equipos. Tocá “Agregar equipo”.</div>';
+  if(I.others.length) h += '<div class="grp">Mando y señalización</div>'+I.others.map(c=>row(c,0)).join('');
+  el.innerHTML = h;
 }
 function renderValidation(){
-  document.getElementById('validation').innerHTML = validate(B()).map(v=>`<div class="val ${v.lv}">${v.lv==='err'?'⛔ ':v.lv==='warn'?'⚠️ ':''}${v.t}</div>`).join('');
+  document.getElementById('validation').innerHTML = validate(O(),B()).map(v=>`<div class="val ${v.lv}">${v.lv==='err'?'⛔ ':v.lv==='warn'?'⚠️ ':''}${v.t}</div>`).join('');
+}
+function renderObra(){
+  const box=document.getElementById('obraDiagram');
+  box.innerHTML = obraSVG(O(), S.cur.b);
+  box.querySelectorAll('[data-board]').forEach(g=>g.addEventListener('click',()=>{ selectBoard(g.dataset.board); switchTab('armar'); }));
 }
 function renderAll(){
-  renderBoardSel(); renderDatos();
+  renderTop(); renderDatos();
+  if(curTab==='obra') renderObra();
   if(curTab==='armar'){ renderPanel(); renderTree(); renderValidation(); }
-  if(curTab==='cliente') document.getElementById('sheetCliente').innerHTML = sheetCliente(B(), S.inst);
-  if(curTab==='plano') document.getElementById('sheetPlano').innerHTML = sheetPlano(B(), S.inst);
+  if(curTab==='cliente') document.getElementById('sheetCliente').innerHTML = sheetCliente(O(), B(), S.inst);
+  if(curTab==='plano') document.getElementById('sheetPlano').innerHTML = sheetPlano(O(), B(), S.inst);
+  if(curTab==='mando') document.getElementById('sheetMando').innerHTML = sheetMando(O(), B(), S.inst);
 }
 let rT=null;
-function softRender(){ clearTimeout(rT); rT=setTimeout(()=>{ save(); renderBoardSel(); if(curTab==='armar'){ renderPanel(); renderValidation(); renderTree(); } document.getElementById('datosResumen').textContent=' · '+(B().cliente||'sin cliente')+' · '+(B().tension==='tri'?'trifásica':'monofásica'); },250); }
+function softRender(){ clearTimeout(rT); rT=setTimeout(()=>{ save(); renderTop(); if(curTab==='armar'){ renderPanel(); renderValidation(); renderTree(); } if(curTab==='obra') renderObra(); },250); }
 function setB(k,v){ B()[k]=v; softRender(); }
+function setO(k,v){ O()[k]=v; softRender(); }
 function setInst(k,v){ S.inst[k]=v; save(); }
 function setTension(v){
   const b=B(); b.tension=v;
   b.comps.forEach(c=>{
     if(v==='tri' && (c.general || c.tipo==='dif')) c.polos=4;
+    if(v==='tri' && (c.tipo==='gm'||c.tipo==='cont') ) c.polos=3;
     if(v==='mono' && (c.polos||2)>2) c.polos=2;
   });
   save(); renderAll();
@@ -854,41 +1328,82 @@ function setTension(v){
 function switchTab(t){
   curTab=t;
   document.querySelectorAll('#editorApp .tab').forEach(x=>x.classList.toggle('active', x.dataset.t===t));
-  ['armar','cliente','plano','qr'].forEach(k=>document.getElementById('t-'+k).classList.toggle('hide', k!==t));
+  ['obra','armar','cliente','plano','mando','qr'].forEach(k=>document.getElementById('t-'+k).classList.toggle('hide', k!==t));
   document.getElementById('fab').classList.toggle('hide', t!=='armar');
   renderAll(); window.scrollTo(0,0);
 }
-function selectBoard(id){ S.current=id; save(); document.getElementById('qrOut').innerHTML=''; renderAll(); }
-function newBoard(){ const b=emptyBoard(); S.boards.unshift(b); S.current=b.id; save(); document.getElementById('datosCard').open=true; switchTab('armar'); toast('Tablero nuevo: cargá los datos del cliente'); }
-function dupBoard(){ const b=JSON.parse(JSON.stringify(B())); b.id=uid(10); b.nombre=(b.nombre||'Tablero')+' (copia)'; delete b.qrUrl; S.boards.unshift(b); S.current=b.id; save(); renderAll(); toast('Tablero duplicado'); }
+function selectObra(id){ S.cur.o=id; S.cur.b=O().boards[0]&&O().boards[0].id; if(!B()){ const b=makeBoard('principal'); O().boards.push(b); S.cur.b=b.id; } save(); document.getElementById('qrOut').innerHTML=''; renderAll(); }
+function selectBoard(id){ S.cur.b=id; save(); document.getElementById('qrOut').innerHTML=''; renderAll(); }
+function newObra(){
+  const o={id:uid(10), cliente:'', direccion:'', boards:[]}; const b=makeBoard('principal'); o.boards.push(b);
+  S.obras.unshift(o); S.cur={o:o.id,b:b.id}; save(); switchTab('obra'); document.getElementById('o-cliente').focus(); toast('Cliente nuevo: cargá el nombre y agregá sus tableros');
+}
+function delObra(){ ask('¿Borrar este cliente con todos sus tableros?', ()=>{ S.obras=S.obras.filter(o=>o.id!==S.cur.o); if(!S.obras.length) S.obras.push(exampleObra()); S.cur.o=S.obras[0].id; S.cur.b=S.obras[0].boards[0].id; save(); renderAll(); toast('Cliente borrado'); }); }
+function loadExampleObra(){ const o=exampleObra(); S.obras.unshift(o); S.cur={o:o.id,b:o.boards[1].id}; save(); renderAll(); toast('Obra de ejemplo cargada'); }
+function dupBoard(){ const b=JSON.parse(JSON.stringify(B())); b.id=uid(10); b.nombre=(b.nombre||'Tablero')+' (copia)'; b.comps.forEach(c=>{ if(c.circ && c.circ.tipo==='LS') delete c.circ.alimenta; }); O().boards.push(b); S.cur.b=b.id; save(); renderAll(); toast('Tablero duplicado'); }
 function delBoard(){
-  ask('¿Borrar este tablero? No se puede deshacer.', ()=>{
-    S.boards=S.boards.filter(b=>b.id!==S.current);
-    if(!S.boards.length) S.boards.push(emptyBoard());
-    S.current=S.boards[0].id; save(); renderAll(); toast('Tablero borrado');
+  ask('¿Borrar este tablero? Las salidas que lo alimentaban quedan sin vincular.', ()=>{
+    const o=O(), id=S.cur.b;
+    o.boards=o.boards.filter(b=>b.id!==id);
+    o.boards.forEach(b=>b.comps.forEach(c=>{ if(c.circ && c.circ.alimenta===id) delete c.circ.alimenta; }));
+    if(!o.boards.length) o.boards.push(makeBoard('principal'));
+    S.cur.b=o.boards[0].id; save(); renderAll(); toast('Tablero borrado');
   });
 }
-function loadExample(){ ask('¿Reemplazar este tablero por el ejemplo?', ()=>{ const ex=exampleBoard(); const b=B(); ex.id=b.id; Object.assign(b, ex); save(); renderAll(); toast('Ejemplo cargado'); }); }
 function moveDev(id,dir){
   const b=B(); const c=b.comps.find(x=>x.id===id);
-  const sib=b.comps.filter(x=>x.de===c.de); const i=sib.indexOf(c); const j=i+dir;
-  if(j<0||j>=sib.length) return;
-  const a=b.comps.indexOf(sib[i]), z=b.comps.indexOf(sib[j]);
+  const same = isPower(c) ? b.comps.filter(x=>isPower(x) && x.de===c.de) : b.comps.filter(x=>DEV[x.tipo].cat===DEV[c.tipo].cat);
+  const i=same.indexOf(c), j=i+dir; if(j<0||j>=same.length) return;
+  const a=b.comps.indexOf(same[i]), z=b.comps.indexOf(same[j]);
   [b.comps[a],b.comps[z]]=[b.comps[z],b.comps[a]];
   save(); renderAll();
 }
 
 // =====================================================================
-//  FORMULARIO DE PROTECCIÓN (bottom sheet)
+//  NUEVO TABLERO
+// =====================================================================
+let nb = null;
+function openNewBoard(){
+  const o=O(); nb={tipo:'seccional', from: (o.boards.find(b=>b.tipo==='principal')||o.boards[0]||{}).id||''};
+  renderNewBoard(); document.getElementById('devModal').classList.add('open');
+}
+function renderNewBoard(){
+  const o=O();
+  let h=`<h3>Agregar tablero a ${esc(o.cliente||'la obra')}</h3><h4>¿Qué tablero es?</h4><div class="btypes">${Object.entries(BOARD_TYPES).map(([k,v])=>`<button class="${nb.tipo===k?'sel':''}" onclick="nb.tipo='${k}';renderNewBoard()"><b>${v.em} ${v.t}</b>${v.desc}</button>`).join('')}</div>`;
+  h+=`<label class="f">¿De dónde se alimenta?</label><select onchange="nb.from=this.value"><option value="">Directo del medidor / red</option>${o.boards.map(b=>`<option value="${b.id}" ${nb.from===b.id?'selected':''}>${esc(boardCode(o,b)+' · '+b.nombre)}</option>`).join('')}</select>`;
+  h+=`<div class="hint">Si sale de otro tablero, se agrega sola una térmica “➡️ Salida” en ese tablero, con su cable. Después la podés ajustar.</div>`;
+  h+=`<div class="btns" style="margin-top:14px"><button class="btn-s" onclick="closeDev()">Cancelar</button><button class="btn-p" onclick="createBoard()">✔ Crear tablero</button></div>`;
+  document.getElementById('devForm').innerHTML=h;
+}
+function createBoard(){
+  const o=O(); const b=makeBoard(nb.tipo);
+  o.boards.push(b);
+  if(nb.from){
+    const up=o.boards.find(x=>x.id===nb.from);
+    const g=b.comps.find(c=>c.general);
+    const amp = g ? g.amp : 25;
+    const sec = Object.keys(IZ).map(Number).sort((a,z)=>a-z).find(s=>s>=2.5 && IZ[s]>=amp) || 6;
+    // la salida cuelga de lo último antes de los diferenciales (protector de tensión o general)
+    const upG = up.comps.find(c=>c.general);
+    const parent = upG ? (children(up,upG.id).find(c=>c.tipo==='ptm') || upG) : null;
+    if(upG && hasCirc(up,upG)) { /* el general ya es salida (pilar) */ upG.circ.alimenta = upG.circ.alimenta || b.id; if(upG.circ.alimenta!==b.id) up.comps.push(mk('tm',{de:upG.id, polos:b.tension==='tri'?4:2, amp, curva:'C', ka:4.5, circ:circ(P('tab'),{nombre:'Salida a '+b.nombre.toLowerCase(), sec, alimenta:b.id})})); }
+    else up.comps.push(mk('tm',{de:parent?parent.id:null, polos:b.tension==='tri'?4:2, amp, curva:'C', ka:4.5, circ:circ(P('tab'),{nombre:'Salida a '+b.nombre.toLowerCase(), sec, alimenta:b.id})}));
+    b.tension = up.tension;
+  }
+  S.cur.b=b.id; save(); closeDev(); switchTab('armar'); document.getElementById('datosCard').open=true;
+  toast(nb.from?'Tablero creado y conectado':'Tablero creado');
+}
+
+// =====================================================================
+//  FORMULARIO DE EQUIPO
 // =====================================================================
 function openDev(id){
   const b=B();
   if(id){ editing = JSON.parse(JSON.stringify(b.comps.find(c=>c.id===id))); editing._new=false; }
   else {
-    // por defecto: térmica de circuito colgada del último disyuntor
     const difs=b.comps.filter(c=>c.tipo==='dif'); const last=difs[difs.length-1];
     const p=PRESETS[0];
-    editing = mk('tm',{de:last?last.id:(b.comps.find(c=>c.general)||{}).id||null, polos:b.tension==='tri'?2:2, amp:p.amp, curva:'C', ka:4.5, circ:circ(p), _new:true, _preset:p.k});
+    editing = mk('tm',{de:last?last.id:(b.comps.find(c=>c.general)||{}).id||null, polos:2, amp:p.amp, curva:'C', ka:4.5, circ:circ(p), _new:true, _preset:p.k});
   }
   renderDevForm();
   document.getElementById('devModal').classList.add('open');
@@ -897,68 +1412,101 @@ function closeDev(){ document.getElementById('devModal').classList.remove('open'
 function setE(k,v){ editing[k]=v; renderDevForm(); }
 function setC(k,v){ editing.circ=editing.circ||{}; editing.circ[k]=v; }
 function setType(t){
-  const b=B(); const e=editing;
-  e.tipo=t; delete e.general;
-  if(t==='tm'){ e.polos=2; e.amp=16; e.curva='C'; e.ka=4.5; e.circ=e.circ||circ(PRESETS[1]); }
-  if(t==='dif'){ e.polos=b.tension==='tri'?4:2; e.amp=40; e.sens=30; e.clase='A'; delete e.circ; }
-  if(t==='ptm'){ e.amp=40; delete e.circ; }
-  if(t==='dps'){ e.polos=b.tension==='tri'?4:2; delete e.circ; }
-  if(t==='cont'){ e.polos=2; e.amp=25; e.circ=e.circ||circ(PRESETS[8]); }
+  const b=B(); const e=editing; const tri=b.tension==='tri';
+  const keep={id:e.id, de:e.de, _new:e._new, ctrl:e.ctrl};
+  Object.keys(e).forEach(k=>delete e[k]); Object.assign(e, keep, {tipo:t});
+  const firstK = conts(b)[0];
+  if(t==='tm'){ Object.assign(e,{polos:2, amp:16, curva:'C', ka:4.5, circ:circ(P('tomas'))}); e._preset='tomas'; }
+  if(t==='dif') Object.assign(e,{polos:tri?4:2, amp:40, sens:30, clase:'A'});
+  if(t==='ptm') e.amp=40;
+  if(t==='dps') e.polos=tri?4:2;
+  if(t==='gm')  Object.assign(e,{polos:tri?3:2, rango:'4-6,3', ajuste:5});
+  if(t==='cont')Object.assign(e,{polos:tri?3:2, amp:25, bobina:'220 V', circ:circ(P('bomba'))});
+  if(t==='rt')  Object.assign(e,{rango:'4-6,3', ajuste:5, circ:circ(P('bomba'))});
+  if(t==='temp')Object.assign(e,{funcion:'Retardo a la conexión', tiempo:'30 s'});
+  if(t==='ih')  Object.assign(e,{programa:'Encendido 19:00 a 23:00'});
+  if(t==='sel') e.pos='M-0-A';
+  if(t==='pul') Object.assign(e,{rol:'marcha', color:'verde'});
+  if(t==='luz') Object.assign(e,{rol:'marcha', color:'verde', texto:'En marcha'});
+  if(t==='sen') Object.assign(e,{kind:'flotante', contacto:'NO', texto:''});
+  if(DEV[t].cat!=='power'){ e.de=null; e.ctrl = e.ctrl || (firstK&&firstK.id) || ''; }
+  else { delete e.ctrl; if(t==='rt'){ const k=conts(b)[0]; if(k) e.de=k.id; } if(t==='cont'){ const g=b.comps.filter(c=>c.tipo==='gm').pop(); if(g && isLeaf(b,g)) e.de=g.id; } }
   renderDevForm();
 }
 function applyPreset(k){
-  const p=PRESETS.find(x=>x.k===k); const e=editing;
-  e._preset=k; e.amp=p.amp; e.circ=circ(p,{fase:(e.circ&&e.circ.fase)||'R'}); renderDevForm();
+  const p=P(k); const e=editing;
+  e._preset=k; if(e.tipo==='tm') e.amp=p.amp; e.circ=circ(p,{fase:(e.circ&&e.circ.fase)||'R'});
+  if(k==='tab'){ const o=O(); const t=o.boards.find(x=>x.id!==B().id && !feederOf(o,x)); if(t){ e.circ.alimenta=t.id; e.circ.nombre='Salida a '+t.nombre.toLowerCase(); } }
+  renderDevForm();
 }
 function setRole(general){
   const e=editing;
-  if(general){ e.general=true; e.amp=40; e.de=null; e.polos=B().tension==='tri'?4:2; }
-  else { delete e.general; e.circ=e.circ||circ(PRESETS[0]); }
+  if(general){ e.general=true; e.amp=Math.max(e.amp||25,25); e.de=null; e.polos=B().tension==='tri'?4:2; delete e.circ; }
+  else { delete e.general; e.circ=e.circ||circ(P('luz')); }
   renderDevForm();
 }
 function renderDevForm(){
-  const b=B(), e=editing, I=info(b);
-  const isNew=e._new;
+  const b=B(), o=O(), e=editing, I=info(b);
+  const isNew=e._new, tri=b.tension==='tri';
   const willHaveKids = !isNew && children(b,e.id).length>0;
-  const circMode = (e.tipo==='tm'||e.tipo==='cont') && !e.general && !willHaveKids;
+  const power = DEV[e.tipo].cat==='power';
+  const circMode = ['tm','cont','gm','rt'].includes(e.tipo) && !willHaveKids && (!e.general || (e.circ && e.circ.tipo==='LS'));
   const excl = isNew ? [] : [e.id, ...descendants(b,e.id)];
   const parents = I.order.filter(({c})=>!excl.includes(c.id) && c.tipo!=='dps');
   const sel = (arr,val,fn,fmt)=>`<select onchange="${fn}">${arr.map(v=>`<option value="${v}" ${String(v)===String(val)?'selected':''}>${fmt?fmt(v):v}</option>`).join('')}</select>`;
-  let h = `<h3>${isNew?'Agregar protección':'Editar protección'}</h3>`;
-  h += `<div class="types">${Object.entries(DEV_TYPES).map(([k,v])=>`<button class="${e.tipo===k?'sel':''}" onclick="setType('${k}')"><span style="font-size:20px">${v.em}</span>${v.t}</button>`).join('')}</div>`;
+  let h = `<h3>${isNew?'Agregar equipo':'Editar · '+esc((I.map[e.id]||{}).tag||DEV[e.tipo].t)}</h3>`;
+  DEV_GROUPS.forEach(([g,ks])=>{ h+=`<h4>${g}</h4><div class="types">${ks.map(k=>`<button class="${e.tipo===k?'sel':''}" onclick="setType('${k}')"><span class="em">${DEV[k].em}</span>${DEV[k].t}</button>`).join('')}</div>`; });
   if(e.tipo==='tm' && !willHaveKids){
-    h += `<div class="seg" style="margin:8px 0"><button class="${!e.general?'sel':''}" onclick="setRole(false)">Circuito</button><button class="${e.general?'sel':''}" onclick="setRole(true)">Llave general</button></div>`;
+    h += `<div class="seg" style="margin:10px 0 4px"><button class="${!e.general?'sel':''}" onclick="setRole(false)">Circuito / salida</button><button class="${e.general?'sel':''}" onclick="setRole(true)">Llave general</button></div>`;
+    if(e.general) h += `<label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-top:6px"><input type="checkbox" style="width:auto" ${e.circ&&e.circ.tipo==='LS'?'checked':''} onchange="if(this.checked){editing.circ=circ(P('tab'));applyPreset('tab')}else{delete editing.circ;renderDevForm()}"> Esta llave alimenta directo a otro tablero (ej.: pilar)</label>`;
   }
-  if(circMode){
-    h += `<label class="f">¿Qué va a alimentar? (completa todo solo)</label><div class="presets">${PRESETS.map(p=>`<button class="${e._preset===p.k?'sel':''}" onclick="applyPreset('${p.k}')"><span class="em">${p.em}</span>${p.t}</button>`).join('')}</div>`;
+  if(circMode && !e.general){
+    const list = e.tipo==='tm' ? PRESETS : PRESETS.filter(p=>!['tab','mando'].includes(p.k));
+    h += `<label class="f">¿Qué va a alimentar? (completa todo solo)</label><div class="presets">${list.map(p=>`<button class="${e._preset===p.k?'sel':''}" onclick="applyPreset('${p.k}')"><span class="em">${p.em}</span>${p.t}</button>`).join('')}</div>`;
   }
-  // conectado a
-  if(!e.general){
+  if(power && !e.general){
     h += `<label class="f">Conectado después de</label><select onchange="editing.de=this.value||null">
-      <option value="" ${!e.de?'selected':''}>Medidor (entrada del tablero)</option>
-      ${parents.map(({c,depth})=>`<option value="${c.id}" ${e.de===c.id?'selected':''}>${'— '.repeat(depth)}#${I.map[c.id].n} ${esc(devTitle(b,c,I.map[c.id]))} (${devSpec(b,c).split(' · ')[0]})</option>`).join('')}
+      <option value="" ${!e.de?'selected':''}>${feederOf(o,b)?'Entrada del tablero':'Medidor (entrada del tablero)'}</option>
+      ${parents.map(({c,depth})=>`<option value="${c.id}" ${e.de===c.id?'selected':''}>${'— '.repeat(depth)}#${I.map[c.id].n} ${esc(devTitle(b,c))} (${esc(devSpec(b,c).split(' · ')[0])})</option>`).join('')}
     </select>`;
   }
-  // datos eléctricos
+  if(!power){
+    const ks=conts(b);
+    h += `<label class="f">Comanda a</label>${ks.length?`<select onchange="editing.ctrl=this.value">${ks.map(k=>`<option value="${k.id}" ${e.ctrl===k.id?'selected':''}>${I.map[k.id].tag} · ${esc(k.circ?k.circ.nombre:'Contactor')}</option>`).join('')}</select>`:'<div class="val warn">Primero agregá un contactor: este equipo lo comanda.</div>'}`;
+  }
   if(e.tipo==='tm'){
     h += `<div class="row2"><div><label class="f">Polos</label>${sel([1,2,3,4],e.polos,"setE('polos',+this.value)",v=>v+'P')}</div><div><label class="f">Corriente</label>${sel(AMPS,e.amp,"setE('amp',+this.value)",v=>v+' A')}</div></div>
       <div class="row2"><div><label class="f">Curva</label>${sel(['B','C','D'],e.curva,"setE('curva',this.value)")}</div><div><label class="f">Poder de corte</label>${sel([3,4.5,6,10],e.ka,"setE('ka',+this.value)",v=>fmtSec(v)+' kA')}</div></div>`;
   }
-  if(e.tipo==='dif'){
-    h += `<div class="row2"><div><label class="f">Polos</label>${sel([2,4],e.polos,"setE('polos',+this.value)",v=>v+'P')}</div><div><label class="f">Corriente</label>${sel([25,40,63,80,100],e.amp,"setE('amp',+this.value)",v=>v+' A')}</div></div>
+  if(e.tipo==='dif') h += `<div class="row2"><div><label class="f">Polos</label>${sel([2,4],e.polos,"setE('polos',+this.value)",v=>v+'P')}</div><div><label class="f">Corriente</label>${sel([25,40,63,80,100],e.amp,"setE('amp',+this.value)",v=>v+' A')}</div></div>
       <div class="row2"><div><label class="f">Sensibilidad</label>${sel([10,30,300],e.sens,"setE('sens',+this.value)",v=>v+' mA')}</div><div><label class="f">Clase</label>${sel(['AC','A'],e.clase,"setE('clase',this.value)")}</div></div>`;
-  }
-  if(e.tipo==='ptm'){ h += `<label class="f">Corriente</label>${sel([25,32,40,63],e.amp||40,"setE('amp',+this.value)",v=>v+' A')}`; }
-  if(e.tipo==='cont'){ h += `<div class="row2"><div><label class="f">Polos</label>${sel([2,4],e.polos,"setE('polos',+this.value)",v=>v+'P')}</div><div><label class="f">Corriente</label>${sel([16,25,40,63],e.amp,"setE('amp',+this.value)",v=>v+' A')}</div></div>`; }
+  if(e.tipo==='ptm') h += `<label class="f">Corriente</label>${sel([25,32,40,63],e.amp||40,"setE('amp',+this.value)",v=>v+' A')}`;
+  if(e.tipo==='gm'||e.tipo==='rt') h += `<div class="row${e.tipo==='gm'?3:2}">${e.tipo==='gm'?`<div><label class="f">Polos</label>${sel([2,3],e.polos,"setE('polos',+this.value)",v=>v+'P')}</div>`:''}<div><label class="f">Rango</label>${sel(GM_RANGOS,e.rango,"setE('rango',this.value)",v=>v+' A')}</div><div><label class="f">Ajuste (A)</label><input inputmode="decimal" value="${esc(fmtSec(e.ajuste))}" onchange="setE('ajuste',num(this.value))"></div></div><div class="hint">Ajustalo a la corriente nominal de la chapa del motor.</div>`;
+  if(e.tipo==='cont') h += `<div class="row3"><div><label class="f">Polos</label>${sel([2,3,4],e.polos,"setE('polos',+this.value)",v=>v+'P')}</div><div><label class="f">Corriente AC-3</label>${sel([9,12,18,25,32,40,63],e.amp,"setE('amp',+this.value)",v=>v+' A')}</div><div><label class="f">Bobina</label>${sel(['220 V','24 V','380 V','24 Vcc'],e.bobina,"setE('bobina',this.value)")}</div></div>`;
+  if(e.tipo==='temp') h += `<div class="row2"><div><label class="f">Función</label>${sel(['Retardo a la conexión','Retardo a la desconexión','Cíclico'],e.funcion,"setE('funcion',this.value)")}</div><div><label class="f">Tiempo</label><input value="${esc(e.tiempo)}" oninput="editing.tiempo=this.value" placeholder="Ej: 30 s"></div></div>`;
+  if(e.tipo==='ih') h += `<label class="f">Programa</label><input value="${esc(e.programa)}" oninput="editing.programa=this.value" placeholder="Ej: 19:00 a 23:00">`;
+  if(e.tipo==='sel') h += `<label class="f">Posiciones</label>${sel(['M-0-A','0-1','1-0-2'],e.pos,"setE('pos',this.value)")}`;
+  if(e.tipo==='pul') h += `<div class="row2"><div><label class="f">Función</label>${sel(['marcha','parada','otro'],e.rol,"setE('rol',this.value);setE('color',this.value==='parada'?'rojo':this.value==='marcha'?'verde':'amarillo')")}</div><div><label class="f">Color</label>${sel(Object.keys(LUZ_COLORS),e.color,"setE('color',this.value)")}</div></div>`;
+  if(e.tipo==='luz') h += `<div class="row2"><div><label class="f">Indica</label>${sel(['marcha','falla','tension','otro'],e.rol,"setE('rol',this.value)",v=>({marcha:'En marcha',falla:'Falla / térmico',tension:'Hay tensión',otro:'Otro'})[v])}</div><div><label class="f">Color</label>${sel(Object.keys(LUZ_COLORS),e.color,"setE('color',this.value)")}</div></div>
+      <label class="f">Texto de la etiqueta</label><input value="${esc(e.texto)}" oninput="editing.texto=this.value" placeholder="Ej: Bomba en marcha">`;
+  if(e.tipo==='sen') h += `<div class="row2"><div><label class="f">Tipo</label>${sel(Object.keys(SEN_KINDS),e.kind,"setE('kind',this.value)",k=>SEN_KINDS[k].em+' '+SEN_KINDS[k].t)}</div><div><label class="f">Contacto</label>${sel(['NO','NC'],e.contacto,"setE('contacto',this.value)",v=>v==='NO'?'NA (cierra para arrancar)':'NC (abre para arrancar)')}</div></div>
+      <label class="f">Dónde está / qué hace</label><input value="${esc(e.texto)}" oninput="editing.texto=this.value" placeholder="Ej: Flotante del tanque elevado">`;
   if(circMode){
     const ci=e.circ||{};
-    h += `<label class="f">Nombre del circuito</label><input value="${esc(ci.nombre)}" oninput="setC('nombre',this.value)">
-      <label class="f">Qué alimenta (lo lee el cliente)</label><textarea oninput="setC('desc',this.value)">${esc(ci.desc)}</textarea>
-      <div class="row3"><div><label class="f">Tipo AEA</label><select onchange="setC('tipo',this.value)">${Object.keys(CIRC_TIPOS).map(k=>`<option value="${k}" ${ci.tipo===k?'selected':''}>${k}</option>`).join('')}</select></div>
-      <div><label class="f">Sección</label><select onchange="setC('sec',+this.value)">${SECS.map(v=>`<option value="${v}" ${ci.sec==v?'selected':''}>${fmtSec(v)} mm²</option>`).join('')}</select></div>
-      <div><label class="f">Bocas</label><input type="number" min="0" max="40" value="${ci.bocas||0}" oninput="setC('bocas',+this.value)"></div></div>
-      ${b.tension==='tri'?`<label class="f">Fase</label><div class="seg">${['R','S','T'].map(f=>`<button class="${(ci.fase||'R')===f?'sel':''}" onclick="setC('fase','${f}');renderDevForm()">${f}</button>`).join('')}</div>`:''}
-      <label class="f">Ícono</label><div class="presets" style="grid-template-columns:repeat(6,1fr)">${[...new Set(PRESETS.map(p=>p.em))].map(em=>`<button class="${ci.icono===em?'sel':''}" onclick="setC('icono','${em}');renderDevForm()"><span class="em">${em}</span></button>`).join('')}</div>`;
+    if(ci.tipo==='LS'){
+      const opts=o.boards.filter(x=>x.id!==b.id && !upstreamBoards(o,b).includes(x.id) && (!feederOf(o,x) || x.id===ci.alimenta));
+      h += `<label class="f">Alimenta al tablero</label><select onchange="setC('alimenta',this.value);const t=boardById(this.value);if(t){setC('nombre','Salida a '+t.nombre.toLowerCase())};renderDevForm()"><option value="">— elegir —</option>${opts.map(x=>`<option value="${x.id}" ${ci.alimenta===x.id?'selected':''}>${esc(boardCode(o,x)+' · '+x.nombre)}</option>`).join('')}</select>
+        <div class="hint">¿No está? Creálo desde “＋ Tablero” eligiendo que sale de este.</div>
+        <div class="row2"><div><label class="f">Sección</label><select onchange="setC('sec',+this.value)">${SECS.map(v=>`<option value="${v}" ${ci.sec==v?'selected':''}>${fmtSec(v)} mm²</option>`).join('')}</select></div><div><label class="f">Largo aprox. (m)</label><input inputmode="decimal" value="${esc(ci.largo||'')}" oninput="setC('largo',this.value)"></div></div>`;
+    } else {
+      h += `<label class="f">Nombre del circuito</label><input value="${esc(ci.nombre)}" oninput="setC('nombre',this.value)">
+        <label class="f">Qué alimenta (lo lee el cliente)</label><textarea oninput="setC('desc',this.value)">${esc(ci.desc)}</textarea>
+        <div class="row3"><div><label class="f">Tipo AEA</label><select onchange="setC('tipo',this.value)">${Object.keys(CIRC_TIPOS).filter(k=>k!=='LS').map(k=>`<option value="${k}" ${ci.tipo===k?'selected':''}>${k}</option>`).join('')}</select></div>
+        <div><label class="f">Sección</label><select onchange="setC('sec',+this.value)">${SECS.map(v=>`<option value="${v}" ${ci.sec==v?'selected':''}>${fmtSec(v)} mm²</option>`).join('')}</select></div>
+        <div><label class="f">Bocas</label><input type="number" min="0" max="40" value="${ci.bocas||0}" oninput="setC('bocas',+this.value)"></div></div>
+        ${tri?`<label class="f">Fase</label><div class="seg">${['R','S','T'].map(f=>`<button class="${(ci.fase||'R')===f?'sel':''}" onclick="setC('fase','${f}');renderDevForm()">${f}</button>`).join('')}</div>`:''}
+        <label class="f">Ícono</label><div class="presets" style="grid-template-columns:repeat(7,1fr)">${[...new Set(PRESETS.map(p=>p.em))].map(em=>`<button class="${ci.icono===em?'sel':''}" onclick="setC('icono','${em}');renderDevForm()"><span class="em">${em}</span></button>`).join('')}</div>`;
+    }
   }
   h += `<div class="btns" style="margin-top:14px">${!isNew?`<button class="btn-d" onclick="deleteDev()">🗑 Quitar</button>`:''}<button class="btn-s" onclick="closeDev()">Cancelar</button><button class="btn-p" onclick="saveDev()">✔ ${isNew?'Agregar':'Guardar'}</button></div>`;
   const box=document.getElementById('devForm'); const st=box.scrollTop; box.innerHTML=h; box.scrollTop=st;
@@ -966,37 +1514,43 @@ function renderDevForm(){
 function saveDev(){
   const b=B(); const e=editing; const isNew=e._new;
   delete e._new; delete e._preset;
-  if(!((e.tipo==='tm'||e.tipo==='cont') && !e.general)) delete e.circ;
+  const power = DEV[e.tipo].cat==='power';
+  if(!(['tm','cont','gm','rt'].includes(e.tipo) && (!e.general || (e.circ && e.circ.tipo==='LS')))) delete e.circ;
+  if(!power){ e.de=null; if(!e.ctrl){ toast('Primero agregá un contactor'); return; } }
   if(e.general){ b.comps.forEach(c=>{ if(c.id!==e.id) delete c.general; }); }
+  if(e.circ && e.circ.tipo==='LS' && e.circ.alimenta){
+    // una sola salida por tablero destino
+    O().boards.forEach(x=>x.comps.forEach(c=>{ if(c.id!==e.id && c.circ && c.circ.alimenta===e.circ.alimenta) delete c.circ.alimenta; }));
+  }
   if(isNew){
-    // insertar después del último hermano para que quede agrupado
-    const sib=b.comps.filter(c=>c.de===e.de); const last=sib[sib.length-1];
-    const idx = last ? Math.max(b.comps.indexOf(last), ...descendants(b,last.id).map(id=>b.comps.findIndex(c=>c.id===id))) + 1 : b.comps.length;
-    if(e.general){ b.comps.filter(c=>c.de===null).forEach(c=>c.de=e.id); b.comps.unshift(e); }
-    else b.comps.splice(idx,0,e);
+    if(e.general){ b.comps.filter(c=>isPower(c) && c.de===null).forEach(c=>c.de=e.id); b.comps.unshift(e); }
+    else if(power){
+      const sib=b.comps.filter(c=>isPower(c) && c.de===e.de); const last=sib[sib.length-1];
+      const idx = last ? Math.max(b.comps.indexOf(last), ...descendants(b,last.id).map(id=>b.comps.findIndex(c=>c.id===id))) + 1 : b.comps.length;
+      b.comps.splice(idx,0,e);
+    } else b.comps.push(e);
   } else {
     const i=b.comps.findIndex(c=>c.id===e.id); b.comps[i]=e;
   }
-  save(); closeDev(); renderAll(); toast(isNew?'Protección agregada':'Guardado');
+  save(); closeDev(); renderAll(); toast(isNew?'Equipo agregado':'Guardado');
 }
 function deleteDev(){
   const b=B(), e=editing;
-  const kids=children(b,e.id);
-  ask(kids.length?`Lo que estaba conectado después (${kids.length}) pasa a colgar de la protección anterior. ¿Quitar?`:'¿Quitar esta protección?', ()=>{
-    kids.forEach(k=>k.de=e.de||null);
-    if(e.general && kids[0]) {/* sin general: queda avisado en el control */}
-    b.comps=b.comps.filter(c=>c.id!==e.id); save(); closeDev(); renderAll(); toast('Protección quitada');
+  const kids=children(b,e.id), deps=b.comps.filter(c=>c.ctrl===e.id);
+  ask((kids.length?`Lo que estaba conectado después (${kids.length}) pasa a colgar del equipo anterior. `:'')+(deps.length?`Los ${deps.length} equipos de mando de este contactor quedan sin asignar. `:'')+'¿Quitar?', ()=>{
+    kids.forEach(k=>k.de=e.de||null); deps.forEach(d=>d.ctrl='');
+    b.comps=b.comps.filter(c=>c.id!==e.id); save(); closeDev(); renderAll(); toast('Equipo quitado');
   });
 }
 
 // =====================================================================
-//  QR + NUBE
+//  QR + NUBE (se guarda la obra entera: el cliente ve todos sus tableros)
 // =====================================================================
-async function cloudSave(b){
-  const id='tab_'+b.id;
+async function cloudSave(o){
+  const id='tab_'+o.id;
   const r = await fetch(`${SUPABASE_URL}/rest/v1/pv_data`,{method:'POST',
     headers:{apikey:SUPABASE_ANON_KEY, Authorization:'Bearer '+SUPABASE_ANON_KEY,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},
-    body:JSON.stringify({id, payload:{tipo:'tablero', v:1, board:b, inst:S.inst}, updated_at:new Date().toISOString()})});
+    body:JSON.stringify({id, payload:{tipo:'obra', v:2, obra:o, inst:S.inst}, updated_at:new Date().toISOString()})});
   if(!r.ok) throw new Error('HTTP '+r.status);
   return id;
 }
@@ -1015,7 +1569,7 @@ async function unpack(str){
   const s=new Blob([u]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
   return JSON.parse(await new Response(s).text());
 }
-function baseUrl(){ return location.origin + location.pathname.replace(/index\.html$/,'').replace(/[^/]*$/,'') + 'tableros.html'; }
+function baseUrl(){ return location.origin + location.pathname.replace(/[^/]*$/,'') + 'tableros.html'; }
 function qrCanvas(text, px){
   let q; try{ q=qrcode(0,'M'); q.addData(text); q.make(); }catch(e){ q=qrcode(0,'L'); q.addData(text); q.make(); }
   const n=q.getModuleCount(), cell=Math.max(2,Math.floor(px/(n+8))), size=cell*(n+8);
@@ -1024,8 +1578,7 @@ function qrCanvas(text, px){
   for(let r=0;r<n;r++) for(let c=0;c<n;c++) if(q.isDark(r,c)) g.fillRect((c+4)*cell,(r+4)*cell,cell,cell);
   return cv;
 }
-function labelCanvas(b, url){
-  // etiqueta para imprimir y pegar en la puerta del tablero (≈ 7×10 cm)
+function labelCanvas(o, b, url){
   const W=700, H=1000, cv=document.createElement('canvas'); cv.width=W; cv.height=H; const g=cv.getContext('2d');
   g.fillStyle='#fff'; g.fillRect(0,0,W,H);
   g.fillStyle='#1e5a3f'; g.fillRect(0,0,W,150);
@@ -1036,41 +1589,41 @@ function labelCanvas(b, url){
   g.font='500 27px Barlow, Arial'; g.fillStyle='#3d4a40';
   g.fillText('Qué hace cada protección y qué hacer si salta',W/2,792);
   g.font='700 30px Barlow, Arial'; g.fillStyle='#1e5a3f';
-  g.fillText(((b.cliente||'')+' · '+(b.nombre||'Tablero')).slice(0,44),W/2,858);
+  g.fillText((boardCode(o,b)+' · '+(b.nombre||'Tablero')).slice(0,40),W/2,850);
   g.font='500 25px Barlow, Arial'; g.fillStyle='#5b6657';
-  g.fillText([S.inst.nombre, S.inst.tel?('Tel. '+S.inst.tel):''].filter(Boolean).join(' · ').slice(0,52),W/2,900);
+  g.fillText((o.cliente||'').slice(0,44),W/2,888);
+  g.fillText([S.inst.nombre, S.inst.tel?('Tel. '+S.inst.tel):''].filter(Boolean).join(' · ').slice(0,52),W/2,926);
   g.strokeStyle='#1e5a3f'; g.lineWidth=8; g.strokeRect(4,4,W-8,H-8);
   return cv;
 }
 async function makeQR(){
-  const b=B(); const btn=document.getElementById('qrBtn'); const out=document.getElementById('qrOut');
+  const o=O(), b=B(); const btn=document.getElementById('qrBtn'); const out=document.getElementById('qrOut');
   btn.disabled=true; btn.textContent='Guardando…';
   let url, online=true;
-  try{ const id=await cloudSave(b); url=baseUrl()+'?t='+encodeURIComponent(id); }
-  catch(e){ online=false; url=baseUrl()+'#d='+await pack({board:b,inst:S.inst}); }
+  try{ const id=await cloudSave(o); url=baseUrl()+'?t='+encodeURIComponent(id)+'&b='+b.id; }
+  catch(e){ online=false; url=baseUrl()+'#d='+await pack({obra:o,inst:S.inst,b:b.id}); }
   b.qrUrl=url; save();
   btn.disabled=false; btn.textContent='🔄 Actualizar QR (mismo código)';
-  const lab=labelCanvas(b,url); const dataUrl=lab.toDataURL('image/png');
-  const msg=`Hola${b.cliente?' '+b.cliente.replace(/\s*\(ejemplo\)/,''):''}! Te dejo la información de tu tablero eléctrico: qué hace cada protección y qué hacer si salta. ${url}`;
+  const dataUrl=labelCanvas(o,b,url).toDataURL('image/png');
+  const msg=`Hola${o.cliente?' '+o.cliente.replace(/\s*\(ejemplo\)/,''):''}! Te dejo la información de tu tablero eléctrico (${b.nombre}): qué hace cada protección y qué hacer si salta. ${url}`;
   out.innerHTML = `<div class="qrbox"><img src="${dataUrl}" alt="Etiqueta QR"></div>
-    ${online?'<div class="val ok" style="margin-top:8px">Guardado en la nube. Si cambiás el tablero, tocá Actualizar y el mismo QR muestra lo nuevo.</div>'
-            :'<div class="val warn" style="margin-top:8px">Sin conexión con la nube: el QR lleva el tablero adentro (funciona igual, pero si lo cambiás tenés que imprimir uno nuevo).</div>'}
+    ${online?'<div class="val ok" style="margin-top:8px">Guardado en la nube con todos los tableros de este cliente. Si cambiás algo, tocá Actualizar y el mismo QR muestra lo nuevo.</div>'
+            :'<div class="val warn" style="margin-top:8px">Sin conexión con la nube: el QR lleva los datos adentro (funciona igual, pero si cambiás algo tenés que imprimir uno nuevo).</div>'}
     <div class="linkbox">${esc(url)}</div>
-    <div class="btns"><button class="btn-p" onclick="downloadDataUrl(document.querySelector('#qrOut img').src,'etiqueta-qr-${slug(b)}.png')">⬇ Etiqueta PNG</button>
+    <div class="btns"><button class="btn-p" onclick="downloadDataUrl(document.querySelector('#qrOut img').src,'etiqueta-qr-${slug(o,b)}.png')">⬇ Etiqueta PNG</button>
     <button class="btn-s" onclick="copyText(B().qrUrl)">📋 Copiar link</button></div>
     <a class="btn-s btn-full" style="display:block;text-align:center;margin-top:8px;text-decoration:none" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">💬 Enviar al cliente por WhatsApp</a>
-    <div class="hint">Tip: imprimí la etiqueta en papel autoadhesivo o plastificala y pegala del lado de adentro de la puerta del tablero.</div>`;
+    <div class="hint">Hacé una etiqueta por tablero (elegí el tablero arriba y generá de nuevo). Imprimila en papel autoadhesivo y pegala del lado de adentro de la puerta.</div>`;
 }
 
 // =====================================================================
 //  EXPORTAR
 // =====================================================================
-const slug = b => ((b.cliente||'tablero')+'-'+(b.nombre||'')).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+const slug = (o,b) => ((o.cliente||'cliente')+'-'+(b.nombre||'')).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 function loadH2C(){ return window.html2canvas ? Promise.resolve() : new Promise((ok,ko)=>{ const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'; s.onload=ok; s.onerror=()=>ko(new Error('sin conexión')); document.head.appendChild(s); }); }
 async function sheetCanvas(elId){
   await loadH2C();
   const el=document.getElementById(elId).querySelector('.sheet');
-  // render a ancho fijo para que la imagen salga igual en cualquier celular
   const clone=el.cloneNode(true); const holder=document.createElement('div');
   holder.style.cssText='position:fixed;left:-10000px;top:0;width:900px;background:#fff'; holder.appendChild(clone); document.body.appendChild(holder);
   clone.querySelectorAll('.svgbox svg').forEach(s=>{ s.style.maxWidth='none'; const w=+s.getAttribute('width'); if(w>860){ s.setAttribute('width',860); s.setAttribute('height', Math.round(+s.getAttribute('height')*860/w)); } });
@@ -1079,15 +1632,15 @@ async function sheetCanvas(elId){
 }
 async function exportPNG(elId,kind){
   toast('Generando imagen…');
-  try{ const cv=await sheetCanvas(elId); downloadDataUrl(cv.toDataURL('image/png'), `${kind}-${slug(B())}.png`); toast('Imagen lista'); }
+  try{ const cv=await sheetCanvas(elId); downloadDataUrl(cv.toDataURL('image/png'), `${kind}-${slug(O(),B())}.png`); toast('Imagen lista'); }
   catch(e){ toast('No se pudo generar la imagen: '+e.message); }
 }
 async function shareImage(elId,kind){
   try{
     const cv=await sheetCanvas(elId);
     const blob=await new Promise(r=>cv.toBlob(r,'image/png'));
-    const file=new File([blob],`${kind}-${slug(B())}.png`,{type:'image/png'});
-    if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:'Tablero '+(B().cliente||'')}); }
+    const file=new File([blob],`${kind}-${slug(O(),B())}.png`,{type:'image/png'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:'Tablero '+(O().cliente||'')}); }
     else { downloadDataUrl(cv.toDataURL('image/png'), file.name); toast('Tu navegador no comparte archivos: se descargó la imagen'); }
   }catch(e){ if(e.name!=='AbortError') toast('No se pudo compartir: '+e.message); }
 }
@@ -1101,9 +1654,6 @@ function exportPDF(elId){
 function downloadDataUrl(u,name){ const a=document.createElement('a'); a.href=u; a.download=name; document.body.appendChild(a); a.click(); a.remove(); }
 async function copyText(t){ try{ await navigator.clipboard.writeText(t); toast('Link copiado'); }catch(e){ toast('No se pudo copiar'); } }
 
-// =====================================================================
-//  UI helpers
-// =====================================================================
 let tT=null;
 function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.style.display='block'; clearTimeout(tT); tT=setTimeout(()=>t.style.display='none',2600); }
 function ask(msg, onYes){
@@ -1117,21 +1667,27 @@ function ask(msg, onYes){
 // =====================================================================
 //  MODO CLIENTE (desde el QR)
 // =====================================================================
-function viewerTab(t){
-  document.querySelectorAll('#viewerApp .tab').forEach(x=>x.classList.toggle('active', x.dataset.v===t));
-  document.getElementById('vCliente').classList.toggle('hide', t!=='cliente');
-  document.getElementById('vPlano').classList.toggle('hide', t!=='plano');
+let vTab='cliente';
+function viewerRender(){
+  const {obra:o, inst} = VIEW; const b=o.boards.find(x=>x.id===VIEW.b)||o.boards[0];
+  document.getElementById('vSub').textContent = [o.cliente, b.nombre].filter(Boolean).join(' · ');
+  document.getElementById('vChips').innerHTML = o.boards.length>1 ? o.boards.map(x=>`<button class="chip ${x.id===b.id?'sel':''}" onclick="VIEW.b='${x.id}';viewerRender()">${(BOARD_TYPES[x.tipo]||BOARD_TYPES.otro).em} ${esc(x.nombre)}</button>`).join('') : '';
+  document.getElementById('vChips').classList.toggle('hide', o.boards.length<2);
+  const hasMando = conts(b).length>0;
+  if(vTab==='mando' && !hasMando) vTab='cliente';
+  document.getElementById('vTabs').innerHTML = [['cliente','👤 Mi tablero'],['plano','📐 Unifilar'],...(hasMando?[['mando','🎛 Mando']]:[])].map(([k,t])=>`<div class="tab ${vTab===k?'active':''}" onclick="vTab='${k}';viewerRender()">${t}</div>`).join('');
+  document.getElementById('vBody').innerHTML = vTab==='cliente' ? sheetCliente(o,b,inst) : vTab==='plano' ? sheetPlano(o,b,inst) : sheetMando(o,b,inst);
+  document.title = (b.nombre||'Tablero')+' · '+(o.cliente||'');
+  const tel=(inst.tel||'').replace(/\D/g,'').replace(/^0/,'').replace(/^54/,'').replace(/^9/,'');
+  document.getElementById('vActions').innerHTML = tel ? `<a class="btn-p" style="text-align:center;text-decoration:none" href="https://wa.me/549${tel}?text=${encodeURIComponent('Hola! Te escribo por mi tablero eléctrico ('+(o.cliente||'')+' · '+b.nombre+')')}">💬 Escribir al electricista</a>` : '';
 }
-function showViewer(data){
-  VIEW=data; const b=data.board, inst=Object.assign({nombre:'Patagonia Volt',tel:'',mat:''}, data.inst||{});
+function showViewer(data, bid){
+  // compatibilidad con QR viejos (un solo tablero)
+  if(data.board && !data.obra){ const b=data.board; data.obra={id:'v', cliente:b.cliente||'', direccion:b.direccion||'', boards:[b]}; }
+  VIEW={obra:data.obra, inst:Object.assign({nombre:'Patagonia Volt',tel:'',mat:''}, data.inst||{}), b:bid||data.b||data.obra.boards[0].id};
   document.getElementById('editorApp').classList.add('hide');
   document.getElementById('viewerApp').classList.remove('hide');
-  document.title = (b.nombre||'Tablero')+' · '+(b.cliente||'');
-  document.getElementById('vSub').textContent = [b.nombre, b.cliente].filter(Boolean).join(' · ');
-  document.getElementById('vCliente').innerHTML = sheetCliente(b, inst);
-  document.getElementById('vPlano').innerHTML = sheetPlano(b, inst);
-  const tel=(inst.tel||'').replace(/\D/g,'');
-  document.getElementById('vActions').innerHTML = tel ? `<a class="btn-p" style="text-align:center;text-decoration:none" href="https://wa.me/549${tel.replace(/^0/,'').replace(/^54/,'').replace(/^9/,'')}?text=${encodeURIComponent('Hola! Te escribo por mi tablero eléctrico ('+(b.cliente||'')+')')}">💬 Escribir al electricista</a>` : '';
+  viewerRender();
 }
 async function boot(){
   const qs=new URLSearchParams(location.search);
@@ -1139,9 +1695,9 @@ async function boot(){
   if(t||hm){
     document.getElementById('editorApp').classList.add('hide');
     document.getElementById('viewerApp').classList.remove('hide');
-    document.getElementById('vCliente').innerHTML='<div class="card">Cargando tablero…</div>';
-    try{ const data = t ? await cloudLoad(t) : await unpack(hm[1]); showViewer(data); }
-    catch(e){ document.getElementById('vCliente').innerHTML='<div class="card">No se pudo cargar el tablero. Revisá la conexión a internet y volvé a escanear el QR.</div>'; }
+    document.getElementById('vBody').innerHTML='<div class="card">Cargando tablero…</div>';
+    try{ const data = t ? await cloudLoad(t) : await unpack(hm[1]); showViewer(data, qs.get('b')); }
+    catch(e){ document.getElementById('vBody').innerHTML='<div class="card">No se pudo cargar el tablero. Revisá la conexión a internet y volvé a escanear el QR.</div>'; }
     return;
   }
   load(); renderAll();
