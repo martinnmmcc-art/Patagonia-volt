@@ -117,6 +117,12 @@ details.card summary::after{content:' ▾';color:var(--muted)}
 .viewer-top .brand{color:#f5c518}
 .vchips{display:flex;gap:6px;overflow-x:auto;padding:10px 12px;background:#13201a}
 .hide{display:none!important}
+/* en el celular: tocar abre el equipo, no selecciona texto */
+.panelwrap,.panelwrap *,.tree,.tree *,.chips,.tabs,.types,.presets,.btypes,.seg,.fab,button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+.panelwrap svg,.tree .it{touch-action:manipulation}
+.panelwrap [data-id],.panelwrap [data-board]{cursor:pointer}
+.tree .it{cursor:pointer}
+.tree .it:active{background:var(--s2)}
 #printArea{display:none}
 @media print{
   @page{size:A4;margin:10mm}
@@ -209,6 +215,7 @@ details.card summary::after{content:' ▾';color:var(--muted)}
         <div><label class="f">PAT (Ω)</label><input id="b-pat" inputmode="decimal" oninput="setB('pat',this.value)" placeholder="Ej: 8"></div>
       </div>
       <label class="f" id="lblLinea">Línea de alimentación</label><select id="b-lineaSec" onchange="setB('lineaSec',+this.value)"></select>
+      <label class="f">Se alimenta desde</label><select id="b-fuente" onchange="changeSource(this.value)"></select>
       <div class="hint" id="fedHint"></div>
       <label class="f">Notas para el plano</label><textarea id="b-notas" oninput="setB('notas',this.value)" placeholder="Ej: Jabalina 1,5 m con cámara de inspección"></textarea>
       <div class="btns" style="margin-top:10px">
@@ -817,8 +824,8 @@ function panelSVG(b){
   });
   let d = `M12 12H${W-12}V${H-12}H12Z`;
   rows.forEach((r,ri)=>{ const ry=TOP+ri*RH+14; d+=`M${PADX-2} ${ry+28}H${PADX+ROW*MW+2}V${ry+DH-28}H${PADX-2}Z`; });
-  s += `<path d="${d}" fill="${est?'#c9ced2':'url(#pvCover)'}" fill-rule="evenodd" stroke="#b9b8b1"/>`;
-  rows.forEach((r,ri)=>{ const ry=TOP+ri*RH+14; s+=`<rect x="${PADX-2}" y="${ry+28}" width="${ROW*MW+4}" height="${DH-56}" fill="none" stroke="#8f8e87" stroke-width="1.5"/>`; });
+  s += `<path d="${d}" fill="${est?'#c9ced2':'url(#pvCover)'}" fill-rule="evenodd" stroke="#b9b8b1" pointer-events="none"/>`;
+  rows.forEach((r,ri)=>{ const ry=TOP+ri*RH+14; s+=`<rect x="${PADX-2}" y="${ry+28}" width="${ROW*MW+4}" height="${DH-56}" fill="none" stroke="#8f8e87" stroke-width="1.5" pointer-events="none"/>`; });
   [[22,22],[W-22,22],[22,H-22],[W-22,H-22]].forEach(([x,y])=>s+=`<circle cx="${x}" cy="${y}" r="4.5" fill="url(#pvScrew)" stroke="#888"/><path d="M${x-3} ${y}h6M${x} ${y-3}v6" stroke="#666"/>`);
   s += `<text x="${W/2}" y="34" text-anchor="middle" font-size="15" font-weight="700" fill="#2b3a31" letter-spacing="1">${esc((b.nombre||'Tablero').toUpperCase())}</text>`;
   s += `<text x="${W/2}" y="48" text-anchor="middle" font-size="9" fill="#4f584d" letter-spacing="2">PATAGONIA VOLT · ${b.tension==='tri'?'3×380/220 V':'220 V'}${est?' · IP65':''}</text>`;
@@ -838,10 +845,10 @@ function panelSVG(b){
     r.forEach(it=>{
       const x=PADX+it.m0*MW, w=it.w*MW, m=map[it.c.id], c=it.c;
       const lab = hasCirc(b,c) ? (c.circ.tipo==='LS'?'➡':c.circ.icono||'') : (c.general?'⏻':DEV[c.tipo].em);
-      s += `<line x1="${x}" y1="${ly+2}" x2="${x}" y2="${ly+20}" stroke="#ddd"/>`;
+      s += `<g data-id="${c.id}"><rect x="${x}" y="${ly}" width="${w}" height="22" fill="transparent"/><line x1="${x}" y1="${ly+2}" x2="${x}" y2="${ly+20}" stroke="#ddd"/>`;
       s += T(x+w/2,ly+15,`${w>MW?m.n+' ':''}${lab}`,'font-size="10" font-weight="700" fill="#222"');
       if(w<=MW) s+=T(x+w/2,ly-3,m.n,'font-size="8" font-weight="700" fill="#333"');
-      s += `<circle cx="${x+w/2}" cy="${ry+18}" r="9" fill="${m.color}" stroke="#fff" stroke-width="1.5"/>`+T(x+w/2,ry+21.5,m.n,'font-size="10" font-weight="800" fill="#fff"');
+      s += `<circle cx="${x+w/2}" cy="${ry+18}" r="11" fill="${m.color}" stroke="#fff" stroke-width="1.5"/>`+T(x+w/2,ry+21.5,m.n,'font-size="10" font-weight="800" fill="#fff"')+`</g>`;
     });
   });
   s += `</svg>`;
@@ -1426,7 +1433,7 @@ function fillSelect(el, arr, fmt, val){ el.innerHTML = arr.map(v=>`<option value
 function renderTop(){
   document.getElementById('obraSel').innerHTML = S.obras.map(o=>`<option value="${o.id}" ${o.id===S.cur.o?'selected':''}>${esc(o.cliente||'Sin nombre')} (${o.boards.length})</option>`).join('');
   const o=O();
-  document.getElementById('boardChips').innerHTML = o.boards.map(b=>`<button class="chip ${b.id===S.cur.b?'sel':''}" onclick="selectBoard('${b.id}')">${(BOARD_TYPES[b.tipo]||BOARD_TYPES.otro).em} ${esc(boardCode(o,b))} · ${esc((b.nombre||'').replace(/^Tablero\s*(de\s+)?/i,'')||'Tablero')}</button>`).join('') + `<button class="chip add" onclick="openNewBoard()">＋ Tablero</button>`;
+  document.getElementById('boardChips').innerHTML = boardOrder(o).map(b=>`<button class="chip ${b.id===S.cur.b?'sel':''}" onclick="selectBoard('${b.id}')">${(BOARD_TYPES[b.tipo]||BOARD_TYPES.otro).em} ${esc(boardCode(o,b))} · ${esc((b.nombre||'').replace(/^Tablero\s*(de\s+)?/i,'')||'Tablero')}</button>`).join('') + `<button class="chip add" onclick="openNewBoard()">＋ Tablero</button>`;
 }
 function renderDatos(){
   const b=B(), o=O();
@@ -1438,7 +1445,9 @@ function renderDatos(){
   document.getElementById('b-lineaSec').disabled = !!f;
   fillSelect(document.getElementById('b-lineaSec'), SECS.filter(s=>s>=2.5), v=>fmtSec(v)+' mm²', f?f.comp.circ.sec:b.lineaSec);
   document.getElementById('lblLinea').textContent = f ? 'Línea seccional (se edita en la salida)' : 'Línea principal';
-  document.getElementById('fedHint').innerHTML = f ? `Se alimenta desde <b>${esc(f.board.nombre)}</b> (${f.comp.polos}×${f.comp.amp} A). Para cambiar el cable, editá esa salida.` : '';
+  const down = downstreamBoards(o,b);
+  document.getElementById('b-fuente').innerHTML = `<option value="">⚡ Red / medidor (directo)</option>` + boardOrder(o).filter(x=>x.id!==b.id && !down.includes(x.id)).map(x=>`<option value="${x.id}" ${f&&f.board.id===x.id?'selected':''}>${(BOARD_TYPES[x.tipo]||BOARD_TYPES.otro).em} ${esc(boardCode(o,x)+' · '+x.nombre)}</option>`).join('');
+  document.getElementById('fedHint').innerHTML = f ? `Sale de <b>${esc(f.board.nombre)}</b> por ${esc(info(f.board).map[f.comp.id].tag)} (${f.comp.polos}×${f.comp.amp} A). Para cambiar el cable, editá esa salida.` : '';
   document.querySelectorAll('#segTension button').forEach(x=>x.classList.toggle('sel', x.dataset.v===b.tension));
   document.getElementById('datosResumen').textContent = ' · '+(BOARD_TYPES[b.tipo]||BOARD_TYPES.otro).t+' · '+(b.tension==='tri'?'trifásica':'monofásica');
   ['cliente','direccion'].forEach(k=>{ const el=document.getElementById('o-'+k); if(document.activeElement!==el) el.value=o[k]||''; });
@@ -1452,10 +1461,10 @@ function renderPanel(){
 function renderTree(){
   const b=B(); const I=info(b);
   const el=document.getElementById('tree');
-  const row=(c,depth)=>{ const m=I.map[c.id]; return `<div class="it" style="padding-left:${6+depth*16}px">
+  const row=(c,depth)=>{ const m=I.map[c.id]; return `<div class="it" style="padding-left:${6+depth*16}px" onclick="openDev('${c.id}')">
       <div class="num" style="border-color:${m.color};color:${m.color}">${m.n}</div>
-      <div class="tx" onclick="openDev('${c.id}')"><div class="t1">${esc(devTitle(b,c))} <span style="color:var(--muted);font-weight:400">${m.code||m.tag}</span></div><div class="t2">${esc(devSpec(b,c))}${hasCirc(b,c)?` · ${fmtSec(c.circ.sec)} mm²${c.circ.bocas?' · '+c.circ.bocas+' bocas':''}`:''}${m.ctrlTag?' · comanda '+m.ctrlTag:''}</div></div>
-      <div class="ac"><button onclick="moveDev('${c.id}',-1)" title="Subir">↑</button><button onclick="moveDev('${c.id}',1)" title="Bajar">↓</button></div>
+      <div class="tx"><div class="t1">${esc(devTitle(b,c))} <span style="color:var(--muted);font-weight:400">${m.code||m.tag}</span></div><div class="t2">${esc(devSpec(b,c))}${hasCirc(b,c)?` · ${fmtSec(c.circ.sec)} mm²${c.circ.bocas?' · '+c.circ.bocas+' bocas':''}`:''}${m.ctrlTag?' · comanda '+m.ctrlTag:''}</div></div>
+      <div class="ac"><button onclick="event.stopPropagation();moveDev('${c.id}',-1)" title="Subir">↑</button><button onclick="event.stopPropagation();moveDev('${c.id}',1)" title="Bajar">↓</button><button onclick="event.stopPropagation();quickDelete('${c.id}')" title="Quitar" style="color:var(--danger)">🗑</button></div>
     </div>`; };
   let h = I.order.length ? '<div class="grp">Fuerza y protecciones</div>'+I.order.map(({c,depth})=>row(c,depth)).join('') : '<div class="hint">Sin equipos. Tocá “Agregar equipo”.</div>';
   if(I.others.length) h += '<div class="grp">Mando y señalización</div>'+I.others.map(c=>row(c,0)).join('');
@@ -1467,7 +1476,7 @@ function renderValidation(){
 function renderObra(){
   const box=document.getElementById('obraDiagram');
   box.innerHTML = obraSVG(O(), S.cur.b);
-  box.querySelectorAll('[data-board]').forEach(g=>g.addEventListener('click',()=>{ selectBoard(g.dataset.board); switchTab('armar'); }));
+  box.querySelectorAll('[data-board]').forEach(g=>g.addEventListener('click',ev=>{ ev.preventDefault(); selectBoard(g.dataset.board); switchTab('armar'); }));
 }
 function renderAll(){
   renderTop(); renderDatos();
@@ -1531,36 +1540,92 @@ function moveDev(id,dir){
 //  NUEVO TABLERO
 // =====================================================================
 let nb = null;
+// tableros que cuelgan (directa o indirectamente) de b por su entrada principal
+function downstreamBoards(o,b){ const r=[]; const walk=x=>o.boards.forEach(y=>{ const f=feederOf(o,y); if(f && f.board.id===x.id && !r.includes(y.id)){ r.push(y.id); walk(y); } }); walk(b); return r; }
+// tableros que hoy salen directo de src por su entrada principal
+const fedFrom = (o,src) => o.boards.filter(y=>{ const f=feederOf(o,y); return f && f.board.id===src.id; });
+// salida libre de un tablero (térmica “Otro tablero” sin vincular), o se crea una
+function freeOutput(up, amp, sec, tension, label){
+  const free = up.comps.find(c=>hasCirc(up,c) && c.circ.tipo==='LS' && !c.circ.alimenta);
+  if(free) return free;
+  const upG = up.comps.find(c=>c.general);
+  if(upG && hasCirc(up,upG)){
+    // la llave general ya es la salida (pilar): se agrega una térmica nueva colgando del general
+    const sal = mk('tm',{de:upG.id, polos:tension==='tri'?4:2, amp, curva:'C', ka:4.5, circ:circ(P('tab'),{nombre:label, sec})});
+    up.comps.push(sal); return sal;
+  }
+  const parent = upG ? (children(up,upG.id).find(c=>c.tipo==='ptm') || upG) : null;
+  const sal = mk('tm',{de:parent?parent.id:null, polos:tension==='tri'?4:2, amp, curva:'C', ka:4.5, circ:circ(P('tab'),{nombre:label, sec})});
+  up.comps.push(sal); return sal;
+}
+// cambia de dónde se alimenta el tablero b (srcId vacío = directo de la red)
+function setSource(o, b, srcId){
+  const old = feederOf(o,b);
+  if(old && old.board.id===srcId) return;
+  if(old){ delete old.comp.circ.alimenta; }
+  if(srcId){
+    const up = o.boards.find(x=>x.id===srcId);
+    const g = b.comps.find(c=>c.general);
+    const amp = g ? g.amp : 25;
+    const sec = (old && old.comp.circ.sec) || SECS.find(x=>x>=2.5 && IZ[x]>=amp) || 6;
+    const out = freeOutput(up, amp, sec, up.tension, 'Salida a '+(b.nombre||'tablero').toLowerCase());
+    out.circ.alimenta = b.id; delete out.circ.entra;
+    out.circ.nombre = 'Salida a '+(b.nombre||'tablero').toLowerCase();
+    b.tension = up.tension;
+  }
+}
+function setNbTipo(k){
+  const o=O(); nb.tipo=k;
+  // el tablero de generador casi siempre va en el medio (pilar → generador → principal)
+  if(k==='transferencia'){ const src=o.boards.find(x=>x.id===nb.from); const fed=src?fedFrom(o,src):o.boards.filter(x=>!feederOf(o,x)); nb.inter=(fed[0]||{}).id||''; }
+  renderNewBoard();
+}
 function openNewBoard(){
-  const o=O(); nb={tipo:'seccional', from: (o.boards.find(b=>b.tipo==='principal')||o.boards[0]||{}).id||''};
+  const o=O(); nb={tipo:'seccional', from: (o.boards.find(b=>b.tipo==='principal')||boardOrder(o)[0]||{}).id||'', inter:''};
   renderNewBoard(); document.getElementById('devModal').classList.add('open');
 }
 function renderNewBoard(){
   const o=O();
-  let h=`<h3>Agregar tablero a ${esc(o.cliente||'la obra')}</h3><h4>¿Qué tablero es?</h4><div class="btypes">${Object.entries(BOARD_TYPES).map(([k,v])=>`<button class="${nb.tipo===k?'sel':''}" onclick="nb.tipo='${k}';renderNewBoard()"><b>${v.em} ${v.t}</b>${v.desc}</button>`).join('')}</div>`;
-  h+=`<label class="f">¿De dónde se alimenta?</label><select onchange="nb.from=this.value"><option value="">Directo del medidor / red</option>${o.boards.map(b=>`<option value="${b.id}" ${nb.from===b.id?'selected':''}>${esc(boardCode(o,b)+' · '+b.nombre)}</option>`).join('')}</select>`;
-  h+=`<div class="hint">Si sale de otro tablero, se agrega sola una térmica “➡️ Salida” en ese tablero, con su cable. Después la podés ajustar.${nb.tipo==='inversor'?'<br><b>Inversor:</b> además se crea en ese tablero una <b>Entrada desde el inversor</b> con su disyuntor, para colgar ahí los circuitos de respaldo.':''}</div>`;
+  const src = o.boards.find(x=>x.id===nb.from);
+  const fed = src ? fedFrom(o,src) : o.boards.filter(x=>!feederOf(o,x));
+  if(nb.inter && !fed.some(x=>x.id===nb.inter)) nb.inter='';
+  let h=`<h3>Agregar tablero a ${esc(o.cliente||'la obra')}</h3><h4>¿Qué tablero es?</h4><div class="btypes">${Object.entries(BOARD_TYPES).map(([k,v])=>`<button class="${nb.tipo===k?'sel':''}" onclick="setNbTipo('${k}')"><b>${v.em} ${v.t}</b>${v.desc}</button>`).join('')}</div>`;
+  h+=`<label class="f">¿De dónde se alimenta?</label><select onchange="nb.from=this.value;nb.inter='';renderNewBoard()"><option value="">Directo del medidor / red</option>${boardOrder(o).map(b=>`<option value="${b.id}" ${nb.from===b.id?'selected':''}>${esc(boardCode(o,b)+' · '+b.nombre)}</option>`).join('')}</select>`;
+  if(fed.length && nb.tipo!=='inversor'){
+    h+=`<label class="f">¿Va en el medio de otro? (intercalar)</label><select onchange="nb.inter=this.value;renderNewBoard()"><option value="">No, es una salida más</option>${fed.map(x=>`<option value="${x.id}" ${nb.inter===x.id?'selected':''}>Sí, antes de ${esc(x.nombre)}</option>`).join('')}</select>`;
+    if(nb.inter){ const d=o.boards.find(x=>x.id===nb.inter); h+=`<div class="val ok" style="margin-top:6px">Queda: ${esc(src?src.nombre:'Red')} → <b>${esc((BOARD_TYPES[nb.tipo]||{}).t||'nuevo')}</b> → ${esc(d.nombre)}</div>`; }
+  }
+  h+=`<div class="hint">Si sale de otro tablero, se usa su salida libre o se agrega una térmica “➡️ Salida”, con su cable. Después la podés ajustar.${nb.tipo==='inversor'?'<br><b>Inversor:</b> además se crea en ese tablero una <b>Entrada desde el inversor</b> con su disyuntor, para colgar ahí los circuitos de respaldo.':''}</div>`;
   h+=`<div class="btns" style="margin-top:14px"><button class="btn-s" onclick="closeDev()">Cancelar</button><button class="btn-p" onclick="createBoard()">✔ Crear tablero</button></div>`;
   document.getElementById('devForm').innerHTML=h;
 }
 function createBoard(){
   const o=O(); const b=makeBoard(nb.tipo);
   o.boards.push(b);
-  if(nb.from){
-    const up=o.boards.find(x=>x.id===nb.from);
-    const g=b.comps.find(c=>c.general);
-    const amp = g ? g.amp : 25;
-    const sec = Object.keys(IZ).map(Number).sort((a,z)=>a-z).find(s=>s>=2.5 && IZ[s]>=amp) || 6;
-    // la salida cuelga de lo último antes de los diferenciales (protector de tensión o general)
-    const upG = up.comps.find(c=>c.general);
-    const parent = upG ? (children(up,upG.id).find(c=>c.tipo==='ptm') || upG) : null;
-    if(upG && hasCirc(up,upG)) { /* el general ya es salida (pilar) */ upG.circ.alimenta = upG.circ.alimenta || b.id; if(upG.circ.alimenta!==b.id) up.comps.push(mk('tm',{de:upG.id, polos:b.tension==='tri'?4:2, amp, curva:'C', ka:4.5, circ:circ(P('tab'),{nombre:'Salida a '+b.nombre.toLowerCase(), sec, alimenta:b.id})})); }
-    else up.comps.push(mk('tm',{de:parent?parent.id:null, polos:b.tension==='tri'?4:2, amp, curva:'C', ka:4.5, circ:circ(P('tab'),{nombre:'Salida a '+b.nombre.toLowerCase(), sec, alimenta:b.id})}));
-    b.tension = up.tension;
+  const down = nb.inter ? o.boards.find(x=>x.id===nb.inter) : null;
+  if(down){
+    // intercalar: lo que alimentaba al tablero de abajo ahora alimenta al nuevo, y el de abajo cuelga del nuevo
+    const f = feederOf(o,down);
+    if(f){ f.comp.circ.alimenta = b.id; f.comp.circ.nombre='Salida a '+b.nombre.toLowerCase(); b.tension=f.board.tension; }
+    setSource(o, down, b.id);
+  } else if(nb.from){
+    setSource(o, b, nb.from);
   }
   if(nb.tipo==='inversor' && nb.from){ const up=o.boards.find(x=>x.id===nb.from); linkInverter(up, b); }
   S.cur.b=b.id; save(); closeDev(); switchTab('armar'); document.getElementById('datosCard').open=true;
-  toast(nb.from?'Tablero creado y conectado':'Tablero creado');
+  toast(down?'Tablero intercalado':nb.from?'Tablero creado y conectado':'Tablero creado');
+}
+// orden lógico para mostrar: desde la red hacia abajo
+function boardOrder(o){
+  const out=[]; const walk=b=>{ if(out.includes(b)) return; out.push(b); o.boards.filter(y=>{ const f=feederOf(o,y); return f && f.board.id===b.id; }).forEach(walk); };
+  o.boards.filter(b=>!feederOf(o,b)).forEach(walk);
+  o.boards.forEach(b=>{ if(!out.includes(b)) out.push(b); });
+  return out;
+}
+function changeSource(v){
+  const o=O(), b=B();
+  setSource(o,b,v); save(); renderAll();
+  toast(v ? 'Ahora se alimenta desde '+o.boards.find(x=>x.id===v).nombre : 'Ahora se alimenta directo de la red');
 }
 
 // =====================================================================
@@ -1729,6 +1794,7 @@ function saveDev(){
   }
   save(); closeDev(); renderAll(); toast(isNew?'Equipo agregado':'Guardado');
 }
+function quickDelete(id){ editing = JSON.parse(JSON.stringify(B().comps.find(c=>c.id===id))); deleteDev(); }
 function deleteDev(){
   const b=B(), e=editing;
   const kids=children(b,e.id), deps=b.comps.filter(c=>c.ctrl===e.id);
@@ -1868,7 +1934,7 @@ let vTab='cliente';
 function viewerRender(){
   const {obra:o, inst} = VIEW; const b=o.boards.find(x=>x.id===VIEW.b)||o.boards[0];
   document.getElementById('vSub').textContent = [o.cliente, b.nombre].filter(Boolean).join(' · ');
-  document.getElementById('vChips').innerHTML = o.boards.length>1 ? o.boards.map(x=>`<button class="chip ${x.id===b.id?'sel':''}" onclick="VIEW.b='${x.id}';viewerRender()">${(BOARD_TYPES[x.tipo]||BOARD_TYPES.otro).em} ${esc(x.nombre)}</button>`).join('') : '';
+  document.getElementById('vChips').innerHTML = o.boards.length>1 ? boardOrder(o).map(x=>`<button class="chip ${x.id===b.id?'sel':''}" onclick="VIEW.b='${x.id}';viewerRender()">${(BOARD_TYPES[x.tipo]||BOARD_TYPES.otro).em} ${esc(x.nombre)}</button>`).join('') : '';
   document.getElementById('vChips').classList.toggle('hide', o.boards.length<2);
   const hasMando = conts(b).length>0;
   if(vTab==='mando' && !hasMando) vTab='cliente';
