@@ -180,7 +180,8 @@ details.card summary::after{content:' ▾';color:var(--muted)}
       <div class="hint">Aparece en las hojas, el plano y la etiqueta QR.</div>
     </div>
     <div class="btns">
-      <button class="btn-s" onclick="loadExampleObra()">⭐ Cargar obra de ejemplo</button>
+      <button class="btn-s" onclick="loadExampleObra()">⭐ Ejemplo casa</button>
+      <button class="btn-s" onclick="loadExampleRespaldo()">⛽🔋 Ejemplo generador + inversor</button>
       <button class="btn-d" onclick="delObra()">🗑 Borrar cliente</button>
     </div>
   </section>
@@ -324,6 +325,8 @@ const BOARD_TYPES = {
   seccional:  {em:'🔀', t:'Seccional',    code:'TS',  desc:'Un sector (planta alta, quincho…)'},
   bomba:      {em:'💧', t:'Bomba de agua',code:'TB',  desc:'Bomba con flotante, M-0-A y pilotos'},
   automatismo:{em:'🎛', t:'Automatismo',  code:'TA',  desc:'Contactor, horario, fotocélula…'},
+  transferencia:{em:'⛽', t:'Generador',  code:'TG',  desc:'Red + generador con conmutador 1-0-2'},
+  inversor:   {em:'🔋', t:'Inversor/UPS', code:'TI',  desc:'Entrada y salida del inversor a circuitos de respaldo'},
   otro:       {em:'📦', t:'Otro',         code:'T',   desc:'Tablero vacío'}
 };
 const CIRC_TIPOS = {
@@ -362,9 +365,15 @@ const DEV = {
   pul:  {em:'🔘', t:'Pulsador',     full:'Pulsador',                   cat:'door',  tag:'S'},
   emerg:{em:'🛑', t:'Emergencia',   full:'Parada de emergencia',       cat:'door',  tag:'S0'},
   luz:  {em:'🟢', t:'Señalizador',  full:'Señalizador luminoso',       cat:'door',  tag:'H'},
-  sen:  {em:'🛟', t:'Sensor',       full:'Sensor / contacto externo',  cat:'field', tag:'B'}
+  sen:  {em:'🛟', t:'Sensor',       full:'Sensor / contacto externo',  cat:'field', tag:'B'},
+  gen:  {em:'⛽', t:'Generador',    full:'Grupo electrógeno',          cat:'power', tag:'G'},
+  conm: {em:'🔀', t:'Conmutador',   full:'Conmutador de fuentes',      cat:'power', tag:'QC'},
+  inv:  {em:'🔋', t:'Inversor',     full:'Inversor / UPS',             cat:'power', tag:'U'},
+  ent:  {em:'⤵️', t:'Entrada',      full:'Entrada desde otro tablero', cat:'power', tag:'X'}
 };
-const DEV_GROUPS = [['Protecciones',['tm','dif','ptm','dps']],['Fuerza motriz',['gm','cont','rt']],['Mando y señalización',['sel','pul','emerg','luz','temp','ih','sen']]];
+const OFF_RAIL = ['gen','inv','ent'];       // equipos de fuerza que no van en el riel DIN
+const ROOT_ONLY = ['gen','ent'];            // son fuentes: no cuelgan de nada
+const DEV_GROUPS = [['Protecciones',['tm','dif','ptm','dps']],['Fuentes y respaldo',['gen','conm','inv','ent']],['Fuerza motriz',['gm','cont','rt']],['Mando y señalización',['sel','pul','emerg','luz','temp','ih','sen']]];
 const isPower = c => DEV[c.tipo] && DEV[c.tipo].cat==='power';
 
 // =====================================================================
@@ -460,11 +469,56 @@ function makeBoard(tipo){
         mk('luz',{rol:'marcha', color:'verde', texto:'Luces encendidas', ctrl:km.id}),
         mk('sen',{kind:'fotocelula', contacto:'NO', texto:'Fotocélula en el frente (cierra al oscurecer)', ctrl:km.id}));
   }
+  else if(tipo==='transferencia'){
+    b.nombre='Tablero de transferencia'; b.ubic='Junto al generador'; b.gabinete='estanco'; b.modulos=12; b.lineaSec=10;
+    const q1=add(mk('tm',{polos:2, amp:40, curva:'C', ka:4.5, general:true}));
+    const g =add(mk('gen',{kva:5, combustible:'nafta', arranque:'arranque manual'}));
+    const q2=add(mk('tm',{de:g.id, polos:2, amp:25, curva:'C', ka:4.5}));
+    add(mk('conm',{de:q1.id, de2:q2.id, polos:2, amp:40, modo:'manual', fuente2:'generador', circ:circ(P('tab'),{nombre:'Salida a tablero principal', sec:10})}));
+  }
+  else if(tipo==='inversor'){
+    b.nombre='Tablero del inversor'; b.ubic='Junto al inversor'; b.modulos=8; b.lineaSec=2.5;
+    const q1=add(mk('tm',{polos:2, amp:10, curva:'C', ka:4.5, general:true}));
+    const u =add(mk('inv',{de:q1.id, potencia:1000, tipoInv:'inversor-cargador', bateria:'12 V'}));
+    add(mk('tm',{de:u.id, polos:2, amp:6, curva:'C', ka:4.5, circ:circ(P('tab'),{nombre:'Salida del inversor', sec:2.5})}));
+  }
   else {
     b.modulos=12;
     add(mk('tm',{polos:2, amp:25, curva:'C', ka:4.5, general:true}));
   }
   return b;
+}
+// conecta la salida del tablero del inversor a una Entrada nueva del tablero de destino
+function linkInverter(dest, ti){
+  const out = ti.comps.find(c=>c.circ && c.circ.tipo==='LS' && ancestors(ti,c).some(a=>a.tipo==='inv'));
+  if(!out) return null;
+  const ent = mk('ent',{nombre:'Entrada desde el inversor'});
+  const d = mk('dif',{de:ent.id, polos:2, amp:25, sens:30, clase:'A'});
+  dest.comps.push(ent, d);
+  out.circ.alimenta = dest.id; out.circ.entra = ent.id; out.circ.nombre = 'Salida inversor a '+dest.nombre.toLowerCase();
+  return {ent, d};
+}
+// obra igual a la del caso real: pilar → generador/conmutador → principal ↔ inversor
+function exampleRespaldo(){
+  const o = {id:uid(10), cliente:'Casa con generador e inversor (ejemplo)', direccion:'El Bolsón', boards:[]};
+  const pil = makeBoard('pilar'); pil.pat='8';
+  const tg  = makeBoard('transferencia');
+  const tp  = makeBoard('principal'); tp.modulos=24; tp.lineaSec=10; tp.ubic='Cocina';
+  const ti  = makeBoard('inversor');
+  const g = tp.comps[0], d1 = tp.comps[1];
+  const pt = mk('ptm',{de:d1.id, amp:40});
+  const c = (de, k, amp, extra) => mk('tm',{de, polos:2, amp, curva:'C', ka:4.5, circ:circ(P(k), extra)});
+  tp.comps.push(pt,
+    c(pt.id,'coc',20,{nombre:'Tomas cocina', desc:'Mesada, microondas y pava', bocas:5}),
+    c(pt.id,'term',20,{nombre:'Termotanque / tomas lavadero', desc:'Termotanque y lavarropas', bocas:2}),
+    mk('tm',{de:pt.id, polos:2, amp:10, curva:'C', ka:4.5, circ:circ(P('tab'),{nombre:'Salida al inversor', sec:2.5, alimenta:ti.id})}));
+  const L = linkInverter(tp, ti);
+  tp.comps.push(c(L.d.id,'luz',10,{nombre:'Iluminación', desc:'Todas las luces de la casa', bocas:12}),
+                c(L.d.id,'tomas',10,{nombre:'Tomas heladera y router', desc:'Heladera, router WiFi y cargadores', bocas:4}));
+  pil.comps[0].circ.alimenta = tg.id; pil.comps[0].circ.nombre='Salida a tablero de transferencia';
+  tg.comps.find(x=>x.tipo==='conm').circ.alimenta = tp.id;
+  o.boards.push(pil, tg, tp, ti);
+  return o;
 }
 function exampleObra(){
   const o = {id:uid(10), cliente:'Familia Gómez (ejemplo)', direccion:'Los Coihues 250, El Bolsón', boards:[]};
@@ -508,8 +562,8 @@ function dfs(b){
   powerComps(b).forEach(c=>{ if(!seen.has(c.id)){ c.de=null; out.push({c,depth:0}); seen.add(c.id);} });
   return out;
 }
-function isLeaf(b,c){ return !children(b,c.id).length; }
-function hasCirc(b,c){ return ['tm','cont','gm','rt'].includes(c.tipo) && isLeaf(b,c) && (!c.general || (c.circ && c.circ.tipo==='LS')); }
+function isLeaf(b,c){ return !children(b,c.id).length && !b.comps.some(x=>x.de2===c.id); }
+function hasCirc(b,c){ return ['tm','cont','gm','rt','conm'].includes(c.tipo) && isLeaf(b,c) && (!c.general || (c.circ && c.circ.tipo==='LS')); }
 function descendants(b,id){ const r=[]; children(b,id).forEach(c=>{ r.push(c.id); r.push(...descendants(b,c.id)); }); return r; }
 function ancestors(b,c){ const r=[]; let p=b.comps.find(x=>x.id===c.de); let g=0; while(p && g++<50){ r.push(p); p=b.comps.find(x=>x.id===p.de); } return r; }
 const ctrlOf = (b,c) => b.comps.find(x=>x.id===c.ctrl && x.tipo==='cont');
@@ -541,9 +595,10 @@ function modsOf(b,c){
   if(c.tipo==='rt') return 2;
   if(c.tipo==='temp') return 1;
   if(c.tipo==='ih') return 2;
+  if(c.tipo==='conm') return (c.polos||2)>2 ? 4 : 3;
   return 2;
 }
-const onRail = c => ['power','rail'].includes(DEV[c.tipo].cat);
+const onRail = c => ['power','rail'].includes(DEV[c.tipo].cat) && !OFF_RAIL.includes(c.tipo);
 function devTitle(b,c){
   if(hasCirc(b,c) && c.circ.tipo==='LS'){ const t=boardById(c.circ.alimenta); return '➡️ Salida a '+(t?t.nombre:'otro tablero'); }
   if(c.tipo==='tm' && c.general) return 'Llave general';
@@ -554,6 +609,10 @@ function devTitle(b,c){
   if(c.tipo==='luz') return 'Piloto '+(c.color||'')+(c.texto?': '+c.texto:'');
   if(c.tipo==='sel') return 'Selector '+(c.pos||'M-0-A');
   if(c.tipo==='sen') return (SEN_KINDS[c.kind]||SEN_KINDS.otro).t;
+  if(c.tipo==='ent'){ const o=VIEW?VIEW.obra:O(); const f=o&&feederOfEntry(o,b,c.id); return '⤵️ '+(c.nombre||('Entrada desde '+(f?f.board.nombre:'otro tablero'))); }
+  if(c.tipo==='inv') return 'Inversor '+(c.potencia||'')+' W';
+  if(c.tipo==='gen') return 'Generador'+(c.kva?' '+fmtSec(c.kva)+' kVA':'');
+  if(c.tipo==='conm') return 'Conmutador red / '+(c.fuente2||'generador');
   return DEV[c.tipo].full;
 }
 function devSpec(b,c){
@@ -572,12 +631,44 @@ function devSpec(b,c){
   if(c.tipo==='emerg')return 'Hongo rojo con retención · NC';
   if(c.tipo==='luz') return `LED ${c.color} · 220 V · 22 mm`;
   if(c.tipo==='sen') return `Contacto ${c.contacto==='NC'?'NC':'NA'} · fuera del tablero`;
+  if(c.tipo==='gen') return `${fmtSec(c.kva||5)} kVA · ${c.combustible||'nafta'} · ${c.arranque||'arranque manual'}`;
+  if(c.tipo==='conm') return `${c.polos||2}P · ${c.amp||40} A · ${c.modo==='auto'?'automático (ATS)':'manual 1-0-2'}`;
+  if(c.tipo==='inv') return `${c.potencia||1000} W · ${c.tipoInv||'inversor-cargador'}${c.bateria?' · '+c.bateria:''}`;
+  if(c.tipo==='ent') return 'Barra de entrada separada';
   return '';
 }
 // tableros
 const boardById = id => { for(const o of S.obras.concat(VIEW?[VIEW.obra]:[])) { const b=o.boards.find(x=>x.id===id); if(b) return b; } return null; };
 const boardCode = (o,b) => { const bt=BOARD_TYPES[b.tipo]||BOARD_TYPES.otro; const same=o.boards.filter(x=>x.tipo===b.tipo); return bt.code+(same.length>1?(same.indexOf(b)+1):''); };
-function feederOf(o,b){ for(const ob of o.boards){ if(ob.id===b.id) continue; for(const c of ob.comps){ if(c.circ && c.circ.tipo==='LS' && c.circ.alimenta===b.id) return {board:ob, comp:c}; } } return null; }
+// alimentación principal del tablero (no cuenta las que entran a una “Entrada” secundaria)
+function feederOf(o,b){ for(const ob of o.boards){ if(ob.id===b.id) continue; for(const c of ob.comps){ if(c.circ && c.circ.tipo==='LS' && c.circ.alimenta===b.id && !c.circ.entra) return {board:ob, comp:c}; } } return null; }
+function feederOfEntry(o,b,entId){ for(const ob of o.boards){ for(const c of ob.comps){ if(c.circ && c.circ.tipo==='LS' && c.circ.alimenta===b.id && c.circ.entra===entId) return {board:ob, comp:c}; } } return null; }
+// recorre aguas arriba cruzando tableros (por la entrada principal o por una Entrada secundaria)
+function upChain(o,b,c){
+  const r=[]; let bb=b, cur=c, g=0;
+  while(g++<120){
+    let p = cur.de ? bb.comps.find(x=>x.id===cur.de) : null;
+    if(!p){
+      if(cur.tipo==='gen') break;
+      const f = cur.tipo==='ent' ? feederOfEntry(o,bb,cur.id) : feederOf(o,bb);
+      if(!f || r.some(x=>x.c.id===f.comp.id)) break;
+      bb=f.board; p=f.comp;
+    }
+    r.push({b:bb, c:p}); cur=p;
+  }
+  return r;
+}
+// diferencial que protege al circuito (aunque esté en otro tablero); se corta al llegar a un inversor
+function difFor(o,b,c){
+  let viaConm=null;
+  for(const u of upChain(o,b,c)){
+    if(u.c.tipo==='dif') return {dif:u.c, board:u.b, viaInv:null, viaConm};
+    if(u.c.tipo==='inv') return {dif:null, viaInv:u.c, invBoard:u.b, viaConm};
+    if(u.c.tipo==='conm' && !viaConm) viaConm=u.c;
+  }
+  return {dif:null, viaInv:null, viaConm};
+}
+const invFor = (o,b,c) => { const u=upChain(o,b,c).find(x=>x.c.tipo==='inv'); return u?u.c:null; };
 function upstreamBoards(o,b){ const r=[]; let f=feederOf(o,b), g=0; while(f && g++<20){ r.push(f.board.id); f=feederOf(o,f.board); } return r; }
 
 // =====================================================================
@@ -655,6 +746,11 @@ function drawDevice(b,c,x,y,w,m){
     s += `<circle cx="${cx}" cy="${y+55}" r="9" fill="#fff" stroke="#555"/><path d="M${cx} ${y+55}l0 -7" stroke="#2a6fdb" stroke-width="1.6"/>`;
     s += `<circle cx="${cx-6}" cy="${y+72}" r="2.5" fill="#2ecc71"/><circle cx="${cx+6}" cy="${y+72}" r="2.5" fill="#e67e22"/>`;
     s += T(cx,y+88,'KT','font-size="10" font-weight="800" fill="#222"')+T(cx,y+99,'⏱','font-size="9"');
+  } else if(c.tipo==='conm'){
+    s += `<rect x="${x+5}" y="${y+36}" width="${w-10}" height="70" rx="4" fill="#ededea" stroke="#b5b5ae"/>`;
+    s += `<circle cx="${cx}" cy="${y+64}" r="17" fill="#c0392b" stroke="#7a1f16"/><rect x="${cx-4}" y="${y+48}" width="8" height="30" rx="3" fill="#e2574a" transform="rotate(-45 ${cx} ${y+64})"/>`;
+    s += T(cx-24,y+50,'1','font-size="10" font-weight="800" fill="#222"')+T(cx,y+44,'0','font-size="10" font-weight="800" fill="#222"')+T(cx+24,y+50,'2','font-size="10" font-weight="800" fill="#222"');
+    s += T(cx,y+98,c.modo==='auto'?'ATS':'I - 0 - II','font-size="8" font-weight="700" fill="#222"');
   } else if(c.tipo==='ih'){
     s += `<rect x="${x+6}" y="${y+42}" width="${w-12}" height="20" rx="2" fill="#c9d6c3" stroke="#555"/>`;
     s += `<text x="${cx}" y="${y+57}" font-size="12" fill="#1b2a22" text-anchor="middle" font-family="monospace" font-weight="700">19:00</text>`;
@@ -682,7 +778,7 @@ function drawDoorDevice(c,cx,cy,m){
 }
 function layoutRows(b){
   const I = info(b);
-  const items = [...I.order.map(o=>o.c), ...I.others.filter(c=>DEV[c.tipo].cat==='rail')];
+  const items = [...I.order.map(o=>o.c), ...I.others.filter(c=>DEV[c.tipo].cat==='rail')].filter(onRail);
   const rows=[[]]; let used=0;
   items.forEach(c=>{
     const w = modsOf(b,c);
@@ -768,7 +864,7 @@ function obraSVG(o, selId){
   const pos={}; let col=0; let maxD=0;
   const place=(b,d)=>{ maxD=Math.max(maxD,d); const ch=kids(b); if(!ch.length){ pos[b.id]={x:col++*(BW+GX), d}; return pos[b.id].x; } const xs=ch.map(k=>place(k,d+1)); pos[b.id]={x:(xs[0]+xs[xs.length-1])/2, d}; return pos[b.id].x; };
   roots.forEach(r=>place(r,0));
-  const W = Math.max(col*(BW+GX)+20, 340), H = 60 + maxD*(BH+GY) + BH + 14;
+  const W = Math.max(col*(BW+GX)+70, 340), H = 60 + maxD*(BH+GY) + BH + 14;
   const yOf = d => 60 + d*(BH+GY);
   let s=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="Barlow, Arial, sans-serif">`;
   s+=`<rect x="${W/2-60}" y="8" width="120" height="28" rx="6" fill="#fff" stroke="#1e5a3f" stroke-width="1.5"/>`+T(W/2,27,'⚡ RED / MEDIDOR','font-size="11" font-weight="700" fill="#1e5a3f"');
@@ -790,6 +886,15 @@ function obraSVG(o, selId){
     s+=T(x+BW/2,y+66,g?`Gral. ${g.polos}×${g.amp} A`:'sin llave general','font-size="9" fill="#5b6657"');
     s+=`</g>`;
   });
+  // salidas que entran a una “Entrada” secundaria (ej.: salida del inversor que vuelve al principal)
+  o.boards.forEach(src=>src.comps.forEach(c=>{
+    if(!(c.circ && c.circ.tipo==='LS' && c.circ.entra)) return;
+    const t=o.boards.find(x=>x.id===c.circ.alimenta); if(!t||!pos[src.id]||!pos[t.id]) return;
+    const sx=pos[src.id].x+10+BW, sy=yOf(pos[src.id].d)+BH/2, tx=pos[t.id].x+10+BW, ty=yOf(pos[t.id].d)+BH/2+12;
+    const ex=Math.max(sx,tx)+16;
+    s+=`<path d="M${sx} ${sy} H${ex} V${ty} H${tx+8}" fill="none" stroke="#d4a20a" stroke-width="2.2" stroke-dasharray="6 3"/><path d="M${tx+9} ${ty-5}l-8 5l8 5" fill="#d4a20a"/>`;
+    s+=`<text x="${ex+4}" y="${(sy+ty)/2}" font-size="9" fill="#8a6a00" font-weight="700">${c.polos}×${c.amp} A</text>`;
+  }));
   s+='</svg>'; return s;
 }
 
@@ -797,12 +902,31 @@ function obraSVG(o, selId){
 //  TEXTOS PARA EL CLIENTE
 // =====================================================================
 function clientText(b,c,I){
+  const o = VIEW ? VIEW.obra : O();
+  const t0 = clientText0(b,c,I);
+  if(hasCirc(b,c) && !['LS','MANDO'].includes(c.circ.tipo)){ const inv=invFor(o,b,c); if(inv) t0.feeds += ` <br>🔋 <b>Sigue andando con el inversor</b> cuando se corta la luz (máx. ${inv.potencia||1000} W entre todo lo que esté prendido).`; }
+  return t0;
+}
+function clientText0(b,c,I){
+  const o = VIEW ? VIEW.obra : O();
+  if(c.tipo==='gen') return {que:`Generador${c.kva?' de '+fmtSec(c.kva)+' kVA':''}: da energía cuando se corta la red.`, feeds:'', si:'Para usarlo: arrancalo, esperá que se estabilice y pasá el conmutador a <b>2</b>. Cuando vuelve la red: conmutador a <b>1</b> y después apagá el generador.'};
+  if(c.tipo==='conm') return c.modo==='auto'
+    ? {que:'Conmutador automático: cuando se corta la red pasa solo al generador, y vuelve a la red cuando regresa.', feeds:'', si:'No lo fuerces a mano salvo que te lo indique el electricista.'}
+    : {que:'<b>Conmutador de fuentes</b>: elige de dónde viene la luz. <b>1</b> = red, <b>0</b> = todo cortado, <b>2</b> = generador. Nunca deja conectadas las dos a la vez.', feeds:'', si:'Pasá siempre por 0 y esperá unos segundos antes de cambiar de 1 a 2 o al revés.'};
+  if(c.tipo==='inv'){
+    const backed = [];
+    o.boards.forEach(bb=>bb.comps.forEach(x=>{ if(hasCirc(bb,x) && !['LS','MANDO'].includes(x.circ.tipo) && invFor(o,bb,x)===c) backed.push(x.circ.nombre); }));
+    return {que:`Inversor${c.potencia?' de '+c.potencia+' W':''}: cuando se corta la luz <b>sigue dando energía con la batería</b> a algunos circuitos.`,
+      feeds: backed.length ? 'Respalda: '+backed.map(esc).join(' · ') : '',
+      si:`No conectes en esos circuitos más de ${c.potencia||1000} W juntos: nada de estufas, pavas, planchas ni termotanques.`};
+  }
+  if(c.tipo==='ent'){ const f=feederOfEntry(o,b,c.id); return {que:`Entrada separada: estos circuitos <b>no vienen de la red de este tablero</b> sino de ${f?'<b>'+esc(f.board.nombre)+'</b>':'otro tablero'}.`, feeds:'', si:f?`Si se quedan sin luz, mirá la térmica de salida en ${esc(f.board.nombre)}.`:''}; }
   const kids = descendants(b,c.id).map(id=>b.comps.find(x=>x.id===id)).filter(x=>hasCirc(b,x));
   const feedsList = kids.map(k=>`${I.map[k.id].n}. ${esc(k.circ.icono||'')} ${esc(k.circ.nombre)}`).join(' · ');
   const km = ctrlOf(b,c); const kmName = km && km.circ ? esc(km.circ.nombre.toLowerCase()) : 'el equipo';
   const autoBy = b.comps.filter(x=>x.ctrl===(km&&km.id) && (x.tipo==='sen'||x.tipo==='ih'||x.tipo==='temp')).map(x=>x.tipo==='sen'?(SEN_KINDS[x.kind]||SEN_KINDS.otro).t.toLowerCase():x.tipo==='ih'?'el reloj horario':'el temporizador').join(' y ');
-  if(hasCirc(b,c) && c.circ.tipo==='LS'){ const t=boardById(c.circ.alimenta); return {
-    que:`Alimenta otro tablero: <b>${esc(t?t.nombre:'otro tablero')}</b>${t&&t.ubic?' ('+esc(t.ubic)+')':''}. Si la bajás, se corta todo ese tablero.`,
+  if(hasCirc(b,c) && c.circ.tipo==='LS'){ const t=boardById(c.circ.alimenta); const ent=t&&c.circ.entra?t.comps.find(x=>x.id===c.circ.entra):null; return {
+    que: ent ? `Alimenta los circuitos de respaldo de <b>${esc(t.nombre)}</b>. Si la bajás, se cortan esos circuitos.` : `Alimenta otro tablero: <b>${esc(t?t.nombre:'otro tablero')}</b>${t&&t.ubic?' ('+esc(t.ubic)+')':''}. Si la bajás, se corta todo ese tablero.`,
     feeds: t?`➡️ ${esc(t.nombre)}`:'', si:'Si salta: revisá primero el tablero de abajo; si no encontrás nada, llamá al electricista.'}; }
   if(c.tipo==='tm' && c.general) return {
     que:'Es la llave que corta <b>todo este tablero</b>. Protege los cables si hay un cortocircuito o si se consume demasiado al mismo tiempo.',
@@ -860,8 +984,9 @@ function sheetHead(o,b,sub){
 }
 function fromLine(o,b){
   const f=feederOf(o,b), I=f?info(f.board):null;
-  const outs = b.comps.filter(c=>c.circ && c.circ.tipo==='LS' && boardById(c.circ.alimenta));
+  const outs = b.comps.filter(c=>c.circ && c.circ.tipo==='LS' && boardById(c.circ.alimenta) && !c.circ.entra);
   let h='';
+  b.comps.filter(c=>c.tipo==='ent').forEach(e=>{ const fe=feederOfEntry(o,b,e.id); if(fe) h+=`<div class="from">🔋 Algunos circuitos de este tablero vienen de <b>${esc(fe.board.nombre)}</b>${fe.board.comps.some(x=>x.tipo==='inv')?' (inversor con batería)':''}: los que cuelgan de “${esc(devTitle(b,e).replace('⤵️ ',''))}”.</div>`; });
   if(f) h+=`<div class="from">⬆️ Este tablero se alimenta desde <b>${esc(f.board.nombre)}</b>${f.board.ubic?' ('+esc(f.board.ubic)+')':''}: protección n.º ${I.map[f.comp.id].n} (${f.comp.polos}×${f.comp.amp} A). Si se queda sin luz, mirá esa térmica.</div>`;
   if(outs.length) h+=`<div class="from">⬇️ Desde acá salen: ${outs.map(c=>'<b>'+esc(boardById(c.circ.alimenta).nombre)+'</b>').join(', ')}.</div>`;
   return h;
@@ -917,16 +1042,20 @@ function planoSVG(o, b, inst){
   const I = info(b);
   const SLOT=118, LV=118, X0=100, Y0=110;
   const pos={}; let leaf=0; let maxDepth=0;
+  const cById = id => b.comps.find(x=>x.id===id);
+  const dOf = (id,g=0) => { const c=cById(id); if(!c||g>60) return 0; let d = c.de ? dOf(c.de,g+1)+1 : 1; if(c.de2) d=Math.max(d, dOf(c.de2,g+1)+1); return d; };
   const place=(id,depth)=>{
     const ch=children(b,id);
-    if(id) maxDepth=Math.max(maxDepth,depth);
+    if(id){ depth = Math.max(depth, dOf(id)); maxDepth=Math.max(maxDepth,depth); }
     if(!ch.length && id){ pos[id]={x:X0+leaf*SLOT, d:depth}; leaf++; return pos[id].x; }
     const xs=ch.map(c=>place(c.id, depth+1));
     const x = xs.length ? (xs[0]+xs[xs.length-1])/2 : X0+(leaf++)*SLOT;
     if(id) pos[id]={x,d:depth};
     return x;
   };
-  const rootX = place(null,0);
+  place(null,0);
+  const mainRoots = children(b,null).filter(c=>!ROOT_ONLY.includes(c.tipo));
+  const rootX = mainRoots.length ? mainRoots.reduce((a,c)=>a+pos[c.id].x,0)/mainRoots.length : X0;
   const nLeaves = Math.max(leaf,1);
   const yOf = d => Y0 + (d-1)*LV;
   const baseY = yOf(Math.max(maxDepth,1))+70+26;
@@ -949,7 +1078,9 @@ function planoSVG(o, b, inst){
   s += `<line x1="${rootX}" y1="96" x2="${rootX-40}" y2="96" stroke="#1d7a44" stroke-width="1.6" stroke-dasharray="4 2"/>` + symGround(rootX-40,96);
   s += `<text x="${rootX-34}" y="138" font-size="9" text-anchor="end" fill="#1d7a44">${f?'PE desde '+esc(boardCode(o,f.board)):'PAT '+(b.pat?esc(b.pat)+' Ω':'— Ω')}</text>`;
   const drawLinks=(id)=>{
-    const ch=children(b,id); if(!ch.length) return;
+    const ch=children(b,id).filter(c=>id || !ROOT_ONLY.includes(c.tipo));
+    if(!id) children(b,null).filter(c=>ROOT_ONLY.includes(c.tipo)).forEach(c=>drawLinks(c.id));
+    if(!ch.length) return;
     const py = id ? yOf(pos[id].d)+70 : Y0;
     const px = id ? pos[id].x : rootX;
     if(ch.length>1){
@@ -972,11 +1103,16 @@ function planoSVG(o, b, inst){
     else if(c.tipo==='rt') s+=symBox(x,y,'⊐⊏');
     else if(c.tipo==='ptm') s+=symBox(x,y,'U&lt;&gt;');
     else if(c.tipo==='dps') s+=symBox(x,y,'DPS');
+    else if(c.tipo==='gen') s+=`<circle cx="${x}" cy="${y+30}" r="19" fill="#fff" stroke="#111" stroke-width="1.6"/><text x="${x}" y="${y+29}" font-size="13" text-anchor="middle" font-weight="800">G</text><text x="${x}" y="${y+41}" font-size="11" text-anchor="middle">~</text><line x1="${x}" y1="${y+49}" x2="${x}" y2="${y+70}" stroke="#111" stroke-width="1.6"/>`;
+    else if(c.tipo==='ent'){ const fe=feederOfEntry(o,b,c.id), fI=fe?info(fe.board):null; s+=`<rect x="${x-46}" y="${y+4}" width="92" height="34" rx="3" fill="#fff7d1" stroke="#111" stroke-width="1.4"/><text x="${x}" y="${y+18}" font-size="9" text-anchor="middle" font-weight="800">DESDE ${esc(fe?boardCode(o,fe.board):'¿?')}</text><text x="${x}" y="${y+31}" font-size="8.5" text-anchor="middle">${fe?fI.map[fe.comp.id].tag+' '+fe.comp.polos+'×'+fe.comp.amp+' A':'sin vincular'}</text><line x1="${x}" y1="${y+38}" x2="${x}" y2="${y+70}" stroke="#111" stroke-width="2"/>`+ticks(x,y+50,3); }
+    else if(c.tipo==='inv') s+=`<line x1="${x}" y1="${y}" x2="${x}" y2="${y+14}" stroke="#111" stroke-width="1.6"/><rect x="${x-18}" y="${y+14}" width="36" height="36" fill="#fff" stroke="#111" stroke-width="1.5"/><line x1="${x-18}" y1="${y+50}" x2="${x+18}" y2="${y+14}" stroke="#111"/><text x="${x-9}" y="${y+28}" font-size="11" text-anchor="middle" font-weight="700">~</text><text x="${x+9}" y="${y+46}" font-size="11" text-anchor="middle" font-weight="700">~</text><line x1="${x}" y1="${y+50}" x2="${x}" y2="${y+70}" stroke="#111" stroke-width="1.6"/><path d="M${x-18} ${y+32}h-10m0 -6v12m-4 -8v4" stroke="#111" stroke-width="1.4"/>`;
+    else if(c.tipo==='conm') s+=`<line x1="${x}" y1="${y}" x2="${x}" y2="${y+22}" stroke="#111" stroke-width="1.6"/><line x1="${x+20}" y1="${y+12}" x2="${x+20}" y2="${y+22}" stroke="#111" stroke-width="1.6"/><circle cx="${x}" cy="${y+22}" r="2"/><circle cx="${x+20}" cy="${y+22}" r="2"/><line x1="${x}" y1="${y+48}" x2="${x+3}" y2="${y+24}" stroke="#111" stroke-width="1.8"/><circle cx="${x}" cy="${y+48}" r="2"/><line x1="${x}" y1="${y+48}" x2="${x}" y2="${y+70}" stroke="#111" stroke-width="1.6"/><text x="${x-5}" y="${y+18}" font-size="8" text-anchor="end">1</text><text x="${x+25}" y="${y+18}" font-size="8">2</text>`;
     const p2=c.polos||2;
-    const l1 = {tm:`${p2}×${c.amp} A ${c.curva}`, dif:`${p2}×${c.amp} A`, ptm:`${c.amp||40} A`, dps:'Cl. II', cont:`${p2}×${c.amp||25} A`, gm:`${c.rango} A`, rt:`${c.rango} A`}[c.tipo];
-    const l2 = {tm:`${fmtSec(c.ka)} kA`, dif:`${c.sens} mA cl.${c.clase}`, ptm:'Prot. tensión', dps:'Uc 275 V', cont:`AC-3 · bob. ${c.bobina||'220 V'}`, gm:`aj. ${fmtSec(c.ajuste)} A`, rt:`aj. ${fmtSec(c.ajuste)} A`}[c.tipo];
-    const lx = (c.tipo==='ptm'||c.tipo==='dps'||c.tipo==='rt') ? x+20 : x+8;
-    s+=`<circle cx="${x-24}" cy="${y+8}" r="8" fill="${m.color}"/><text x="${x-24}" y="${y+11.5}" font-size="9" fill="#fff" text-anchor="middle" font-weight="800">${m.n}</text>`;
+    const l1 = {tm:`${p2}×${c.amp} A ${c.curva}`, dif:`${p2}×${c.amp} A`, ptm:`${c.amp||40} A`, dps:'Cl. II', cont:`${p2}×${c.amp||25} A`, gm:`${c.rango} A`, rt:`${c.rango} A`, gen:`${fmtSec(c.kva||5)} kVA`, inv:`${c.potencia||1000} W`, conm:`${p2}×${c.amp||40} A`, ent:''}[c.tipo]||'';
+    const l2 = {tm:`${fmtSec(c.ka)} kA`, dif:`${c.sens} mA cl.${c.clase}`, ptm:'Prot. tensión', dps:'Uc 275 V', cont:`AC-3 · bob. ${c.bobina||'220 V'}`, gm:`aj. ${fmtSec(c.ajuste)} A`, rt:`aj. ${fmtSec(c.ajuste)} A`, gen:esc(c.combustible||'nafta'), inv:'con batería', conm:c.modo==='auto'?'ATS':'1-0-2 manual', ent:''}[c.tipo]||'';
+    const lx = (c.tipo==='ptm'||c.tipo==='dps'||c.tipo==='rt'||c.tipo==='gen'||c.tipo==='inv') ? x+24 : c.tipo==='conm' ? x+30 : c.tipo==='ent' ? x+50 : x+8;
+    const nx = c.tipo==='ent' ? x-58 : c.tipo==='gen' ? x-30 : x-24;
+    s+=`<circle cx="${nx}" cy="${y+8}" r="8" fill="${m.color}"/><text x="${nx}" y="${y+11.5}" font-size="9" fill="#fff" text-anchor="middle" font-weight="800">${m.n}</text>`;
     s+=`<text x="${lx}" y="${y+28}" font-size="9" font-weight="800" fill="#1e5a3f">${m.tag}</text><text x="${lx}" y="${y+40}" font-size="10" font-weight="700">${l1}</text><text x="${lx}" y="${y+52}" font-size="9" fill="#444">${l2}</text>`;
     if(c.general) s+=`<text x="${lx}" y="${y+64}" font-size="8.5" fill="#1e5a3f" font-weight="700">GENERAL</text>`;
     if(isLeaf(b,c)){
@@ -995,7 +1131,7 @@ function planoSVG(o, b, inst){
         const bx=x-SLOT/2+5, bw=SLOT-10, by=baseY+12;
         s+=`<rect x="${bx}" y="${by}" width="${bw}" height="112" rx="4" fill="${ls?'#fff7d1':'#f6f2e8'}" stroke="#1e5a3f" ${ls?'stroke-width="2"':''}/>`;
         s+=`<rect x="${bx}" y="${by}" width="${bw}" height="20" rx="4" fill="${ls?'#1b2a22':m.color}"/><text x="${x}" y="${by+14}" font-size="11" text-anchor="middle" fill="#fff" font-weight="800">${ls?'➡ '+esc(tgt?boardCode(o,tgt):'TS'):(m.code||'')}</text>`;
-        wrap(ls?(tgt?tgt.nombre:'Tablero sin vincular'):ci.nombre, 18).slice(0,3).forEach((ln,i)=>s+=`<text x="${x}" y="${by+34+i*11}" font-size="9.5" text-anchor="middle" font-weight="700">${esc(ln)}</text>`);
+        wrap(ls?(tgt?(ci.entra?'Respaldo en ':'')+tgt.nombre:'Tablero sin vincular'):ci.nombre, 18).slice(0,3).forEach((ln,i)=>s+=`<text x="${x}" y="${by+34+i*11}" font-size="9.5" text-anchor="middle" font-weight="700">${esc(ln)}</text>`);
         s+=`<text x="${x}" y="${by+75}" font-size="9" text-anchor="middle">${ls&&tri?'4':'2'}×${fmtSec(ci.sec)} + PE ${fmtSec(pe)} mm²</text>`;
         s+=`<text x="${x}" y="${by+87}" font-size="9" text-anchor="middle">${ls?'Línea seccional':ci.tipo==='MOT'?'Motor M 1~':ci.tipo==='MANDO'?'Mando 220 V':(ci.bocas||0)+' '+(ci.bocas==1?'boca':'bocas')}${tri&&!ls?' · fase '+(ci.fase||'R'):''}</text>`;
         const In = c.amp || (c.tipo==='gm'||c.tipo==='rt' ? num(c.ajuste) : '');
@@ -1003,6 +1139,10 @@ function planoSVG(o, b, inst){
         if(ci.tipo==='MOT') s+=`<circle cx="${x+bw/2-14}" cy="${by+100}" r="9" fill="#fff" stroke="#111"/><text x="${x+bw/2-14}" y="${by+104}" font-size="10" text-anchor="middle" font-weight="700">M</text>`;
       }
     }
+  });
+  b.comps.filter(c=>c.tipo==='conm' && c.de2 && pos[c.id] && pos[c.de2]).forEach(c=>{
+    const a=pos[c.de2], z=pos[c.id], yc=yOf(z.d);
+    s+=`<path d="M${a.x} ${yOf(a.d)+70} V${yc+4} H${z.x+20} V${yc+12}" fill="none" stroke="#111" stroke-width="1.6"/>`;
   });
   const ry=H-104, rw=Math.min(430,W-20), rx=W-rw-10;
   s+=`<rect x="${rx}" y="${ry}" width="${rw}" height="94" fill="#fff" stroke="#111" stroke-width="1.4"/><line x1="${rx}" y1="${ry+26}" x2="${rx+rw}" y2="${ry+26}" stroke="#111"/>`;
@@ -1022,11 +1162,11 @@ function sheetPlano(o, b, inst){
   let rowsH='';
   I.order.forEach(({c})=>{
     const m=I.map[c.id];
-    const difC = m.dif ? b.comps.find(x=>x.id===m.dif) : null;
     if(hasCirc(b,c)){
+      const df = difFor(o,b,c), difC=df.dif, dI = difC ? (df.board===b ? I : info(df.board)) : null;
       const ci=c.circ, ls=ci.tipo==='LS', tgt=ls?boardById(ci.alimenta):null;
       const prot = c.tipo==='tm' ? `${c.polos}×${c.amp} A ${c.curva||''}` : c.tipo==='cont' ? `${m.tag} ${c.amp} A` + ancestors(b,c).filter(a=>a.tipo==='gm').map(g=>` · QM ${g.rango} A`).join('') : `${c.rango||''} A`;
-      rowsH+=`<tr><td><b>${m.n}</b></td><td><b>${ls?'➡ '+esc(tgt?boardCode(o,tgt):''):m.code}</b> ${esc(ls&&tgt?tgt.nombre:ci.nombre)}</td><td>${CIRC_TIPOS[ci.tipo]||''}</td><td>${prot}</td><td>${difC?`#${I.map[difC.id].n} ${difC.amp}A/${difC.sens}mA`:(ls?'en tablero destino':'<b style="color:#b3432e">SIN DIF.</b>')}</td><td>${ls&&tri?4:2}×${fmtSec(ci.sec)} + PE ${fmtSec(Math.max(2.5,ci.sec))}</td><td>${ls||ci.tipo==='MANDO'?'—':ci.bocas||''}</td>${tri?`<td>${ls?'RST':ci.fase||'R'}</td>`:''}</tr>`;
+      rowsH+=`<tr><td><b>${m.n}</b></td><td><b>${ls?'➡ '+esc(tgt?boardCode(o,tgt):''):m.code}</b> ${esc(ls&&tgt?tgt.nombre:ci.nombre)}</td><td>${CIRC_TIPOS[ci.tipo]||''}</td><td>${prot}</td><td>${difC?`${df.board!==b?esc(boardCode(o,df.board))+' ':''}#${dI.map[difC.id].n} ${difC.amp}A/${difC.sens}mA`:(ls?'en tablero destino':ci.tipo==='MANDO'?'—':'<b style="color:#b3432e">SIN DIF.'+(df.viaInv?' (después del inversor)':'')+'</b>')}</td><td>${ls&&tri?4:2}×${fmtSec(ci.sec)} + PE ${fmtSec(Math.max(2.5,ci.sec))}</td><td>${ls||ci.tipo==='MANDO'?'—':ci.bocas||''}</td>${tri?`<td>${ls?'RST':ci.fase||'R'}</td>`:''}</tr>`;
     }
   });
   const v = validate(o,b);
@@ -1201,11 +1341,14 @@ function validate(o,b){
     if(ci.tipo==='LS'){
       const t=boardById(ci.alimenta);
       if(!t) add('warn',`${name}: no está vinculada a ningún tablero de la obra.`);
-      const tg = t && t.comps.find(x=>x.general);
+      const tg = t && !ci.entra && t.comps.find(x=>x.general);
       if(tg && c.amp && tg.amp>c.amp) add('warn',`${name}: alimenta un tablero con llave general de ${tg.amp} A desde una térmica de ${c.amp} A. La de abajo debería ser igual o menor para que corte primero (selectividad).`);
+      if(ci.entra && t && !t.comps.some(x=>x.id===ci.entra)) add('warn',`${name}: la entrada del tablero destino ya no existe.`);
     } else if(ci.tipo!=='MANDO'){
-      if(!dif) add('err',`${name}: no tiene disyuntor diferencial aguas arriba.`);
-      else if(dif.sens>30) add('err',`${name}: el diferencial que lo protege es de ${dif.sens} mA; para circuitos terminales de vivienda va de 30 mA.`);
+      const df = difFor(o,b,c);
+      if(!df.dif && df.viaInv) add('err',`${name}: se alimenta del inversor${df.viaInv.potencia?' de '+df.viaInv.potencia+' W':''} y <b>después del inversor no hay disyuntor diferencial</b>. El diferencial de la red no lo protege cuando funciona con batería: poné un ID 30 mA a la salida del inversor, antes de estos circuitos.`);
+      else if(!df.dif) add('err',`${name}: no tiene disyuntor diferencial aguas arriba.`);
+      else if(df.dif.sens>30) add('err',`${name}: el diferencial que lo protege es de ${df.dif.sens} mA; para circuitos terminales de vivienda va de 30 mA.`);
     }
     if(b.tension==='mono' && c.tipo==='tm' && c.polos<2) add('err',`${name}: en monofásica de vivienda la protección debe ser bipolar (corta fase y neutro).`);
     const iz=IZ[ci.sec];
@@ -1218,6 +1361,29 @@ function validate(o,b){
     if(ci.tipo==='TUG'){ if(c.amp>20) add('err',`${name}: TUG admite protección de hasta 20 A.`); if(ci.sec<2.5) add('err',`${name}: sección mínima TUG 2,5 mm².`); if(ci.bocas>15) add('err',`${name}: más de 15 bocas en un circuito TUG.`); }
     if(['TUE','IUE','ACU','MOT'].includes(ci.tipo) && ci.sec<2.5) add('warn',`${name}: sección menor a 2,5 mm² para un circuito de uso especial.`);
     if(!ci.nombre) add('warn',`Hay un circuito sin nombre.`);
+  });
+  // fuentes y respaldo
+  b.comps.filter(c=>c.tipo==='gen').forEach(g=>{
+    const fromGen = id => { let x=b.comps.find(y=>y.id===id), k=0; while(x && k++<40){ if(x.id===g.id) return true; x=b.comps.find(y=>y.id===x.de); } return false; };
+    if(!b.comps.some(c=>c.tipo==='conm' && (fromGen(c.de2)||fromGen(c.de)))) add('err',`${I.map[g.id].tag}: generador sin conmutador. Sin un conmutador 1-0-2 el generador puede inyectar a la red (peligro para quien trabaje en la línea) o quedar en paralelo con ella.`);
+    if(!b.comps.some(c=>c.tipo==='tm' && c.de===g.id)) add('warn',`${I.map[g.id].tag}: poné una térmica a la salida del generador, antes del conmutador.`);
+  });
+  b.comps.filter(c=>c.tipo==='conm').forEach(k=>{
+    if(!k.de2) add('err',`${I.map[k.id].tag}: al conmutador le falta la <b>entrada 2</b> (generador u otra fuente).`);
+    if((k.polos||2) < (b.tension==='tri'?4:2)) add('err',`${I.map[k.id].tag}: el conmutador tiene que cortar también el neutro (${b.tension==='tri'?'4P':'2P'}).`);
+  });
+  b.comps.filter(c=>c.tipo==='inv').forEach(u=>{
+    const outs = children(b,u.id).filter(x=>x.tipo==='tm');
+    const In = (u.potencia||1000)/220;
+    if(!outs.length) add('warn',`${I.map[u.id].tag}: poné una térmica a la salida del inversor.`);
+    outs.forEach(q=>{ if(q.amp > Math.max(6, In*1.5)) add('warn',`${I.map[u.id].tag}: el inversor de ${u.potencia} W entrega ≈ ${fmtSec(In.toFixed(1))} A; la térmica de salida de ${q.amp} A queda grande.`); });
+    if(!ancestors(b,u).some(a=>a.tipo==='tm')) add('warn',`${I.map[u.id].tag}: poné una térmica a la entrada del inversor.`);
+  });
+  b.comps.filter(c=>c.tipo==='ent').forEach(e=>{
+    const fe=feederOfEntry(o,b,e.id);
+    if(!fe) add('warn',`${I.map[e.id].tag}: entrada sin vincular. En el otro tablero, en la salida “➡️ Otro tablero”, elegí que llega a esta entrada.`);
+    else if(fe.board.comps.some(x=>x.tipo==='inv')) add('warn',`${I.map[e.id].tag}: los circuitos del inversor van con <b>su propia barra de neutro</b>, separada del neutro de red de este tablero (el PE sí es común). Revisá en el manual del inversor cómo maneja neutro-tierra cuando funciona con batería.`);
+    if(!children(b,e.id).length) add('warn',`${I.map[e.id].tag}: no tiene circuitos colgados. En cada circuito de respaldo elegí “Conectado después de” esta entrada.`);
   });
   b.comps.filter(c=>c.tipo==='gm'||c.tipo==='rt').forEach(g=>{ const [a,z]=rangeOf(g.rango), aj=num(g.ajuste); if(!(aj>=a && aj<=z)) add('err',`${I.map[g.id].tag}: el ajuste ${fmtSec(g.ajuste)} A está fuera del rango ${g.rango} A.`); });
   conts(b).forEach(k=>{
@@ -1321,6 +1487,7 @@ function setTension(v){
   b.comps.forEach(c=>{
     if(v==='tri' && (c.general || c.tipo==='dif')) c.polos=4;
     if(v==='tri' && (c.tipo==='gm'||c.tipo==='cont') ) c.polos=3;
+    if(v==='tri' && c.tipo==='conm') c.polos=4;
     if(v==='mono' && (c.polos||2)>2) c.polos=2;
   });
   save(); renderAll();
@@ -1340,7 +1507,8 @@ function newObra(){
 }
 function delObra(){ ask('¿Borrar este cliente con todos sus tableros?', ()=>{ S.obras=S.obras.filter(o=>o.id!==S.cur.o); if(!S.obras.length) S.obras.push(exampleObra()); S.cur.o=S.obras[0].id; S.cur.b=S.obras[0].boards[0].id; save(); renderAll(); toast('Cliente borrado'); }); }
 function loadExampleObra(){ const o=exampleObra(); S.obras.unshift(o); S.cur={o:o.id,b:o.boards[1].id}; save(); renderAll(); toast('Obra de ejemplo cargada'); }
-function dupBoard(){ const b=JSON.parse(JSON.stringify(B())); b.id=uid(10); b.nombre=(b.nombre||'Tablero')+' (copia)'; b.comps.forEach(c=>{ if(c.circ && c.circ.tipo==='LS') delete c.circ.alimenta; }); O().boards.push(b); S.cur.b=b.id; save(); renderAll(); toast('Tablero duplicado'); }
+function loadExampleRespaldo(){ const o=exampleRespaldo(); S.obras.unshift(o); S.cur={o:o.id,b:o.boards[2].id}; save(); renderAll(); toast('Ejemplo con generador e inversor cargado'); }
+function dupBoard(){ const b=JSON.parse(JSON.stringify(B())); b.id=uid(10); b.nombre=(b.nombre||'Tablero')+' (copia)'; b.comps.forEach(c=>{ if(c.circ && c.circ.tipo==='LS'){ delete c.circ.alimenta; delete c.circ.entra; } }); O().boards.push(b); S.cur.b=b.id; save(); renderAll(); toast('Tablero duplicado'); }
 function delBoard(){
   ask('¿Borrar este tablero? Las salidas que lo alimentaban quedan sin vincular.', ()=>{
     const o=O(), id=S.cur.b;
@@ -1371,7 +1539,7 @@ function renderNewBoard(){
   const o=O();
   let h=`<h3>Agregar tablero a ${esc(o.cliente||'la obra')}</h3><h4>¿Qué tablero es?</h4><div class="btypes">${Object.entries(BOARD_TYPES).map(([k,v])=>`<button class="${nb.tipo===k?'sel':''}" onclick="nb.tipo='${k}';renderNewBoard()"><b>${v.em} ${v.t}</b>${v.desc}</button>`).join('')}</div>`;
   h+=`<label class="f">¿De dónde se alimenta?</label><select onchange="nb.from=this.value"><option value="">Directo del medidor / red</option>${o.boards.map(b=>`<option value="${b.id}" ${nb.from===b.id?'selected':''}>${esc(boardCode(o,b)+' · '+b.nombre)}</option>`).join('')}</select>`;
-  h+=`<div class="hint">Si sale de otro tablero, se agrega sola una térmica “➡️ Salida” en ese tablero, con su cable. Después la podés ajustar.</div>`;
+  h+=`<div class="hint">Si sale de otro tablero, se agrega sola una térmica “➡️ Salida” en ese tablero, con su cable. Después la podés ajustar.${nb.tipo==='inversor'?'<br><b>Inversor:</b> además se crea en ese tablero una <b>Entrada desde el inversor</b> con su disyuntor, para colgar ahí los circuitos de respaldo.':''}</div>`;
   h+=`<div class="btns" style="margin-top:14px"><button class="btn-s" onclick="closeDev()">Cancelar</button><button class="btn-p" onclick="createBoard()">✔ Crear tablero</button></div>`;
   document.getElementById('devForm').innerHTML=h;
 }
@@ -1390,6 +1558,7 @@ function createBoard(){
     else up.comps.push(mk('tm',{de:parent?parent.id:null, polos:b.tension==='tri'?4:2, amp, curva:'C', ka:4.5, circ:circ(P('tab'),{nombre:'Salida a '+b.nombre.toLowerCase(), sec, alimenta:b.id})}));
     b.tension = up.tension;
   }
+  if(nb.tipo==='inversor' && nb.from){ const up=o.boards.find(x=>x.id===nb.from); linkInverter(up, b); }
   S.cur.b=b.id; save(); closeDev(); switchTab('armar'); document.getElementById('datosCard').open=true;
   toast(nb.from?'Tablero creado y conectado':'Tablero creado');
 }
@@ -1429,6 +1598,11 @@ function setType(t){
   if(t==='pul') Object.assign(e,{rol:'marcha', color:'verde'});
   if(t==='luz') Object.assign(e,{rol:'marcha', color:'verde', texto:'En marcha'});
   if(t==='sen') Object.assign(e,{kind:'flotante', contacto:'NO', texto:''});
+  if(t==='gen') Object.assign(e,{kva:5, combustible:'nafta', arranque:'arranque manual'});
+  if(t==='conm') Object.assign(e,{polos:tri?4:2, amp:40, modo:'manual', fuente2:'generador'});
+  if(t==='inv') Object.assign(e,{potencia:1000, tipoInv:'inversor-cargador', bateria:'12 V'});
+  if(t==='ent') Object.assign(e,{nombre:'Entrada desde el inversor'});
+  if(ROOT_ONLY.includes(t)) e.de=null;
   if(DEV[t].cat!=='power'){ e.de=null; e.ctrl = e.ctrl || (firstK&&firstK.id) || ''; }
   else { delete e.ctrl; if(t==='rt'){ const k=conts(b)[0]; if(k) e.de=k.id; } if(t==='cont'){ const g=b.comps.filter(c=>c.tipo==='gm').pop(); if(g && isLeaf(b,g)) e.de=g.id; } }
   renderDevForm();
@@ -1454,8 +1628,8 @@ function renderDevForm(){
   const excl = isNew ? [] : [e.id, ...descendants(b,e.id)];
   const parents = I.order.filter(({c})=>!excl.includes(c.id) && c.tipo!=='dps');
   const sel = (arr,val,fn,fmt)=>`<select onchange="${fn}">${arr.map(v=>`<option value="${v}" ${String(v)===String(val)?'selected':''}>${fmt?fmt(v):v}</option>`).join('')}</select>`;
-  let h = `<h3>${isNew?'Agregar equipo':'Editar · '+esc((I.map[e.id]||{}).tag||DEV[e.tipo].t)}</h3>`;
-  DEV_GROUPS.forEach(([g,ks])=>{ h+=`<h4>${g}</h4><div class="types">${ks.map(k=>`<button class="${e.tipo===k?'sel':''}" onclick="setType('${k}')"><span class="em">${DEV[k].em}</span>${DEV[k].t}</button>`).join('')}</div>`; });
+  let h = `<h3>${isNew?'Agregar equipo':'Editar · '+DEV[e.tipo].em+' '+esc(DEV[e.tipo].full)+' '+esc((I.map[e.id]||{}).tag||'')}</h3>`;
+  if(isNew) DEV_GROUPS.forEach(([g,ks])=>{ h+=`<h4>${g}</h4><div class="types">${ks.map(k=>`<button class="${e.tipo===k?'sel':''}" onclick="setType('${k}')"><span class="em">${DEV[k].em}</span>${DEV[k].t}</button>`).join('')}</div>`; });
   if(e.tipo==='tm' && !willHaveKids){
     h += `<div class="seg" style="margin:10px 0 4px"><button class="${!e.general?'sel':''}" onclick="setRole(false)">Circuito / salida</button><button class="${e.general?'sel':''}" onclick="setRole(true)">Llave general</button></div>`;
     if(e.general) h += `<label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-top:6px"><input type="checkbox" style="width:auto" ${e.circ&&e.circ.tipo==='LS'?'checked':''} onchange="if(this.checked){editing.circ=circ(P('tab'));applyPreset('tab')}else{delete editing.circ;renderDevForm()}"> Esta llave alimenta directo a otro tablero (ej.: pilar)</label>`;
@@ -1464,12 +1638,21 @@ function renderDevForm(){
     const list = e.tipo==='tm' ? PRESETS : PRESETS.filter(p=>!['tab','mando'].includes(p.k));
     h += `<label class="f">¿Qué va a alimentar? (completa todo solo)</label><div class="presets">${list.map(p=>`<button class="${e._preset===p.k?'sel':''}" onclick="applyPreset('${p.k}')"><span class="em">${p.em}</span>${p.t}</button>`).join('')}</div>`;
   }
-  if(power && !e.general){
-    h += `<label class="f">Conectado después de</label><select onchange="editing.de=this.value||null">
+  if(power && !e.general && !ROOT_ONLY.includes(e.tipo)){
+    h += `<label class="f">${e.tipo==='conm'?'Entrada 1 (red) viene de':'Conectado después de'}</label><select onchange="editing.de=this.value||null">
       <option value="" ${!e.de?'selected':''}>${feederOf(o,b)?'Entrada del tablero':'Medidor (entrada del tablero)'}</option>
       ${parents.map(({c,depth})=>`<option value="${c.id}" ${e.de===c.id?'selected':''}>${'— '.repeat(depth)}#${I.map[c.id].n} ${esc(devTitle(b,c))} (${esc(devSpec(b,c).split(' · ')[0])})</option>`).join('')}
     </select>`;
   }
+  if(e.tipo==='conm'){
+    h += `<label class="f">Entrada 2 (generador / otra fuente) viene de</label><select onchange="editing.de2=this.value||null"><option value="">— elegir —</option>${parents.filter(({c})=>c.id!==e.de).map(({c,depth})=>`<option value="${c.id}" ${e.de2===c.id?'selected':''}>${'— '.repeat(depth)}#${I.map[c.id].n} ${esc(devTitle(b,c))}</option>`).join('')}</select>
+      <div class="row3"><div><label class="f">Polos</label>${sel([2,4],e.polos,"setE('polos',+this.value)",v=>v+'P')}</div><div><label class="f">Corriente</label>${sel([25,40,63,80,100,125],e.amp,"setE('amp',+this.value)",v=>v+' A')}</div><div><label class="f">Tipo</label>${sel(['manual','auto'],e.modo,"setE('modo',this.value)",v=>v==='auto'?'Automático':'Manual 1-0-2')}</div></div>
+      <label class="f">Fuente 2</label><input value="${esc(e.fuente2||'generador')}" oninput="editing.fuente2=this.value">
+      <div class="hint">Primero agregá el generador y su térmica; después el conmutador con la entrada 1 desde la red y la 2 desde la térmica del generador.</div>`;
+  }
+  if(e.tipo==='gen') h += `<div class="row3"><div><label class="f">Potencia (kVA)</label><input inputmode="decimal" value="${esc(fmtSec(e.kva))}" onchange="setE('kva',num(this.value))"></div><div><label class="f">Combustible</label>${sel(['nafta','gasoil','gas'],e.combustible,"setE('combustible',this.value)")}</div><div><label class="f">Arranque</label>${sel(['arranque manual','arranque eléctrico','arranque automático'],e.arranque,"setE('arranque',this.value)")}</div></div>`;
+  if(e.tipo==='inv') h += `<div class="row3"><div><label class="f">Potencia (W)</label><input inputmode="numeric" value="${esc(e.potencia)}" onchange="setE('potencia',+this.value)"></div><div><label class="f">Tipo</label>${sel(['inversor-cargador','inversor solar híbrido','UPS online'],e.tipoInv,"setE('tipoInv',this.value)")}</div><div><label class="f">Batería</label><input value="${esc(e.bateria||'')}" oninput="editing.bateria=this.value" placeholder="12 V 100 Ah"></div></div>`;
+  if(e.tipo==='ent'){ const fe=feederOfEntry(o,b,e.id); h += `<label class="f">Nombre</label><input value="${esc(e.nombre)}" oninput="editing.nombre=this.value"><div class="hint">${fe?'Llega desde <b>'+esc(fe.board.nombre)+'</b>.':'Para vincularla: en el otro tablero editá su salida “➡️ Otro tablero”, elegí este tablero y esta entrada.'} Los circuitos que cuelgan de acá van con su propia barra de neutro.</div>`; }
   if(!power){
     const ks=conts(b);
     h += `<label class="f">Comanda a</label>${ks.length?`<select onchange="editing.ctrl=this.value">${ks.map(k=>`<option value="${k.id}" ${e.ctrl===k.id?'selected':''}>${I.map[k.id].tag} · ${esc(k.circ?k.circ.nombre:'Contactor')}</option>`).join('')}</select>`:'<div class="val warn">Primero agregá un contactor: este equipo lo comanda.</div>'}`;
@@ -1494,8 +1677,11 @@ function renderDevForm(){
   if(circMode){
     const ci=e.circ||{};
     if(ci.tipo==='LS'){
-      const opts=o.boards.filter(x=>x.id!==b.id && !upstreamBoards(o,b).includes(x.id) && (!feederOf(o,x) || x.id===ci.alimenta));
-      h += `<label class="f">Alimenta al tablero</label><select onchange="setC('alimenta',this.value);const t=boardById(this.value);if(t){setC('nombre','Salida a '+t.nombre.toLowerCase())};renderDevForm()"><option value="">— elegir —</option>${opts.map(x=>`<option value="${x.id}" ${ci.alimenta===x.id?'selected':''}>${esc(boardCode(o,x)+' · '+x.nombre)}</option>`).join('')}</select>
+      // a la entrada principal solo si no crea un círculo; a una Entrada secundaria, a cualquier tablero (ej.: salida del inversor que vuelve al principal)
+      const opts=o.boards.filter(x=>lsCanMain(o,b,x,ci) || x.comps.some(c=>c.tipo==='ent'));
+      const tsel=boardById(ci.alimenta), ents = tsel ? tsel.comps.filter(c=>c.tipo==='ent') : [];
+      h += `<label class="f">Alimenta al tablero</label><select onchange="pickLSTarget(this.value)"><option value="">— elegir —</option>${opts.map(x=>`<option value="${x.id}" ${ci.alimenta===x.id?'selected':''}>${esc(boardCode(o,x)+' · '+x.nombre)}</option>`).join('')}</select>
+        ${tsel && (ents.length) ? `<label class="f">Entra por</label><select onchange="setC('entra',this.value)">${lsCanMain(o,b,tsel,ci)?`<option value="" ${!ci.entra?'selected':''}>Entrada principal del tablero</option>`:''}${ents.map(en=>`<option value="${en.id}" ${ci.entra===en.id?'selected':''}>${esc(devTitle(tsel,en).replace('⤵️ ',''))}</option>`).join('')}</select>`:''}
         <div class="hint">¿No está? Creálo desde “＋ Tablero” eligiendo que sale de este.</div>
         <div class="row2"><div><label class="f">Sección</label><select onchange="setC('sec',+this.value)">${SECS.map(v=>`<option value="${v}" ${ci.sec==v?'selected':''}>${fmtSec(v)} mm²</option>`).join('')}</select></div><div><label class="f">Largo aprox. (m)</label><input inputmode="decimal" value="${esc(ci.largo||'')}" oninput="setC('largo',this.value)"></div></div>`;
     } else {
@@ -1511,16 +1697,25 @@ function renderDevForm(){
   h += `<div class="btns" style="margin-top:14px">${!isNew?`<button class="btn-d" onclick="deleteDev()">🗑 Quitar</button>`:''}<button class="btn-s" onclick="closeDev()">Cancelar</button><button class="btn-p" onclick="saveDev()">✔ ${isNew?'Agregar':'Guardar'}</button></div>`;
   const box=document.getElementById('devForm'); const st=box.scrollTop; box.innerHTML=h; box.scrollTop=st;
 }
+function lsCanMain(o,b,x,ci){ return x.id!==b.id && !upstreamBoards(o,b).includes(x.id) && (!feederOf(o,x) || (ci.alimenta===x.id && !ci.entra)); }
+function pickLSTarget(v){
+  const o=O(), b=B(), ci=editing.circ, prev={alimenta:ci.alimenta, entra:ci.entra};
+  const t=boardById(v); ci.alimenta=v; ci.entra='';
+  if(t){ ci.nombre='Salida a '+t.nombre.toLowerCase(); if(!lsCanMain(o,b,t,prev)){ const en=t.comps.find(c=>c.tipo==='ent'); if(en) ci.entra=en.id; } }
+  renderDevForm();
+}
 function saveDev(){
   const b=B(); const e=editing; const isNew=e._new;
   delete e._new; delete e._preset;
   const power = DEV[e.tipo].cat==='power';
   if(!(['tm','cont','gm','rt'].includes(e.tipo) && (!e.general || (e.circ && e.circ.tipo==='LS')))) delete e.circ;
   if(!power){ e.de=null; if(!e.ctrl){ toast('Primero agregá un contactor'); return; } }
+  if(ROOT_ONLY.includes(e.tipo)) e.de=null;
+  if(e.tipo==='conm' && e.de2 && e.de2===e.de){ toast('Las dos entradas del conmutador no pueden venir del mismo lugar'); return; }
   if(e.general){ b.comps.forEach(c=>{ if(c.id!==e.id) delete c.general; }); }
   if(e.circ && e.circ.tipo==='LS' && e.circ.alimenta){
-    // una sola salida por tablero destino
-    O().boards.forEach(x=>x.comps.forEach(c=>{ if(c.id!==e.id && c.circ && c.circ.alimenta===e.circ.alimenta) delete c.circ.alimenta; }));
+    // una sola salida por entrada de destino
+    O().boards.forEach(x=>x.comps.forEach(c=>{ if(c.id!==e.id && c.circ && c.circ.alimenta===e.circ.alimenta && (c.circ.entra||'')===(e.circ.entra||'')) { delete c.circ.alimenta; delete c.circ.entra; } }));
   }
   if(isNew){
     if(e.general){ b.comps.filter(c=>isPower(c) && c.de===null).forEach(c=>c.de=e.id); b.comps.unshift(e); }
@@ -1537,6 +1732,8 @@ function saveDev(){
 function deleteDev(){
   const b=B(), e=editing;
   const kids=children(b,e.id), deps=b.comps.filter(c=>c.ctrl===e.id);
+  b.comps.forEach(c=>{ if(c.de2===e.id) c.de2=null; });
+  if(e.tipo==='ent') O().boards.forEach(x=>x.comps.forEach(c=>{ if(c.circ && c.circ.entra===e.id){ delete c.circ.entra; delete c.circ.alimenta; } }));
   ask((kids.length?`Lo que estaba conectado después (${kids.length}) pasa a colgar del equipo anterior. `:'')+(deps.length?`Los ${deps.length} equipos de mando de este contactor quedan sin asignar. `:'')+'¿Quitar?', ()=>{
     kids.forEach(k=>k.de=e.de||null); deps.forEach(d=>d.ctrl='');
     b.comps=b.comps.filter(c=>c.id!==e.id); save(); closeDev(); renderAll(); toast('Equipo quitado');
