@@ -477,11 +477,10 @@ function makeBoard(tipo){
         mk('sen',{kind:'fotocelula', contacto:'NO', texto:'Fotocélula en el frente (cierra al oscurecer)', ctrl:km.id}));
   }
   else if(tipo==='transferencia'){
-    b.nombre='Tablero de transferencia'; b.ubic='Junto al generador'; b.gabinete='estanco'; b.modulos=12; b.lineaSec=10;
+    b.nombre='Tablero de transferencia'; b.ubic='Junto al generador'; b.gabinete='estanco'; b.modulos=8; b.lineaSec=10;
     const q1=add(mk('tm',{polos:2, amp:40, curva:'C', ka:4.5, general:true}));
-    const g =add(mk('gen',{kva:5, combustible:'nafta', arranque:'arranque manual'}));
-    const q2=add(mk('tm',{de:g.id, polos:2, amp:25, curva:'C', ka:4.5}));
-    add(mk('conm',{de:q1.id, de2:q2.id, polos:2, amp:40, modo:'manual', fuente2:'generador', circ:circ(P('tab'),{nombre:'Salida a tablero principal', sec:10})}));
+    const g =add(mk('gen',{kva:5, combustible:'nafta', arranque:'arranque manual', conexion:'toma'}));
+    add(mk('conm',{de:q1.id, de2:g.id, polos:2, amp:40, modo:'manual', fuente2:'grupo electrógeno', circ:circ(P('tab'),{nombre:'Salida a tablero principal', sec:10})}));
   }
   else if(tipo==='inversor'){
     b.nombre='Tablero del inversor'; b.ubic='Junto al inversor'; b.modulos=8; b.lineaSec=2.5;
@@ -564,7 +563,13 @@ const powerComps = b => b.comps.filter(isPower);
 function children(b, id){ return b.comps.filter(c=>isPower(c) && c.de===id); }
 function dfs(b){
   const out=[]; const seen=new Set();
-  const walk=(id,depth)=>{ children(b,id).forEach(c=>{ if(seen.has(c.id)) return; seen.add(c.id); out.push({c,depth}); walk(c.id,depth+1); }); };
+  const walk=(id,depth)=>{ children(b,id).forEach(c=>{
+    if(seen.has(c.id)) return;
+    if(c.de2){ // primero la cadena de la entrada 2 (grupo y su protección, si tiene)
+      const chain=[]; let x=b.comps.find(y=>y.id===c.de2), g=0; while(x && g++<30){ chain.unshift(x); x=b.comps.find(y=>y.id===x.de); }
+      chain.forEach(x=>{ if(!seen.has(x.id) && isPower(x)){ seen.add(x.id); out.push({c:x,depth}); } });
+    }
+    seen.add(c.id); out.push({c,depth}); walk(c.id,depth+1); }); };
   walk(null,0);
   powerComps(b).forEach(c=>{ if(!seen.has(c.id)){ c.de=null; out.push({c,depth:0}); seen.add(c.id);} });
   return out;
@@ -619,7 +624,7 @@ function devTitle(b,c){
   if(c.tipo==='ent'){ const o=VIEW?VIEW.obra:O(); const f=o&&feederOfEntry(o,b,c.id); return '⤵️ '+(c.nombre||('Entrada desde '+(f?f.board.nombre:'otro tablero'))); }
   if(c.tipo==='inv') return 'Inversor '+(c.potencia||'')+' W';
   if(c.tipo==='gen') return 'Generador'+(c.kva?' '+fmtSec(c.kva)+' kVA':'');
-  if(c.tipo==='conm') return 'Conmutador red / '+(c.fuente2||'generador');
+  if(c.tipo==='conm') return 'Llave conmutadora red / '+(c.fuente2||'grupo');
   return DEV[c.tipo].full;
 }
 function devSpec(b,c){
@@ -638,7 +643,7 @@ function devSpec(b,c){
   if(c.tipo==='emerg')return 'Hongo rojo con retención · NC';
   if(c.tipo==='luz') return `LED ${c.color} · 220 V · 22 mm`;
   if(c.tipo==='sen') return `Contacto ${c.contacto==='NC'?'NC':'NA'} · fuera del tablero`;
-  if(c.tipo==='gen') return `${fmtSec(c.kva||5)} kVA · ${c.combustible||'nafta'} · ${c.arranque||'arranque manual'}`;
+  if(c.tipo==='gen') return `${fmtSec(c.kva||5)} kVA · ${c.combustible||'nafta'} · ${c.conexion==='toma'?'por toma de entrada':(c.arranque||'conexión fija')}`;
   if(c.tipo==='conm') return `${c.polos||2}P · ${c.amp||40} A · ${c.modo==='auto'?'automático (ATS)':'manual 1-0-2'}`;
   if(c.tipo==='inv') return `${c.potencia||1000} W · ${c.tipoInv||'inversor-cargador'}${c.bateria?' · '+c.bateria:''}`;
   if(c.tipo==='ent') return 'Barra de entrada separada';
@@ -771,7 +776,8 @@ function drawDevice(b,c,x,y,w,m){
 function drawDoorDevice(c,cx,cy,m){
   let s=`<g data-id="${c.id}" style="cursor:pointer">`;
   s+=`<circle cx="${cx}" cy="${cy}" r="17" fill="#b8b9b5" stroke="#6f706b"/><circle cx="${cx}" cy="${cy}" r="14.5" fill="#d9dad6" stroke="#9a9b96"/>`;
-  if(c.tipo==='luz'){ const col=LUZ_COLORS[c.color]||'#2ecc40'; s+=`<circle cx="${cx}" cy="${cy}" r="11.5" fill="${col}" stroke="#555"/><circle cx="${cx}" cy="${cy}" r="11.5" fill="url(#pvLens)"/>`; }
+  if(c.tipo==='gen'){ s+=`<circle cx="${cx}" cy="${cy}" r="16" fill="#1f5fbf" stroke="#103a7a"/><circle cx="${cx}" cy="${cy}" r="11" fill="#0f2d5c"/><circle cx="${cx}" cy="${cy-6}" r="2.6" fill="#ddd"/><circle cx="${cx-5}" cy="${cy+4}" r="2.6" fill="#ddd"/><circle cx="${cx+5}" cy="${cy+4}" r="2.6" fill="#ddd"/>`; }
+  else if(c.tipo==='luz'){ const col=LUZ_COLORS[c.color]||'#2ecc40'; s+=`<circle cx="${cx}" cy="${cy}" r="11.5" fill="${col}" stroke="#555"/><circle cx="${cx}" cy="${cy}" r="11.5" fill="url(#pvLens)"/>`; }
   else if(c.tipo==='pul'){ const col=LUZ_COLORS[c.color]||'#2ecc40'; s+=`<circle cx="${cx}" cy="${cy}" r="11.5" fill="#444"/><circle cx="${cx}" cy="${cy}" r="9.5" fill="${col}" stroke="#333"/><circle cx="${cx}" cy="${cy}" r="9.5" fill="url(#pvLens)"/>`+(c.rol==='marcha'?T(cx,cy+3.5,'I','font-size="10" font-weight="800" fill="#fff"'):c.rol==='parada'?T(cx,cy+3.5,'O','font-size="10" font-weight="800" fill="#fff"'):''); }
   else if(c.tipo==='emerg'){ s+=`<circle cx="${cx}" cy="${cy}" r="17" fill="#f5c518" stroke="#9a7a00"/><circle cx="${cx}" cy="${cy}" r="13" fill="url(#pvMush)" stroke="#6d140e"/>`; }
   else if(c.tipo==='sel'){
@@ -803,7 +809,7 @@ function layoutRows(b){
 function panelSVG(b){
   const I = info(b), map=I.map;
   const rows = layoutRows(b);
-  const door = I.others.filter(c=>DEV[c.tipo].cat==='door');
+  const door = [...b.comps.filter(c=>c.tipo==='gen' && c.conexion==='toma'), ...I.others.filter(c=>DEV[c.tipo].cat==='door')];
   const W = PADX*2 + ROW*MW;
   const perRow = Math.max(1, Math.floor((W-40)/62));
   const doorRows = Math.ceil(door.length/perRow);
@@ -834,7 +840,7 @@ function panelSVG(b){
     const r=Math.floor(i/perRow), k=i%perRow, inRow=Math.min(perRow, door.length-r*perRow);
     const x0 = W/2 - (inRow-1)*31 + k*62, y0 = 58 + r*84 + 30;
     s += drawDoorDevice(c,x0,y0,map[c.id]);
-    const lab = c.tipo==='luz' ? (c.texto||'') : c.tipo==='pul' ? (c.rol==='marcha'?'MARCHA':c.rol==='parada'?'PARADA':(c.texto||'')) : c.tipo==='emerg' ? 'EMERGENCIA' : (c.pos||'');
+    const lab = c.tipo==='gen' ? 'ENTRADA GRUPO' : c.tipo==='luz' ? (c.texto||'') : c.tipo==='pul' ? (c.rol==='marcha'?'MARCHA':c.rol==='parada'?'PARADA':(c.texto||'')) : c.tipo==='emerg' ? 'EMERGENCIA' : (c.pos||'');
     s += `<rect x="${x0-28}" y="${y0+22}" width="56" height="24" rx="2" fill="#fff" stroke="#9a9b96"/>`;
     const ws = wrap(lab.toUpperCase(),11).slice(0,2);
     ws.forEach((ln,j)=>s+=T(x0,y0+32+j*9-(ws.length===1?-4:0),esc(ln),'font-size="7" font-weight="700" fill="#222"'));
@@ -855,7 +861,8 @@ function panelSVG(b){
   return uniqIds(s);
 }
 function miniDevice(b,c,m){
-  if(DEV[c.tipo].cat==='door') return uniqIds(`<svg viewBox="-24 -24 48 48" width="44" height="44">${svgDefs()}${drawDoorDevice(c,0,0,Object.assign({},m,{n:''}))}</svg>`).replace(/<circle cx="19" cy="-19"[^>]*\/>/,'');
+  if(OFF_RAIL.includes(c.tipo) && !(c.tipo==='gen' && c.conexion==='toma')) return `<div style="width:44px;height:44px;border-radius:10px;background:#ede7d8;display:flex;align-items:center;justify-content:center;font-size:24px">${DEV[c.tipo].em}</div>`;
+  if(DEV[c.tipo].cat==='door' || c.tipo==='gen') return uniqIds(`<svg viewBox="-24 -24 48 48" width="44" height="44">${svgDefs()}${drawDoorDevice(c,0,0,Object.assign({},m,{n:''}))}</svg>`).replace(/<circle cx="19" cy="-19"[^>]*\/>/,'');
   if(c.tipo==='sen'){ const k=SEN_KINDS[c.kind]||SEN_KINDS.otro; return `<div style="width:44px;height:44px;border-radius:10px;background:#ede7d8;display:flex;align-items:center;justify-content:center;font-size:24px">${k.em}</div>`; }
   const w = Math.min(modsOf(b,c),4)*MW;
   return uniqIds(`<svg viewBox="-2 26 ${w+4} ${DH-52}" width="${Math.round((w+4)*.7)}" height="${Math.round((DH-52)*.7)}">${svgDefs()}${drawDevice(b,c,0,0,w,m)}</svg>`);
@@ -916,10 +923,10 @@ function clientText(b,c,I){
 }
 function clientText0(b,c,I){
   const o = VIEW ? VIEW.obra : O();
-  if(c.tipo==='gen') return {que:`Generador${c.kva?' de '+fmtSec(c.kva)+' kVA':''}: da energía cuando se corta la red.`, feeds:'', si:'Para usarlo: arrancalo, esperá que se estabilice y pasá el conmutador a <b>2</b>. Cuando vuelve la red: conmutador a <b>1</b> y después apagá el generador.'};
+  if(c.tipo==='gen') return {que:`Grupo electrógeno${c.kva?' de '+fmtSec(c.kva)+' kVA':''}: da energía cuando se corta la red.${c.conexion==='toma'?' Se enchufa en la <b>toma de entrada</b> del tablero.':''}`, feeds:'', si:'Para usarlo: arrancalo, esperá que se estabilice y pasá el conmutador a <b>2</b>. Cuando vuelve la red: conmutador a <b>1</b> y después apagá el generador.'};
   if(c.tipo==='conm') return c.modo==='auto'
     ? {que:'Conmutador automático: cuando se corta la red pasa solo al generador, y vuelve a la red cuando regresa.', feeds:'', si:'No lo fuerces a mano salvo que te lo indique el electricista.'}
-    : {que:'<b>Conmutador de fuentes</b>: elige de dónde viene la luz. <b>1</b> = red, <b>0</b> = todo cortado, <b>2</b> = generador. Nunca deja conectadas las dos a la vez.', feeds:'', si:'Pasá siempre por 0 y esperá unos segundos antes de cambiar de 1 a 2 o al revés.'};
+    : {que:'<b>Llave conmutadora</b>: elige de dónde viene la luz. <b>1</b> = red, <b>0</b> = todo cortado, <b>2</b> = generador. Nunca deja conectadas las dos a la vez.', feeds:'', si:'Pasá siempre por 0 y esperá unos segundos antes de cambiar de 1 a 2 o al revés.'};
   if(c.tipo==='inv'){
     const backed = [];
     o.boards.forEach(bb=>bb.comps.forEach(x=>{ if(hasCirc(bb,x) && !['LS','MANDO'].includes(x.circ.tipo) && invFor(o,bb,x)===c) backed.push(x.circ.nombre); }));
@@ -1011,6 +1018,13 @@ function sheetCliente(o, b, inst){
     </div></div>`;
   });
   h += `</div>
+    ${b.comps.some(c=>c.tipo==='conm' && c.modo!=='auto') ? `<div class="guide" style="background:#fff7d1;border-color:#d4a20a"><h3 style="color:#8a6a00">⛽ Cómo pasar al grupo electrógeno</h3><ol>
+      <li>Con la red cortada, poné la llave conmutadora en <b>0</b>.</li>
+      ${b.comps.some(c=>c.tipo==='gen'&&c.conexion==='toma')?'<li>Enchufá el cable del grupo en la <b>toma de entrada</b> del tablero (con el grupo apagado).</li>':''}
+      <li>Arrancá el grupo y esperá un minuto que se estabilice.</li>
+      <li>Pasá la llave a <b>2 (grupo)</b>. Prendé solo lo necesario: no supere la potencia del grupo.</li>
+      <li>Cuando vuelve la red: llave a <b>0</b>, apagá el grupo, ${b.comps.some(c=>c.tipo==='gen'&&c.conexion==='toma')?'desenchufalo, ':''}y llave a <b>1 (red)</b>.</li>
+      <li>Nunca pases de 1 a 2 sin parar en 0.</li></ol></div>` : ''}
     <div class="guide"><h3>¿Se cortó la luz? Seguí estos pasos</h3><ol>
       <li>Fijate si se cortó en todo el barrio: si es así, es la red y no tu tablero.</li>
       <li>Abrí el tablero y buscá la protección que quedó <b>baja</b> (palanca abajo).</li>
@@ -1110,15 +1124,17 @@ function planoSVG(o, b, inst){
     else if(c.tipo==='rt') s+=symBox(x,y,'⊐⊏');
     else if(c.tipo==='ptm') s+=symBox(x,y,'U&lt;&gt;');
     else if(c.tipo==='dps') s+=symBox(x,y,'DPS');
-    else if(c.tipo==='gen') s+=`<circle cx="${x}" cy="${y+30}" r="19" fill="#fff" stroke="#111" stroke-width="1.6"/><text x="${x}" y="${y+29}" font-size="13" text-anchor="middle" font-weight="800">G</text><text x="${x}" y="${y+41}" font-size="11" text-anchor="middle">~</text><line x1="${x}" y1="${y+49}" x2="${x}" y2="${y+70}" stroke="#111" stroke-width="1.6"/>`;
+    else if(c.tipo==='gen') s+=`<circle cx="${x}" cy="${y+22}" r="17" fill="#fff" stroke="#111" stroke-width="1.6"/><text x="${x}" y="${y+21}" font-size="12" text-anchor="middle" font-weight="800">G</text><text x="${x}" y="${y+32}" font-size="11" text-anchor="middle">~</text>`+(c.conexion==='toma'
+      ? `<line x1="${x}" y1="${y+39}" x2="${x}" y2="${y+48}" stroke="#111" stroke-width="1.6" stroke-dasharray="3 2"/><path d="M${x-8} ${y+48}h16M${x-4} ${y+48}v-5M${x+4} ${y+48}v-5" stroke="#111" stroke-width="1.6"/><path d="M${x-9} ${y+52}a9 9 0 0 0 18 0" fill="none" stroke="#111" stroke-width="1.6"/><line x1="${x}" y1="${y+61}" x2="${x}" y2="${y+70}" stroke="#111" stroke-width="1.6"/><text x="${x-12}" y="${y+60}" font-size="8" text-anchor="end">toma</text>`
+      : `<line x1="${x}" y1="${y+39}" x2="${x}" y2="${y+70}" stroke="#111" stroke-width="1.6"/>`);
     else if(c.tipo==='ent'){ const fe=feederOfEntry(o,b,c.id), fI=fe?info(fe.board):null; s+=`<rect x="${x-46}" y="${y+4}" width="92" height="34" rx="3" fill="#fff7d1" stroke="#111" stroke-width="1.4"/><text x="${x}" y="${y+18}" font-size="9" text-anchor="middle" font-weight="800">DESDE ${esc(fe?boardCode(o,fe.board):'¿?')}</text><text x="${x}" y="${y+31}" font-size="8.5" text-anchor="middle">${fe?fI.map[fe.comp.id].tag+' '+fe.comp.polos+'×'+fe.comp.amp+' A':'sin vincular'}</text><line x1="${x}" y1="${y+38}" x2="${x}" y2="${y+70}" stroke="#111" stroke-width="2"/>`+ticks(x,y+50,3); }
     else if(c.tipo==='inv') s+=`<line x1="${x}" y1="${y}" x2="${x}" y2="${y+14}" stroke="#111" stroke-width="1.6"/><rect x="${x-18}" y="${y+14}" width="36" height="36" fill="#fff" stroke="#111" stroke-width="1.5"/><line x1="${x-18}" y1="${y+50}" x2="${x+18}" y2="${y+14}" stroke="#111"/><text x="${x-9}" y="${y+28}" font-size="11" text-anchor="middle" font-weight="700">~</text><text x="${x+9}" y="${y+46}" font-size="11" text-anchor="middle" font-weight="700">~</text><line x1="${x}" y1="${y+50}" x2="${x}" y2="${y+70}" stroke="#111" stroke-width="1.6"/><path d="M${x-18} ${y+32}h-10m0 -6v12m-4 -8v4" stroke="#111" stroke-width="1.4"/>`;
-    else if(c.tipo==='conm') s+=`<line x1="${x}" y1="${y}" x2="${x}" y2="${y+22}" stroke="#111" stroke-width="1.6"/><line x1="${x+20}" y1="${y+12}" x2="${x+20}" y2="${y+22}" stroke="#111" stroke-width="1.6"/><circle cx="${x}" cy="${y+22}" r="2"/><circle cx="${x+20}" cy="${y+22}" r="2"/><line x1="${x}" y1="${y+48}" x2="${x+3}" y2="${y+24}" stroke="#111" stroke-width="1.8"/><circle cx="${x}" cy="${y+48}" r="2"/><line x1="${x}" y1="${y+48}" x2="${x}" y2="${y+70}" stroke="#111" stroke-width="1.6"/><text x="${x-5}" y="${y+18}" font-size="8" text-anchor="end">1</text><text x="${x+25}" y="${y+18}" font-size="8">2</text>`;
+    else if(c.tipo==='conm') s+=`<line x1="${x}" y1="${y}" x2="${x}" y2="${y+22}" stroke="#111" stroke-width="1.6"/><line x1="${x+20}" y1="${y+12}" x2="${x+20}" y2="${y+22}" stroke="#111" stroke-width="1.6"/><circle cx="${x}" cy="${y+22}" r="2"/><circle cx="${x+20}" cy="${y+22}" r="2"/><line x1="${x}" y1="${y+48}" x2="${x+3}" y2="${y+24}" stroke="#111" stroke-width="1.8"/><circle cx="${x}" cy="${y+48}" r="2"/><line x1="${x}" y1="${y+48}" x2="${x}" y2="${y+70}" stroke="#111" stroke-width="1.6"/><text x="${x-5}" y="${y+18}" font-size="8" text-anchor="end" font-weight="700">1·RED</text><text x="${x+25}" y="${y+18}" font-size="8" font-weight="700">2·GRUPO</text>`;
     const p2=c.polos||2;
     const l1 = {tm:`${p2}×${c.amp} A ${c.curva}`, dif:`${p2}×${c.amp} A`, ptm:`${c.amp||40} A`, dps:'Cl. II', cont:`${p2}×${c.amp||25} A`, gm:`${c.rango} A`, rt:`${c.rango} A`, gen:`${fmtSec(c.kva||5)} kVA`, inv:`${c.potencia||1000} W`, conm:`${p2}×${c.amp||40} A`, ent:''}[c.tipo]||'';
-    const l2 = {tm:`${fmtSec(c.ka)} kA`, dif:`${c.sens} mA cl.${c.clase}`, ptm:'Prot. tensión', dps:'Uc 275 V', cont:`AC-3 · bob. ${c.bobina||'220 V'}`, gm:`aj. ${fmtSec(c.ajuste)} A`, rt:`aj. ${fmtSec(c.ajuste)} A`, gen:esc(c.combustible||'nafta'), inv:'con batería', conm:c.modo==='auto'?'ATS':'1-0-2 manual', ent:''}[c.tipo]||'';
+    const l2 = {tm:`${fmtSec(c.ka)} kA`, dif:`${c.sens} mA cl.${c.clase}`, ptm:'Prot. tensión', dps:'Uc 275 V', cont:`AC-3 · bob. ${c.bobina||'220 V'}`, gm:`aj. ${fmtSec(c.ajuste)} A`, rt:`aj. ${fmtSec(c.ajuste)} A`, gen:c.conexion==='toma'?'por toma':esc(c.combustible||'nafta'), inv:'con batería', conm:c.modo==='auto'?'ATS':'1-0-2 manual', ent:''}[c.tipo]||'';
     const lx = (c.tipo==='ptm'||c.tipo==='dps'||c.tipo==='rt'||c.tipo==='gen'||c.tipo==='inv') ? x+24 : c.tipo==='conm' ? x+30 : c.tipo==='ent' ? x+50 : x+8;
-    const nx = c.tipo==='ent' ? x-58 : c.tipo==='gen' ? x-30 : x-24;
+    const nx = c.tipo==='ent' ? x-58 : c.tipo==='gen' ? x-30 : c.tipo==='conm' ? x-50 : x-24;
     s+=`<circle cx="${nx}" cy="${y+8}" r="8" fill="${m.color}"/><text x="${nx}" y="${y+11.5}" font-size="9" fill="#fff" text-anchor="middle" font-weight="800">${m.n}</text>`;
     s+=`<text x="${lx}" y="${y+28}" font-size="9" font-weight="800" fill="#1e5a3f">${m.tag}</text><text x="${lx}" y="${y+40}" font-size="10" font-weight="700">${l1}</text><text x="${lx}" y="${y+52}" font-size="9" fill="#444">${l2}</text>`;
     if(c.general) s+=`<text x="${lx}" y="${y+64}" font-size="8.5" fill="#1e5a3f" font-weight="700">GENERAL</text>`;
@@ -1163,6 +1179,19 @@ function planoSVG(o, b, inst){
   s+=`</svg>`;
   return s;
 }
+function conmTable(o,b,I){
+  const ks=b.comps.filter(c=>c.tipo==='conm'); if(!ks.length) return '';
+  const desc = id => { const c=b.comps.find(x=>x.id===id); if(!c) return '<b style="color:#b3432e">sin conectar</b>';
+    if(c.tipo==='gen') return `${esc(devTitle(b,c))} · ${c.conexion==='toma'?'enchufado en toma de entrada':'conexión fija'}`;
+    const f = !c.de && c.general ? feederOf(o,b) : null;
+    return `${I.map[c.id].tag} ${esc(devSpec(b,c).split(' · ')[0])}${f?' · viene de '+esc(f.board.nombre)+' ('+info(f.board).map[f.comp.id].tag+')':''}`; };
+  return ks.map(k=>{ const t=k.circ&&k.circ.alimenta?boardById(k.circ.alimenta):null;
+    return `<h3 class="st">Llave conmutadora ${esc(I.map[k.id].tag)}</h3><table class="ctable"><tr><th>Borne</th><th>Conectado a</th></tr>
+      <tr><td><b>1 · Red</b></td><td>${desc(k.de)}</td></tr>
+      <tr><td><b>2 · Grupo</b></td><td>${desc(k.de2)}</td></tr>
+      <tr><td><b>Común · Salida</b></td><td>${t?'➡ '+esc(boardCode(o,t)+' · '+t.nombre)+' · '+(b.tension==='tri'?4:2)+'×'+fmtSec(k.circ.sec)+' + PE mm²':(children(b,k.id).length?'circuitos de este tablero':'<b style="color:#b3432e">sin salida</b>')}</td></tr>
+      <tr><td><b>Tipo</b></td><td>${k.polos||2}P ${k.amp||40} A · ${k.modo==='auto'?'automático (ATS)':'manual 1-0-2'} · corta fase${(k.polos||2)>=2?' y neutro':''}</td></tr></table>`; }).join('');
+}
 function sheetPlano(o, b, inst){
   const I=info(b);
   const tri=b.tension==='tri';
@@ -1172,7 +1201,7 @@ function sheetPlano(o, b, inst){
     if(hasCirc(b,c)){
       const df = difFor(o,b,c), difC=df.dif, dI = difC ? (df.board===b ? I : info(df.board)) : null;
       const ci=c.circ, ls=ci.tipo==='LS', tgt=ls?boardById(ci.alimenta):null;
-      const prot = c.tipo==='tm' ? `${c.polos}×${c.amp} A ${c.curva||''}` : c.tipo==='cont' ? `${m.tag} ${c.amp} A` + ancestors(b,c).filter(a=>a.tipo==='gm').map(g=>` · QM ${g.rango} A`).join('') : `${c.rango||''} A`;
+      const prot = c.tipo==='tm' ? `${c.polos}×${c.amp} A ${c.curva||''}` : c.tipo==='conm' ? `${m.tag} conmutador ${c.polos||2}P ${c.amp||40} A` : c.tipo==='cont' ? `${m.tag} ${c.amp} A` + ancestors(b,c).filter(a=>a.tipo==='gm').map(g=>` · QM ${g.rango} A`).join('') : `${c.rango||''} A`;
       rowsH+=`<tr><td><b>${m.n}</b></td><td><b>${ls?'➡ '+esc(tgt?boardCode(o,tgt):''):m.code}</b> ${esc(ls&&tgt?tgt.nombre:ci.nombre)}</td><td>${CIRC_TIPOS[ci.tipo]||''}</td><td>${prot}</td><td>${difC?`${df.board!==b?esc(boardCode(o,df.board))+' ':''}#${dI.map[difC.id].n} ${difC.amp}A/${difC.sens}mA`:(ls?'en tablero destino':ci.tipo==='MANDO'?'—':'<b style="color:#b3432e">SIN DIF.'+(df.viaInv?' (después del inversor)':'')+'</b>')}</td><td>${ls&&tri?4:2}×${fmtSec(ci.sec)} + PE ${fmtSec(Math.max(2.5,ci.sec))}</td><td>${ls||ci.tipo==='MANDO'?'—':ci.bocas||''}</td>${tri?`<td>${ls?'RST':ci.fase||'R'}</td>`:''}</tr>`;
     }
   });
@@ -1180,6 +1209,7 @@ function sheetPlano(o, b, inst){
   const lineSec = (feederOf(o,b)||{comp:{circ:{sec:b.lineaSec}}}).comp.circ.sec;
   return `<div class="sheet">${sheetHead(o,b,'Plano unifilar para instaladores')}${fromLine(o,b)}
     <div class="svgbox">${planoSVG(o,b,inst)}</div>
+    ${conmTable(o,b,I)}
     <h3 class="st">Planilla de circuitos</h3>
     <div style="overflow-x:auto"><table class="ctable"><tr><th>N°</th><th>Circuito</th><th>Tipo</th><th>Protección</th><th>Diferencial</th><th>Conductor mm²</th><th>Bocas</th>${tri?'<th>Fase</th>':''}</tr>${rowsH}</table></div>
     <div class="notes"><b>Datos:</b> ${tri?'Trifásica 3×380/220 V':'Monofásica 220 V'} · Alimentación ${tri?4:2}×${fmtSec(lineSec)} mm² · Gabinete ${b.modulos} módulos${b.gabinete==='estanco'?' estanco IP65':''} · PAT: ${b.pat?esc(b.pat)+' Ω':'sin dato'}.<br>
@@ -1373,7 +1403,8 @@ function validate(o,b){
   b.comps.filter(c=>c.tipo==='gen').forEach(g=>{
     const fromGen = id => { let x=b.comps.find(y=>y.id===id), k=0; while(x && k++<40){ if(x.id===g.id) return true; x=b.comps.find(y=>y.id===x.de); } return false; };
     if(!b.comps.some(c=>c.tipo==='conm' && (fromGen(c.de2)||fromGen(c.de)))) add('err',`${I.map[g.id].tag}: generador sin conmutador. Sin un conmutador 1-0-2 el generador puede inyectar a la red (peligro para quien trabaje en la línea) o quedar en paralelo con ella.`);
-    if(!b.comps.some(c=>c.tipo==='tm' && c.de===g.id)) add('warn',`${I.map[g.id].tag}: poné una térmica a la salida del generador, antes del conmutador.`);
+    if(g.conexion==='toma') add('warn',`${I.map[g.id].tag}: la toma de entrada del grupo tiene que ser <b>macho</b> (ficha de pared tipo IEC 60309) y el cable del grupo con <b>hembra</b> del lado del tablero. Nunca un cable macho-macho: queda con las patas vivas.`);
+    else if(!b.comps.some(c=>c.tipo==='tm' && c.de===g.id)) add('warn',`${I.map[g.id].tag}: poné una térmica a la salida del generador, antes del conmutador.`);
   });
   b.comps.filter(c=>c.tipo==='conm').forEach(k=>{
     if(!k.de2) add('err',`${I.map[k.id].tag}: al conmutador le falta la <b>entrada 2</b> (generador u otra fuente).`);
@@ -1663,8 +1694,8 @@ function setType(t){
   if(t==='pul') Object.assign(e,{rol:'marcha', color:'verde'});
   if(t==='luz') Object.assign(e,{rol:'marcha', color:'verde', texto:'En marcha'});
   if(t==='sen') Object.assign(e,{kind:'flotante', contacto:'NO', texto:''});
-  if(t==='gen') Object.assign(e,{kva:5, combustible:'nafta', arranque:'arranque manual'});
-  if(t==='conm') Object.assign(e,{polos:tri?4:2, amp:40, modo:'manual', fuente2:'generador'});
+  if(t==='gen') Object.assign(e,{kva:5, combustible:'nafta', arranque:'arranque manual', conexion:'toma'});
+  if(t==='conm'){ Object.assign(e,{polos:tri?4:2, amp:40, modo:'manual', fuente2:'grupo electrógeno'}); const g=b.comps.find(c=>c.tipo==='gen'); if(g){ const q=b.comps.find(c=>c.tipo==='tm'&&c.de===g.id); e.de2=(q||g).id; } const gg=b.comps.find(c=>c.general); if(gg && isLeaf(b,gg)) e.de=gg.id; }
   if(t==='inv') Object.assign(e,{potencia:1000, tipoInv:'inversor-cargador', bateria:'12 V'});
   if(t==='ent') Object.assign(e,{nombre:'Entrada desde el inversor'});
   if(ROOT_ONLY.includes(t)) e.de=null;
@@ -1689,7 +1720,8 @@ function renderDevForm(){
   const isNew=e._new, tri=b.tension==='tri';
   const willHaveKids = !isNew && children(b,e.id).length>0;
   const power = DEV[e.tipo].cat==='power';
-  const circMode = ['tm','cont','gm','rt'].includes(e.tipo) && !willHaveKids && (!e.general || (e.circ && e.circ.tipo==='LS'));
+  const circMode = ['tm','cont','gm','rt','conm'].includes(e.tipo) && !willHaveKids && (!e.general || (e.circ && e.circ.tipo==='LS'));
+  if(e.tipo==='conm' && circMode && (!e.circ || e.circ.tipo!=='LS')){ const t=o.boards.find(x=>x.id!==b.id && !feederOf(o,x) && !upstreamBoards(o,b).includes(x.id)); e.circ=circ(P('tab'),{nombre:'Salida a tablero', sec:(feederOf(o,b)||{comp:{circ:{sec:b.lineaSec}}}).comp.circ.sec}); if(t){ e.circ.alimenta=t.id; e.circ.nombre='Salida a '+t.nombre.toLowerCase(); } }
   const excl = isNew ? [] : [e.id, ...descendants(b,e.id)];
   const parents = I.order.filter(({c})=>!excl.includes(c.id) && c.tipo!=='dps');
   const sel = (arr,val,fn,fmt)=>`<select onchange="${fn}">${arr.map(v=>`<option value="${v}" ${String(v)===String(val)?'selected':''}>${fmt?fmt(v):v}</option>`).join('')}</select>`;
@@ -1699,23 +1731,25 @@ function renderDevForm(){
     h += `<div class="seg" style="margin:10px 0 4px"><button class="${!e.general?'sel':''}" onclick="setRole(false)">Circuito / salida</button><button class="${e.general?'sel':''}" onclick="setRole(true)">Llave general</button></div>`;
     if(e.general) h += `<label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-top:6px"><input type="checkbox" style="width:auto" ${e.circ&&e.circ.tipo==='LS'?'checked':''} onchange="if(this.checked){editing.circ=circ(P('tab'));applyPreset('tab')}else{delete editing.circ;renderDevForm()}"> Esta llave alimenta directo a otro tablero (ej.: pilar)</label>`;
   }
-  if(circMode && !e.general){
+  if(circMode && !e.general && e.tipo!=='conm'){
     const list = e.tipo==='tm' ? PRESETS : PRESETS.filter(p=>!['tab','mando'].includes(p.k));
     h += `<label class="f">¿Qué va a alimentar? (completa todo solo)</label><div class="presets">${list.map(p=>`<button class="${e._preset===p.k?'sel':''}" onclick="applyPreset('${p.k}')"><span class="em">${p.em}</span>${p.t}</button>`).join('')}</div>`;
   }
   if(power && !e.general && !ROOT_ONLY.includes(e.tipo)){
-    h += `<label class="f">${e.tipo==='conm'?'Entrada 1 (red) viene de':'Conectado después de'}</label><select onchange="editing.de=this.value||null">
+    h += `<label class="f">${e.tipo==='conm'?'🔌 Entrada 1 · RED — viene de':'Conectado después de'}</label><select onchange="editing.de=this.value||null">
       <option value="" ${!e.de?'selected':''}>${feederOf(o,b)?'Entrada del tablero':'Medidor (entrada del tablero)'}</option>
       ${parents.map(({c,depth})=>`<option value="${c.id}" ${e.de===c.id?'selected':''}>${'— '.repeat(depth)}#${I.map[c.id].n} ${esc(devTitle(b,c))} (${esc(devSpec(b,c).split(' · ')[0])})</option>`).join('')}
     </select>`;
   }
   if(e.tipo==='conm'){
-    h += `<label class="f">Entrada 2 (generador / otra fuente) viene de</label><select onchange="editing.de2=this.value||null"><option value="">— elegir —</option>${parents.filter(({c})=>c.id!==e.de).map(({c,depth})=>`<option value="${c.id}" ${e.de2===c.id?'selected':''}>${'— '.repeat(depth)}#${I.map[c.id].n} ${esc(devTitle(b,c))}</option>`).join('')}</select>
+    const gens2 = b.comps.filter(c=>c.tipo==='gen');
+    h += `<label class="f">⛽ Entrada 2 · GRUPO — viene de</label><select onchange="editing.de2=this.value||null"><option value="">— elegir —</option>${parents.filter(({c})=>c.id!==e.de).map(({c,depth})=>`<option value="${c.id}" ${e.de2===c.id?'selected':''}>${'— '.repeat(depth)}#${I.map[c.id].n} ${esc(devTitle(b,c))}</option>`).join('')}</select>
+      ${!gens2.length?`<div class="val warn" style="margin-top:6px">Primero agregá el <b>Generador</b> (en “Fuentes y respaldo”); si va enchufado, elegí “toma de entrada”.</div>`:''}
       <div class="row3"><div><label class="f">Polos</label>${sel([2,4],e.polos,"setE('polos',+this.value)",v=>v+'P')}</div><div><label class="f">Corriente</label>${sel([25,40,63,80,100,125],e.amp,"setE('amp',+this.value)",v=>v+' A')}</div><div><label class="f">Tipo</label>${sel(['manual','auto'],e.modo,"setE('modo',this.value)",v=>v==='auto'?'Automático':'Manual 1-0-2')}</div></div>
       <label class="f">Fuente 2</label><input value="${esc(e.fuente2||'generador')}" oninput="editing.fuente2=this.value">
-      <div class="hint">Primero agregá el generador y su térmica; después el conmutador con la entrada 1 desde la red y la 2 desde la térmica del generador.</div>`;
+      <div class="hint">La salida (punto común del conmutador) se elige abajo, en “Sale a”. El conmutador corta fase y neutro.</div>`;
   }
-  if(e.tipo==='gen') h += `<div class="row3"><div><label class="f">Potencia (kVA)</label><input inputmode="decimal" value="${esc(fmtSec(e.kva))}" onchange="setE('kva',num(this.value))"></div><div><label class="f">Combustible</label>${sel(['nafta','gasoil','gas'],e.combustible,"setE('combustible',this.value)")}</div><div><label class="f">Arranque</label>${sel(['arranque manual','arranque eléctrico','arranque automático'],e.arranque,"setE('arranque',this.value)")}</div></div>`;
+  if(e.tipo==='gen') h += `<label class="f">Conexión</label>${sel(['toma','fijo'],e.conexion||'fijo',"setE('conexion',this.value)",v=>v==='toma'?'🔌 Enchufado en toma de entrada (portátil)':'Conexión fija con cable')}<div class="row3"><div><label class="f">Potencia (kVA)</label><input inputmode="decimal" value="${esc(fmtSec(e.kva))}" onchange="setE('kva',num(this.value))"></div><div><label class="f">Combustible</label>${sel(['nafta','gasoil','gas'],e.combustible,"setE('combustible',this.value)")}</div><div><label class="f">Arranque</label>${sel(['arranque manual','arranque eléctrico','arranque automático'],e.arranque,"setE('arranque',this.value)")}</div></div>`;
   if(e.tipo==='inv') h += `<div class="row3"><div><label class="f">Potencia (W)</label><input inputmode="numeric" value="${esc(e.potencia)}" onchange="setE('potencia',+this.value)"></div><div><label class="f">Tipo</label>${sel(['inversor-cargador','inversor solar híbrido','UPS online'],e.tipoInv,"setE('tipoInv',this.value)")}</div><div><label class="f">Batería</label><input value="${esc(e.bateria||'')}" oninput="editing.bateria=this.value" placeholder="12 V 100 Ah"></div></div>`;
   if(e.tipo==='ent'){ const fe=feederOfEntry(o,b,e.id); h += `<label class="f">Nombre</label><input value="${esc(e.nombre)}" oninput="editing.nombre=this.value"><div class="hint">${fe?'Llega desde <b>'+esc(fe.board.nombre)+'</b>.':'Para vincularla: en el otro tablero editá su salida “➡️ Otro tablero”, elegí este tablero y esta entrada.'} Los circuitos que cuelgan de acá van con su propia barra de neutro.</div>`; }
   if(!power){
@@ -1745,7 +1779,7 @@ function renderDevForm(){
       // a la entrada principal solo si no crea un círculo; a una Entrada secundaria, a cualquier tablero (ej.: salida del inversor que vuelve al principal)
       const opts=o.boards.filter(x=>lsCanMain(o,b,x,ci) || x.comps.some(c=>c.tipo==='ent'));
       const tsel=boardById(ci.alimenta), ents = tsel ? tsel.comps.filter(c=>c.tipo==='ent') : [];
-      h += `<label class="f">Alimenta al tablero</label><select onchange="pickLSTarget(this.value)"><option value="">— elegir —</option>${opts.map(x=>`<option value="${x.id}" ${ci.alimenta===x.id?'selected':''}>${esc(boardCode(o,x)+' · '+x.nombre)}</option>`).join('')}</select>
+      h += `<label class="f">${e.tipo==='conm'?'🏠 Salida (común) — sale a':'Alimenta al tablero'}</label><select onchange="pickLSTarget(this.value)"><option value="">— elegir —</option>${opts.map(x=>`<option value="${x.id}" ${ci.alimenta===x.id?'selected':''}>${esc(boardCode(o,x)+' · '+x.nombre)}</option>`).join('')}</select>
         ${tsel && (ents.length) ? `<label class="f">Entra por</label><select onchange="setC('entra',this.value)">${lsCanMain(o,b,tsel,ci)?`<option value="" ${!ci.entra?'selected':''}>Entrada principal del tablero</option>`:''}${ents.map(en=>`<option value="${en.id}" ${ci.entra===en.id?'selected':''}>${esc(devTitle(tsel,en).replace('⤵️ ',''))}</option>`).join('')}</select>`:''}
         <div class="hint">¿No está? Creálo desde “＋ Tablero” eligiendo que sale de este.</div>
         <div class="row2"><div><label class="f">Sección</label><select onchange="setC('sec',+this.value)">${SECS.map(v=>`<option value="${v}" ${ci.sec==v?'selected':''}>${fmtSec(v)} mm²</option>`).join('')}</select></div><div><label class="f">Largo aprox. (m)</label><input inputmode="decimal" value="${esc(ci.largo||'')}" oninput="setC('largo',this.value)"></div></div>`;
@@ -1773,7 +1807,7 @@ function saveDev(){
   const b=B(); const e=editing; const isNew=e._new;
   delete e._new; delete e._preset;
   const power = DEV[e.tipo].cat==='power';
-  if(!(['tm','cont','gm','rt'].includes(e.tipo) && (!e.general || (e.circ && e.circ.tipo==='LS')))) delete e.circ;
+  if(!(['tm','cont','gm','rt','conm'].includes(e.tipo) && (!e.general || (e.circ && e.circ.tipo==='LS')))) delete e.circ;
   if(!power){ e.de=null; if(!e.ctrl){ toast('Primero agregá un contactor'); return; } }
   if(ROOT_ONLY.includes(e.tipo)) e.de=null;
   if(e.tipo==='conm' && e.de2 && e.de2===e.de){ toast('Las dos entradas del conmutador no pueden venir del mismo lugar'); return; }
