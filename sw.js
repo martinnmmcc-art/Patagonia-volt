@@ -1,4 +1,4 @@
-// Patagonia Volt — Service Worker v6
+// Patagonia Volt — Service Worker v7
 //
 // REGLA DE ORO: el service worker SOLO guarda archivos de la app (código, íconos,
 // fuentes, librerías). NUNCA toca pedidos a la base de datos (Supabase) ni a ninguna
@@ -9,7 +9,7 @@
 // - Íconos, fuentes y librerías: caché primero (casi nunca cambian).
 // - Cambiar CACHE_NAME borra todas las copias viejas al activarse.
 
-const CACHE_NAME = 'patagonia-volt-v6';
+const CACHE_NAME = 'patagonia-volt-v7';
 
 const CORE_ASSETS = ['./', './index.html', './app.js', './style.css', './manifest.json', './tableros.html'];
 const STATIC_ASSETS = [
