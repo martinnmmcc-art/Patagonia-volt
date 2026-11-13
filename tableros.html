@@ -804,74 +804,178 @@ function svgDefs(){
   </defs>`;
 }
 const T = (x,y,t,o='') => `<text x="${x}" y="${y}" text-anchor="middle" font-family="Arial" ${o}>${t}</text>`;
+// ---------------------------------------------------------------------
+//  Equipos DIN dibujados como los reales (vista con la tapa puesta: se ve el frente de 45 mm)
+//  Marcas según lo que exige la norma de cada producto (IEC 60898-1 térmicas, IEC 61008-1 disyuntores)
+// ---------------------------------------------------------------------
+function leverSVG(cx,y,blue){
+  // alojamiento + palanca arriba (conectada) con estrías
+  return `<rect x="${cx-7.5}" y="${y}" width="15" height="31" rx="2.5" fill="#1d2024" stroke="#0e1012"/>`+
+    `<rect x="${cx-6}" y="${y+1.5}" width="12" height="15" rx="2" fill="url(#${blue?'pvLeverB':'pvLever'})"/>`+
+    `<path d="M${cx-4} ${y+4}h8M${cx-4} ${y+6.5}h8" stroke="${blue?'#8fb5e6':'#6f747b'}" stroke-width=".8"/>`+
+    `<text x="${cx}" y="${y+13.5}" font-size="5.2" text-anchor="middle" font-family="Arial" font-weight="700" fill="#fff">I-ON</text>`+
+    `<text x="${cx}" y="${y+28}" font-size="4.6" text-anchor="middle" font-family="Arial" fill="#9a9ea4">O-OFF</text>`;
+}
+function onWindow(cx,y){ return `<rect x="${cx-5}" y="${y}" width="10" height="5" rx="1" fill="#d93a2b" stroke="#7a1f16" stroke-width=".6"/>`; }
 function drawDevice(b,c,x,y,w,m){
   const col = m.color;
+  const nm = Math.round(w/MW);
   let s = `<g data-id="${c.id}" style="cursor:pointer" filter="url(#pvSh)">`;
-  const dark = c.tipo==='cont'||c.tipo==='rt'||c.tipo==='gm';
-  s += `<rect x="${x+.5}" y="${y}" width="${w-1}" height="${DH}" rx="4" fill="${dark?'#e9e9e6':'url(#pvBody)'}" stroke="#8f8f8a"/>`;
-  for(let i=0;i<Math.round(w/MW);i++){ const cx=x+MW/2+i*MW;
+  const grey = ['cont','rt','gm','temp','ih'].includes(c.tipo);
+  // cuerpo y bornes (los bornes quedan detrás de la tapa)
+  s += `<rect x="${x+.5}" y="${y}" width="${w-1}" height="${DH}" rx="4" fill="${grey?'#e4e5e2':'url(#pvBody)'}" stroke="#8f8f8a"/>`;
+  for(let i=0;i<nm;i++){ const cx=x+MW/2+i*MW;
     s+=`<circle cx="${cx}" cy="${y+13}" r="5" fill="url(#pvScrew)" stroke="#6d7176"/><line x1="${cx-3.5}" y1="${y+13}" x2="${cx+3.5}" y2="${y+13}" stroke="#55595e" stroke-width="1.4"/>`;
     s+=`<circle cx="${cx}" cy="${y+DH-13}" r="5" fill="url(#pvScrew)" stroke="#6d7176"/><line x1="${cx}" y1="${y+DH-16.5}" x2="${cx}" y2="${y+DH-9.5}" stroke="#55595e" stroke-width="1.4"/>`; }
-  s += `<rect x="${x+3}" y="${y+30}" width="${w-6}" height="${DH-60}" rx="3" fill="#fdfdfb" stroke="#cfcfc9"/>`;
-  s += `<rect x="${x+3}" y="${y+30}" width="${w-6}" height="5" rx="2" fill="${col}"/>`;
+  // frente
+  s += `<rect x="${x+2.5}" y="${y+29}" width="${w-5}" height="${DH-58}" rx="3" fill="${grey?'#eeefec':'#fdfdfb'}" stroke="#c9c9c3"/>`;
+  if(['tm','dif'].includes(c.tipo)) for(let i=1;i<nm;i++) s+=`<line x1="${x+i*MW}" y1="${y+30}" x2="${x+i*MW}" y2="${y+DH-30}" stroke="#e1e1dc"/>`;
+  s += `<rect x="${x+3}" y="${y+30}" width="${w-6}" height="4" rx="1.5" fill="${col}"/>`;
   const cx = x+w/2;
-  if(c.tipo==='tm' || c.tipo==='dif'){
-    const lw = Math.min(w-10, 14+ (w/MW-1)*MW*.9);
-    s += `<rect x="${cx-lw/2}" y="${y+40}" width="${lw}" height="28" rx="3" fill="#2a2d31"/>`;
-    s += `<rect x="${cx-lw/2+2}" y="${y+41}" width="${lw-4}" height="17" rx="2" fill="url(#${c.tipo==='dif'?'pvLeverB':'pvLever'})"/>`;
-    s += T(cx,y+54,'I-ON','font-size="7" fill="#fff" font-weight="700"');
-    if(c.tipo==='tm'){
-      s += T(cx,y+86,`${c.curva}${c.amp}`,`font-size="${w>MW?15:12}" font-weight="800" fill="#1b1b1b"`);
-      s += `<rect x="${cx-12}" y="${y+92}" width="24" height="11" fill="none" stroke="#333" stroke-width=".8"/>`+T(cx,y+100.5,Math.round(c.ka*1000),'font-size="7.5" fill="#222"');
-    } else {
-      const off = w>MW*2?10:0;
-      s += T(cx-off,y+84,`${c.amp}A`,'font-size="11" font-weight="800" fill="#1b1b1b"');
-      s += T(cx-off,y+96,`${c.sens}mA`,'font-size="9" font-weight="700" fill="#c0392b"');
-      s += `<circle cx="${x+w-13}" cy="${y+101}" r="6.5" fill="#f4c20d" stroke="#9a7a00"/>`+T(x+w-13,y+104.5,'T','font-size="9" font-weight="800" fill="#333"');
-      s += `<text x="${x+10}" y="${y+104}" font-size="8" fill="#444" font-family="Arial">${c.clase==='A'?'A ∿':'AC'}${c.retardo==='S'?' Ⓢ':''}</text>`;
+  const t = (X,Y,txt,o) => T(X,Y,txt,o);
+  if(c.tipo==='tm'){
+    for(let i=0;i<nm;i++){ const lx=x+MW/2+i*MW;
+      s += leverSVG(lx,y+37,false) + onWindow(lx,y+70);
     }
+    if(nm>1) s += `<rect x="${x+MW/2-6}" y="${y+38.2}" width="${(nm-1)*MW+12}" height="2.6" rx="1" fill="#3a3d42"/>`;
+    const rating = `${c.curva}${c.amp}`;
+    s += t(cx,y+88,rating,`font-size="${rating.length>3&&nm===1?10:13}" font-weight="800" fill="#141414"`);
+    s += `<rect x="${cx-12}" y="${y+92}" width="24" height="9" fill="#fff" stroke="#222" stroke-width=".7"/>`+t(cx,y+99,Math.round(c.ka*1000),'font-size="6.5" fill="#111" font-weight="700"');
+    if(nm>1){ s += `<rect x="${cx+14}" y="${y+92}" width="8" height="9" fill="#fff" stroke="#222" stroke-width=".7"/>`+t(cx+18,y+99,'3','font-size="6.5" fill="#111"');
+      s += t(cx,y+108,'230/400V~ IEC 60898-1','font-size="4.6" fill="#555"');
+    } else s += t(cx,y+108,'230V~','font-size="5" fill="#555"');
+  } else if(c.tipo==='dif'){
+    const lx = x+MW/2;
+    s += leverSVG(lx,y+37,true) + `<rect x="${lx-5}" y="${y+70}" width="10" height="5" rx="1" fill="#2a6fdb" stroke="#123f80" stroke-width=".6"/>`;
+    // zona derecha: botón de prueba y marcas
+    const rx = x+MW, rw = w-MW, rcx = rx+rw/2;
+    s += `<rect x="${rcx-8}" y="${y+37}" width="16" height="13" rx="3" fill="#f4c20d" stroke="#9a7a00"/>`+t(rcx,y+46.5,'T','font-size="9" font-weight="800" fill="#333"');
+    s += t(rcx,y+57,'IΔn','font-size="6" fill="#444"')+t(rcx,y+66,`${c.sens}mA`,`font-size="${nm>2?9:8}" font-weight="800" fill="#c0392b"`);
+    s += t(rcx,y+76,`In ${c.amp}A`,'font-size="6.5" font-weight="700" fill="#222"');
+    // tipo AC / A (y S selectivo, en recuadro como en el frente real)
+    s += `<rect x="${rcx-9}" y="${y+80}" width="${c.retardo==='S'?11:18}" height="9" fill="#fff" stroke="#222" stroke-width=".6"/>`+t(rcx-9+(c.retardo==='S'?5.5:9),y+87,c.clase==='A'?'A∿':'AC∿','font-size="5.8" fill="#111"');
+    if(c.retardo==='S') s += `<rect x="${rcx+3}" y="${y+80}" width="7" height="9" fill="#fff" stroke="#222" stroke-width=".6"/>`+t(rcx+6.5,y+87,'S','font-size="6.5" font-weight="800" fill="#111"');
+    s += t(lx,y+88,'ID','font-size="8" font-weight="800" fill="#141414"');
+    s += t(cx,y+100,`${c.polos||2}P ${c.amp}A ${c.sens}mA`,'font-size="5.8" font-weight="700" fill="#222"');
+    s += t(cx,y+108, nm>2 ? '230/400V~ IEC 61008-1' : 'IEC 61008','font-size="4.6" fill="#555"');
   } else if(c.tipo==='ptm'){
-    s += `<rect x="${x+8}" y="${y+42}" width="${w-16}" height="22" rx="2" fill="#11291c" stroke="#333"/>`;
-    s += `<text x="${cx}" y="${y+58}" font-size="13" fill="#7dff9e" text-anchor="middle" font-family="monospace" font-weight="700">${b.tension==='tri'?'380V':'220V'}</text>`;
-    s += `<circle cx="${x+12}" cy="${y+74}" r="3" fill="#2ecc71"/><circle cx="${x+22}" cy="${y+74}" r="3" fill="#555"/>`;
-    s += T(cx,y+92,'PROTECTOR','font-size="7.5" fill="#222" font-weight="700"')+T(cx,y+101,'TENSIÓN','font-size="7.5" fill="#222" font-weight="700"');
+    s += `<rect x="${x+6}" y="${y+38}" width="${w-12}" height="20" rx="2" fill="#0f2418" stroke="#333"/>`;
+    s += `<text x="${cx}" y="${y+53}" font-size="13" fill="#7dff9e" text-anchor="middle" font-family="monospace" font-weight="700">${b.tension==='tri'?'380':'220'}</text>`;
+    s += `<circle cx="${x+11}" cy="${y+64}" r="2.5" fill="#2ecc71"/><circle cx="${x+19}" cy="${y+64}" r="2.5" fill="#444"/>`+t(x+w-14,y+66,'U> U<','font-size="5.5" fill="#333"');
+    s += `<rect x="${cx-15}" y="${y+70}" width="12" height="7" rx="2" fill="#bfc1bd"/><rect x="${cx+3}" y="${y+70}" width="12" height="7" rx="2" fill="#bfc1bd"/>`+t(cx-9,y+75.5,'▲','font-size="5" fill="#333"')+t(cx+9,y+75.5,'▼','font-size="5" fill="#333"');
+    s += t(cx,y+90,'PROTECTOR DE','font-size="6.2" fill="#222" font-weight="700"')+t(cx,y+98,'TENSIÓN','font-size="6.2" fill="#222" font-weight="700"')+t(cx,y+107,`${c.amp||40}A`,'font-size="6" fill="#444"');
   } else if(c.tipo==='dps'){
-    s += `<rect x="${cx-9}" y="${y+44}" width="18" height="10" rx="1" fill="#27ae60" stroke="#1d7a44"/>`;
-    s += T(cx,y+74,'DPS','font-size="12" font-weight="800" fill="#1b1b1b"')+T(cx,y+86,'Uc 275V','font-size="7.5" fill="#333"');
-    s += `<path d="M${cx} ${y+90}v5m-7 0h14m-10 3h6" stroke="#333" stroke-width="1.2"/>`;
+    // cartuchos enchufables, uno por polo, con ventanita verde
+    for(let i=0;i<nm;i++){ const lx=x+i*MW+3;
+      s += `<rect x="${lx}" y="${y+36}" width="${MW-6}" height="52" rx="2" fill="#e6e7e3" stroke="#9c9d98"/>`;
+      s += `<path d="M${lx+4} ${y+40}h${MW-14}M${lx+4} ${y+43}h${MW-14}" stroke="#b5b6b1"/>`;
+      s += `<rect x="${lx+6}" y="${y+48}" width="${MW-18}" height="8" rx="1" fill="#27ae60" stroke="#1d7a44"/>`;
+      s += t(lx+(MW-6)/2,y+66,'275V','font-size="5.5" fill="#333"')+t(lx+(MW-6)/2,y+74,'40kA','font-size="5.5" fill="#333"');
+    }
+    s += t(cx,y+97,'DPS T2','font-size="8" font-weight="800" fill="#141414"');
+    s += `<path d="M${cx} ${y+100}v3m-5 0h10m-7 2.5h4" stroke="#333" stroke-width=".9"/>`;
   } else if(c.tipo==='gm'){
-    // guardamotor: perilla giratoria + dial de regulación
-    s += `<rect x="${x+5}" y="${y+36}" width="${w-10}" height="70" rx="4" fill="#ededea" stroke="#b5b5ae"/>`;
-    s += `<circle cx="${cx}" cy="${y+60}" r="16" fill="#26292d" stroke="#111"/><rect x="${cx-4}" y="${y+45}" width="8" height="30" rx="3" fill="#3c4046"/><path d="M${cx} ${y+46}v8" stroke="#f5c518" stroke-width="2"/>`;
-    s += T(cx-27,y+52,'I','font-size="8" fill="#222" font-weight="700"')+T(cx+27,y+52,'O','font-size="8" fill="#222" font-weight="700"');
-    s += `<circle cx="${cx+24}" cy="${y+92}" r="8" fill="#fff" stroke="#555"/><path d="M${cx+24} ${y+92}l4 -5" stroke="#c0392b" stroke-width="1.6"/>`;
-    s += T(cx-8,y+92,`${c.rango}A`,'font-size="8" font-weight="700" fill="#222"')+T(cx-8,y+102,'QM','font-size="8" fill="#555"');
+    s += `<rect x="${x+5}" y="${y+35}" width="${w-10}" height="73" rx="4" fill="#e3e4e1" stroke="#a9aaa5"/>`;
+    s += `<circle cx="${cx}" cy="${y+58}" r="16" fill="#202326" stroke="#0e1012"/><rect x="${cx-4}" y="${y+43}" width="8" height="30" rx="3" fill="#3a3e44"/><path d="M${cx} ${y+44}v8" stroke="#f5c518" stroke-width="2"/>`;
+    s += t(cx-24,y+46,'I','font-size="8" fill="#222" font-weight="800"')+t(cx+24,y+46,'O','font-size="8" fill="#222" font-weight="800"')+t(cx+23,y+73,'TRIP','font-size="4.5" fill="#c0392b"');
+    // dial de regulación térmica con escala
+    s += `<circle cx="${cx+20}" cy="${y+92}" r="9" fill="#fff" stroke="#555"/><path d="M${cx+20} ${y+92}l4.5 -5" stroke="#c0392b" stroke-width="1.6"/>`;
+    for(let k=0;k<5;k++){ const a=Math.PI*(0.8+k*0.35); s+=`<line x1="${cx+20+Math.cos(a)*9}" y1="${y+92+Math.sin(a)*9}" x2="${cx+20+Math.cos(a)*11.5}" y2="${y+92+Math.sin(a)*11.5}" stroke="#555" stroke-width=".7"/>`; }
+    s += t(cx-12,y+90,`${c.rango}A`,'font-size="7" font-weight="700" fill="#222"')+t(cx-12,y+99,`aj. ${fmtSec(c.ajuste)}A`,'font-size="6" fill="#444"')+t(cx-12,y+107,'IEC 60947-4-1','font-size="4.3" fill="#666"');
   } else if(c.tipo==='cont'){
-    s += `<text x="${x+8}" y="${y+46}" font-size="7" fill="#333" font-family="Arial">A1</text><text x="${x+w-18}" y="${y+46}" font-size="7" fill="#333" font-family="Arial">A2</text>`;
-    s += `<rect x="${cx-10}" y="${y+52}" width="20" height="16" rx="2" fill="#dcdcd6" stroke="#888"/>`+T(cx,y+63,'I O','font-size="8" fill="#333"');
-    s += T(cx,y+86,`${m.tag||'KM'}`,'font-size="12" font-weight="800" fill="#1b1b1b"')+T(cx,y+98,`${c.amp||25}A`,'font-size="7.5" fill="#333"');
+    s += t(x+9,y+40,'A1','font-size="6" fill="#333"')+t(x+w-9,y+40,'A2','font-size="6" fill="#333"');
+    s += `<rect x="${x+6}" y="${y+44}" width="${w-12}" height="30" rx="3" fill="#d9dbd7" stroke="#9fa19c"/>`;
+    s += `<rect x="${cx-9}" y="${y+51}" width="18" height="15" rx="2" fill="#f5f5f2" stroke="#888"/><rect x="${cx-5}" y="${y+54}" width="10" height="9" rx="1" fill="#2b2e33"/>`;
+    s += t(cx,y+86,`${m.tag||'KM'}`,'font-size="10" font-weight="800" fill="#141414"')+t(cx,y+95,`${c.amp||25}A AC-3`,'font-size="6" fill="#333"');
+    s += t(cx,y+104,`bob. ${c.bobina||'220 V'}`,'font-size="5.5" fill="#555"')+t(cx,y+110,'13 NA 14','font-size="4.6" fill="#666"');
   } else if(c.tipo==='rt'){
-    s += `<circle cx="${cx-8}" cy="${y+56}" r="9" fill="#fff" stroke="#555"/><path d="M${cx-8} ${y+56}l5 -5" stroke="#c0392b" stroke-width="1.6"/>`;
-    s += `<rect x="${cx+5}" y="${y+48}" width="14" height="14" rx="3" fill="#2a6fdb" stroke="#1b4a96"/>`+T(cx+12,y+72,'R','font-size="7" fill="#333"');
-    s += T(cx,y+88,`${c.rango}A`,'font-size="9" font-weight="700" fill="#222"')+T(cx,y+100,'95 96 97 98','font-size="6" fill="#555"');
+    s += `<circle cx="${cx-8}" cy="${y+52}" r="10" fill="#fff" stroke="#555"/><path d="M${cx-8} ${y+52}l5 -6" stroke="#c0392b" stroke-width="1.6"/>`;
+    s += `<rect x="${cx+6}" y="${y+40}" width="12" height="11" rx="3" fill="#2a6fdb" stroke="#1b4a96"/>`+t(cx+12,y+48,'R','font-size="6.5" font-weight="800" fill="#fff"');
+    s += `<rect x="${cx+6}" y="${y+55}" width="12" height="9" rx="3" fill="#d6332a" stroke="#7a1f16"/>`+t(cx+12,y+62,'O','font-size="6" font-weight="800" fill="#fff"');
+    s += t(cx,y+82,`${c.rango}A`,'font-size="8" font-weight="700" fill="#222"')+t(cx,y+92,`aj. ${fmtSec(c.ajuste)}A`,'font-size="6" fill="#444"')+t(cx,y+104,'95-96 NC · 97-98 NA','font-size="4.6" fill="#555"');
   } else if(c.tipo==='temp'){
-    s += `<circle cx="${cx}" cy="${y+55}" r="9" fill="#fff" stroke="#555"/><path d="M${cx} ${y+55}l0 -7" stroke="#2a6fdb" stroke-width="1.6"/>`;
-    s += `<circle cx="${cx-6}" cy="${y+72}" r="2.5" fill="#2ecc71"/><circle cx="${cx+6}" cy="${y+72}" r="2.5" fill="#e67e22"/>`;
-    s += T(cx,y+88,'KT','font-size="10" font-weight="800" fill="#222"')+T(cx,y+99,'⏱','font-size="9"');
+    s += `<circle cx="${cx}" cy="${y+50}" r="9" fill="#fff" stroke="#555"/><path d="M${cx} ${y+50}l0 -7" stroke="#2a6fdb" stroke-width="1.6"/>`+t(cx,y+65,'t','font-size="6" fill="#444"');
+    s += `<circle cx="${cx-6}" cy="${y+72}" r="2.3" fill="#2ecc71"/><circle cx="${cx+6}" cy="${y+72}" r="2.3" fill="#e67e22"/>`;
+    s += t(cx,y+88,'KT','font-size="9" font-weight="800" fill="#222"')+t(cx,y+98,esc(String(c.tiempo||'').slice(0,6)),'font-size="5.5" fill="#444"');
   } else if(c.tipo==='conm'){
-    s += `<rect x="${x+5}" y="${y+36}" width="${w-10}" height="70" rx="4" fill="#ededea" stroke="#b5b5ae"/>`;
+    s += `<rect x="${x+5}" y="${y+35}" width="${w-10}" height="73" rx="4" fill="#ededea" stroke="#b5b5ae"/>`;
     s += `<circle cx="${cx}" cy="${y+64}" r="17" fill="#c0392b" stroke="#7a1f16"/><rect x="${cx-4}" y="${y+48}" width="8" height="30" rx="3" fill="#e2574a" transform="rotate(-45 ${cx} ${y+64})"/>`;
-    s += T(cx-24,y+50,'1','font-size="10" font-weight="800" fill="#222"')+T(cx,y+44,'0','font-size="10" font-weight="800" fill="#222"')+T(cx+24,y+50,'2','font-size="10" font-weight="800" fill="#222"');
-    s += T(cx,y+98,c.modo==='auto'?'ATS':'I - 0 - II','font-size="8" font-weight="700" fill="#222"');
+    s += t(cx-24,y+50,'1','font-size="10" font-weight="800" fill="#222"')+t(cx,y+44,'0','font-size="10" font-weight="800" fill="#222"')+t(cx+24,y+50,'2','font-size="10" font-weight="800" fill="#222"');
+    s += t(cx,y+98,c.modo==='auto'?'ATS':'I - 0 - II','font-size="8" font-weight="700" fill="#222"')+t(cx,y+106,`${c.polos||2}P ${c.amp||40}A`,'font-size="5.5" fill="#444"');
   } else if(c.tipo==='ih'){
-    s += `<rect x="${x+6}" y="${y+42}" width="${w-12}" height="20" rx="2" fill="#c9d6c3" stroke="#555"/>`;
-    s += `<text x="${cx}" y="${y+57}" font-size="12" fill="#1b2a22" text-anchor="middle" font-family="monospace" font-weight="700">19:00</text>`;
-    s += `<rect x="${x+8}" y="${y+70}" width="10" height="7" rx="1" fill="#888"/><rect x="${x+22}" y="${y+70}" width="10" height="7" rx="1" fill="#888"/><rect x="${x+36}" y="${y+70}" width="10" height="7" rx="1" fill="#888"/>`;
-    s += T(cx,y+96,'HORARIO','font-size="7.5" font-weight="700" fill="#222"');
+    s += `<rect x="${x+6}" y="${y+38}" width="${w-12}" height="22" rx="2" fill="#c9d6c3" stroke="#555"/>`;
+    s += `<text x="${cx}" y="${y+53}" font-size="12" fill="#1b2a22" text-anchor="middle" font-family="monospace" font-weight="700">19:00</text>`;
+    s += t(cx,y+58.5,'L M M J V S D','font-size="3.8" fill="#1b2a22"');
+    for(let k=0;k<4;k++) s += `<rect x="${x+8+k*11}" y="${y+66}" width="8" height="6" rx="1" fill="#8a8c88"/>`;
+    s += t(cx,y+88,'HORARIO','font-size="7" font-weight="700" fill="#222"')+t(cx,y+97,'16A 230V~','font-size="5.5" fill="#444"');
   }
   s += `</g>`;
   return s;
 }
+// ---------------------------------------------------------------------
+//  Ficha ampliada: el equipo grande con flechas que explican cada marca
+// ---------------------------------------------------------------------
+function calloutsFor(b,c,w){
+  const cx=w/2, lx=MW/2, A=[];
+  if(c.tipo==='tm'){
+    A.push([lx+8,44,'Palanca: arriba (I-ON) = conectada · abajo (O-OFF) = cortada']);
+    A.push([lx+6,72.5,'Ventanita roja: los contactos están cerrados']);
+    A.push([cx+18,84,`${c.curva}${c.amp}: curva ${c.curva} (${c.curva==='B'?'cargas resistivas, cables largos':c.curva==='C'?'uso general en viviendas':'motores y arranques fuertes'}) · corta si pasan más de ${c.amp} A por un tiempo`]);
+    A.push([cx+(w>MW?23:13),96.5,`${Math.round(c.ka*1000)}: poder de corte. Corta sin romperse un cortocircuito de hasta ${Math.round(c.ka*1000)} A`]);
+  } else if(c.tipo==='dif'){
+    const rcx = MW+(w-MW)/2;
+    A.push([lx+8,44,'Palanca: arriba = conectado · si salta queda abajo']);
+    A.push([rcx+8,43,'Botón T de prueba: apretalo una vez por mes, tiene que saltar']);
+    A.push([rcx+13,63,`${c.sens} mA: corta si se escapa más de ${c.sens} miliamperes a tierra.${c.sens<=30?' Es lo que protege a las personas.':' Protege contra incendio, no a las personas.'}`]);
+    A.push([rcx+13,74,`In ${c.amp} A: corriente máxima que puede pasar. No protege los cables: por eso va siempre con una térmica`]);
+    A.push([rcx+(c.retardo==='S'?11:9),84.5,c.clase==='A'?'Tipo A: detecta también fugas de equipos electrónicos (lavarropas, inverter)':'Tipo AC: detecta fugas de corriente alterna común']);
+  } else if(c.tipo==='gm'){
+    A.push([cx,58,'Perilla: I = prendido · O = apagado. Si salta queda en TRIP']);
+    A.push([cx+20,92,`Regulación: se ajusta a la corriente de la chapa del motor (${fmtSec(c.ajuste)} A)`]);
+  } else if(c.tipo==='rt'){
+    A.push([cx-8,52,`Regulación: ajustada a ${fmtSec(c.ajuste)} A (chapa del motor)`]);
+    A.push([cx+12,45,'R: botón azul para rearmar después de que salta']);
+  } else if(c.tipo==='ptm'){
+    A.push([cx,48,'Pantalla: muestra la tensión de la red en este momento']);
+    A.push([x0(),64,'U> U<: corta por sobretensión o baja tensión y reconecta solo']);
+  } else if(c.tipo==='dps'){
+    A.push([MW/2,52,'Ventanita verde = funcionando · roja = hay que cambiar el cartucho']);
+    A.push([cx,97,'Tipo 2 (T2): para el tablero de la casa. Descarga a tierra los picos por rayos']);
+  } else if(c.tipo==='cont'){
+    A.push([cx,58,'Visor: muestra si el contactor está cerrado (prendido)']);
+    A.push([cx,94,`${c.amp||25} A AC-3: corriente para motores. Bobina ${c.bobina||'220 V'}`]);
+  }
+  return A;
+  function x0(){ return 14; }
+}
+function deviceZoom(b,c,m){
+  if(!['power','rail'].includes(DEV[c.tipo].cat) || OFF_RAIL.includes(c.tipo)) return '';
+  const w = modsOf(b,c)*MW, A = calloutsFor(b,c,w); if(!A.length) return '';
+  const SC=2.1, top=26, bot=DH-26, dw=w*SC, dh=(bot-top)*SC;
+  const tx = dw+34, lines = A.map(a=>wrap(a[2],38));
+  const nLines = lines.reduce((n,l)=>n+l.length,0);
+  const H = Math.max(dh+10, nLines*14 + A.length*10 + 10), W = tx+250;
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="Barlow, Arial, sans-serif">${svgDefs()}`;
+  s += `<g transform="translate(4,${(H-dh)/2}) scale(${SC}) translate(0,${-top})">${drawDevice(b,c,0,0,w,m)}</g>`;
+  let yy = 12;
+  A.forEach((a,i)=>{
+    const px = 4 + a[0]*SC, py = (H-dh)/2 + (a[1]-top)*SC;
+    const ty = yy + 4;
+    s += `<circle cx="${px}" cy="${py}" r="3.5" fill="#d4a20a" stroke="#fff" stroke-width="1"/><path d="M${px} ${py} L${tx-8} ${ty}" stroke="#d4a20a" stroke-width="1.4" fill="none"/><circle cx="${tx-8}" cy="${ty}" r="2" fill="#d4a20a"/>`;
+    lines[i].forEach((ln,j)=>{ s += `<text x="${tx}" y="${yy+8+j*14}" font-size="12" fill="#1b2a22" ${j===0?'font-weight="700"':''}>${esc(ln)}</text>`; });
+    yy += lines[i].length*14 + 10;
+  });
+  s += '</svg>';
+  return uniqIds(s);
+}
+// línea corta para la tarjeta del cliente
+function readLine(c){
+  if(c.tipo==='tm') return `📖 <b>${c.curva}${c.amp}</b> = curva ${c.curva}, ${c.amp} A · <b>${Math.round(c.ka*1000)}</b> = poder de corte ${Math.round(c.ka*1000)} A`;
+  if(c.tipo==='dif') return `📖 <b>${c.sens} mA</b> = fuga a la que corta · <b>${c.amp} A</b> = corriente máxima · tipo ${c.clase}${c.retardo==='S'?' · S = selectivo (con retardo)':''}`;
+  if(c.tipo==='gm') return `📖 Rango ${c.rango} A · ajustado a <b>${fmtSec(c.ajuste)} A</b> (corriente del motor)`;
+  return '';
+}
+
 // equipos de puerta (22 mm)
 function drawDoorDevice(c,cx,cy,m){
   let s=`<g data-id="${c.id}" style="cursor:pointer">`;
@@ -942,8 +1046,9 @@ function panelSVG(b){
     s += drawDoorDevice(c,x0,y0,map[c.id]);
     const lab = c.tipo==='gen' ? 'ENTRADA GRUPO' : c.tipo==='luz' ? (c.texto||'') : c.tipo==='pul' ? (c.rol==='marcha'?'MARCHA':c.rol==='parada'?'PARADA':(c.texto||'')) : c.tipo==='emerg' ? 'EMERGENCIA' : (c.pos||'');
     s += `<rect x="${x0-28}" y="${y0+22}" width="56" height="24" rx="2" fill="#fff" stroke="#9a9b96"/>`;
-    const ws = wrap(lab.toUpperCase(),11).slice(0,2);
-    ws.forEach((ln,j)=>s+=T(x0,y0+32+j*9-(ws.length===1?-4:0),esc(ln),'font-size="7" font-weight="700" fill="#222"'));
+    const ws = wrap(lab.toUpperCase(),12).slice(0,3);
+    const lh = ws.length>2?7:9, y1 = y0+22+12-((ws.length-1)*lh)/2+2.5;
+    ws.forEach((ln,j)=>s+=T(x0,y1+j*lh,esc(ln),`font-size="${ws.length>2?6:7}" font-weight="700" fill="#222"`));
   });
   rows.forEach((r,ri)=>{
     const ry=TOP+ri*RH+14, ly=ry+DH-22;
@@ -965,7 +1070,7 @@ function miniDevice(b,c,m){
   if(DEV[c.tipo].cat==='door' || c.tipo==='gen') return uniqIds(`<svg viewBox="-24 -24 48 48" width="44" height="44">${svgDefs()}${drawDoorDevice(c,0,0,Object.assign({},m,{n:''}))}</svg>`).replace(/<circle cx="19" cy="-19"[^>]*\/>/,'');
   if(c.tipo==='sen'){ const k=SEN_KINDS[c.kind]||SEN_KINDS.otro; return `<div style="width:44px;height:44px;border-radius:10px;background:#ede7d8;display:flex;align-items:center;justify-content:center;font-size:24px">${k.em}</div>`; }
   const w = Math.min(modsOf(b,c),4)*MW;
-  return uniqIds(`<svg viewBox="-2 26 ${w+4} ${DH-52}" width="${Math.round((w+4)*.7)}" height="${Math.round((DH-52)*.7)}">${svgDefs()}${drawDevice(b,c,0,0,w,m)}</svg>`);
+  return uniqIds(`<svg viewBox="-2 26 ${w+4} ${DH-52}" width="${Math.round((w+4)*.95)}" height="${Math.round((DH-52)*.95)}">${svgDefs()}${drawDevice(b,c,0,0,w,m)}</svg>`);
 }
 
 // =====================================================================
@@ -1119,7 +1224,7 @@ function sheetCliente(o, b, inst){
     const m=I.map[c.id], t=clientText(b,c,I);
     h += `<div class="lc" style="border-left:5px solid ${m.color}"><div class="ico">${miniDevice(b,c,m)}</div><div>
       <h4><span class="n" style="background:${m.color}">${m.n}</span>${esc(devTitle(b,c))}</h4>
-      <div class="spec">${devSpec(b,c)}${m.code?' · '+m.code:''}</div>
+      <div class="spec">${devSpec(b,c)}${m.code?' · '+m.code:''}</div>${readLine(c)?`<div class="spec" style="color:#1e5a3f">${readLine(c)}</div>`:''}
       <p>${t.que}</p>${t.feeds?`<div class="feeds">🔌 ${t.feeds}</div>`:''}${t.si?`<p style="margin-top:5px;font-size:12px;color:#5b6657">${t.si}</p>`:''}
     </div></div>`;
   });
@@ -1131,6 +1236,9 @@ function sheetCliente(o, b, inst){
       <li>Pasá la llave a <b>2 (grupo)</b>. Prendé solo lo necesario: no supere la potencia del grupo.</li>
       <li>Cuando vuelve la red: llave a <b>0</b>, apagá el grupo, ${b.comps.some(c=>c.tipo==='gen'&&c.conexion==='toma')?'desenchufalo, ':''}y llave a <b>1 (red)</b>.</li>
       <li>Nunca pases de 1 a 2 sin parar en 0.</li></ol></div>` : ''}
+    ${(()=>{ const pick=[]; const tmC=I.order.map(x=>x.c).find(c=>c.tipo==='tm'&&!c.general)||I.order.map(x=>x.c).find(c=>c.tipo==='tm'); const dC=I.order.map(x=>x.c).find(c=>c.tipo==='dif'); const gC=I.order.map(x=>x.c).find(c=>c.tipo==='gm');
+      [tmC,dC,gC].forEach(c=>{ if(c){ const z=deviceZoom(b,c,I.map[c.id]); if(z) pick.push(`<div class="svgbox" style="margin:6px 0 4px">${z}</div>`); } });
+      return pick.length?`<h3 class="st">📖 Cómo leer tus protecciones</h3>${pick.join('')}`:''; })()}
     <div class="guide"><h3>¿Se cortó la luz? Seguí estos pasos</h3><ol>
       <li>Fijate si se cortó en todo el barrio: si es así, es la red y no tu tablero.</li>
       <li>Abrí el tablero y buscá la protección que quedó <b>baja</b> (palanca abajo).</li>
@@ -1864,6 +1972,7 @@ function renderDevForm(){
   const parents = I.order.filter(({c})=>!excl.includes(c.id) && c.tipo!=='dps');
   const sel = (arr,val,fn,fmt)=>`<select onchange="${fn}">${arr.map(v=>`<option value="${v}" ${String(v)===String(val)?'selected':''}>${fmt?fmt(v):v}</option>`).join('')}</select>`;
   let h = `<h3>${isNew?'Agregar equipo':'Editar · '+DEV[e.tipo].em+' '+esc(DEV[e.tipo].full)+' '+esc((I.map[e.id]||{}).tag||'')}</h3>`;
+  { const z = deviceZoom(b,e,(I.map[e.id]||{color:'#8a8f86',n:'',tag:DEV[e.tipo].tag})); if(z) h += `<div style="background:#fff;border-radius:10px;padding:6px;margin-bottom:8px;overflow-x:auto">${z.replace(/width="(\d+)" height="(\d+)"/,'style="width:100%;height:auto;max-width:$1px"')}</div>`; }
   if(isNew) DEV_GROUPS.forEach(([g,ks])=>{ h+=`<h4>${g}</h4><div class="types">${ks.map(k=>`<button class="${e.tipo===k?'sel':''}" onclick="setType('${k}')"><span class="em">${DEV[k].em}</span>${DEV[k].t}</button>`).join('')}</div>`; });
   if(e.tipo==='tm' && !willHaveKids){
     h += `<div class="seg" style="margin:10px 0 4px"><button class="${!e.general?'sel':''}" onclick="setRole(false)">Circuito / salida</button><button class="${e.general?'sel':''}" onclick="setRole(true)">Llave general</button></div>`;
