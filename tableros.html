@@ -674,7 +674,7 @@ function dfs(b){
 }
 function isLeaf(b,c){ return !children(b,c.id).length && !b.comps.some(x=>x.de2===c.id); }
 const CIRC_DEVS = ['tm','dif','cont','gm','rt','conm'];
-function hasCirc(b,c){ return CIRC_DEVS.includes(c.tipo) && isLeaf(b,c) && (!c.general || (c.circ && c.circ.tipo==='LS')) && (c.tipo!=='dif' || !!(c.circ && c.circ.tipo)); }
+function hasCirc(b,c){ return CIRC_DEVS.includes(c.tipo) && !!(c.circ && c.circ.tipo) && isLeaf(b,c) && (!c.general || c.circ.tipo==='LS'); }
 function descendants(b,id){ const r=[]; children(b,id).forEach(c=>{ r.push(c.id); r.push(...descendants(b,c.id)); }); return r; }
 function ancestors(b,c){ const r=[]; let p=b.comps.find(x=>x.id===c.de); let g=0; while(p && g++<50){ r.push(p); p=b.comps.find(x=>x.id===p.de); } return r; }
 const ctrlOf = (b,c) => b.comps.find(x=>x.id===c.ctrl && x.tipo==='cont');
@@ -1055,7 +1055,7 @@ function panelSVG(b){
     s += `<rect x="${PADX-2}" y="${ly}" width="${ROW*MW+4}" height="22" rx="2" fill="#fff" stroke="#bdbcb4"/>`;
     r.forEach(it=>{
       const x=PADX+it.m0*MW, w=it.w*MW, m=map[it.c.id], c=it.c;
-      const lab = hasCirc(b,c) ? (c.circ.tipo==='LS'?'➡':c.circ.icono||'') : (c.general?'⏻':DEV[c.tipo].em);
+      const lab = hasCirc(b,c) ? (c.circ.tipo==='LS'?'➡':c.circ.icono||'') : (c.general?'GRAL':DEV[c.tipo].em);
       s += `<g data-id="${c.id}"><rect x="${x}" y="${ly}" width="${w}" height="22" fill="transparent"/><line x1="${x}" y1="${ly+2}" x2="${x}" y2="${ly+20}" stroke="#ddd"/>`;
       s += T(x+w/2,ly+15,`${w>MW?m.n+' ':''}${lab}`,'font-size="10" font-weight="700" fill="#222"');
       if(w<=MW) s+=T(x+w/2,ly-3,m.n,'font-size="8" font-weight="700" fill="#333"');
@@ -1615,6 +1615,12 @@ function validate(o,b){
     if(['TUE','IUE','ACU','MOT'].includes(ci.tipo) && ci.sec<2.5) add('warn',`${name}: sección menor a 2,5 mm² para un circuito de uso especial.`);
     if(!ci.nombre) add('warn',`Hay un circuito sin nombre.`);
   });
+  // equipos que quedaron al final de una rama sin decir qué alimentan
+  b.comps.filter(c=>CIRC_DEVS.includes(c.tipo) && isLeaf(b,c) && !(c.circ && c.circ.tipo) && !(c.general && b.comps.filter(isPower).length===1)).forEach(c=>{
+    add('warn', c.tipo==='dif'
+      ? `#${I.map[c.id].n} Disyuntor sin nada colgado: agregale las térmicas que protege, o tocálo y elegí qué alimenta.`
+      : `#${I.map[c.id].n} ${esc(DEV[c.tipo].t)} sin circuito asignado: tocála y elegí qué alimenta (o una salida a otro tablero).`);
+  });
   // fuentes y respaldo
   b.comps.filter(c=>c.tipo==='gen').forEach(g=>{
     const fromGen = id => { let x=b.comps.find(y=>y.id===id), k=0; while(x && k++<40){ if(x.id===g.id) return true; x=b.comps.find(y=>y.id===x.de); } return false; };
@@ -1728,17 +1734,25 @@ function renderObra(){
   box.innerHTML = obraSVG(O(), S.cur.b);
   box.querySelectorAll('[data-board]').forEach(g=>g.addEventListener('click',ev=>{ ev.preventDefault(); selectBoard(g.dataset.board); switchTab('armar'); }));
 }
+function safe(where, fn, boxId){
+  try{ fn(); }
+  catch(e){
+    console.error(where, e);
+    const box = boxId && document.getElementById(boxId);
+    if(box) box.innerHTML = `<div class="val err" style="text-align:left">⚠️ No se pudo dibujar <b>${esc((B()||{}).nombre||'este tablero')}</b> (${esc(where)}). Revisá el último equipo que cambiaste o mandame captura.<br><small>${esc(e.message)}</small></div>`;
+  }
+}
 function renderAll(){
-  renderTop(); renderDatos();
-  if(curTab==='obra') renderObra();
-  if(curTab==='armar'){ renderPanel(); renderTree(); renderValidation(); }
-  if(curTab==='cliente') document.getElementById('sheetCliente').innerHTML = sheetCliente(O(), B(), S.inst);
-  if(curTab==='plano') document.getElementById('sheetPlano').innerHTML = sheetPlano(O(), B(), S.inst);
-  if(curTab==='mando') document.getElementById('sheetMando').innerHTML = sheetMando(O(), B(), S.inst);
-  if(curTab==='qr') renderSync();
+  safe('encabezado', renderTop); safe('datos', renderDatos);
+  if(curTab==='obra') safe('obra', renderObra, 'obraDiagram');
+  if(curTab==='armar'){ safe('dibujo', renderPanel, 'editPanel'); safe('lista', renderTree, 'tree'); safe('control', renderValidation, 'validation'); }
+  if(curTab==='cliente') safe('hoja cliente', ()=>document.getElementById('sheetCliente').innerHTML = sheetCliente(O(), B(), S.inst), 'sheetCliente');
+  if(curTab==='plano') safe('unifilar', ()=>document.getElementById('sheetPlano').innerHTML = sheetPlano(O(), B(), S.inst), 'sheetPlano');
+  if(curTab==='mando') safe('mando', ()=>document.getElementById('sheetMando').innerHTML = sheetMando(O(), B(), S.inst), 'sheetMando');
+  if(curTab==='qr') safe('qr', renderSync);
 }
 let rT=null;
-function softRender(){ clearTimeout(rT); rT=setTimeout(()=>{ save(); renderTop(); if(curTab==='armar'){ renderPanel(); renderValidation(); renderTree(); } if(curTab==='obra') renderObra(); },250); }
+function softRender(){ clearTimeout(rT); rT=setTimeout(()=>{ save(); safe('encabezado', renderTop); if(curTab==='armar'){ safe('dibujo', renderPanel, 'editPanel'); safe('control', renderValidation, 'validation'); safe('lista', renderTree, 'tree'); } if(curTab==='obra') safe('obra', renderObra, 'obraDiagram'); },250); }
 function setB(k,v){ B()[k]=v; softRender(); }
 function setO(k,v){ O()[k]=v; softRender(); }
 function setInst(k,v){ S.inst[k]=v; save(); }
@@ -2102,7 +2116,9 @@ function deleteDev(){
   if(e.tipo==='ent') O().boards.forEach(x=>x.comps.forEach(c=>{ if(c.circ && c.circ.entra===e.id){ delete c.circ.entra; delete c.circ.alimenta; } }));
   ask((kids.length?`Lo que estaba conectado después (${kids.length}) pasa a colgar del equipo anterior. `:'')+(deps.length?`Los ${deps.length} equipos de mando de este contactor quedan sin asignar. `:'')+'¿Quitar?', ()=>{
     kids.forEach(k=>k.de=e.de||null); deps.forEach(d=>d.ctrl='');
-    b.comps=b.comps.filter(c=>c.id!==e.id); save(); closeDev(); renderAll(); toast('Equipo quitado');
+    b.comps=b.comps.filter(c=>c.id!==e.id);
+    const par = e.de && b.comps.find(c=>c.id===e.de);
+    if(e.circ && e.circ.tipo && !kids.length && par && CIRC_DEVS.includes(par.tipo) && !(par.circ && par.circ.tipo) && isLeaf(b,par) && !par.general) par.circ = e.circ; save(); closeDev(); renderAll(); toast('Equipo quitado');
   });
 }
 
@@ -2227,7 +2243,8 @@ function ask(msg, onYes){
 //  MODO CLIENTE (desde el QR)
 // =====================================================================
 let vTab='cliente';
-function viewerRender(){
+function viewerRender(){ try{ viewerRender0(); }catch(e){ console.error(e); document.getElementById('vBody').innerHTML='<div class="card">No se pudo mostrar este tablero. Avisale al electricista.</div>'; } }
+function viewerRender0(){
   const {obra:o, inst} = VIEW; const b=o.boards.find(x=>x.id===VIEW.b)||o.boards[0];
   document.getElementById('vSub').textContent = [o.cliente, b.nombre].filter(Boolean).join(' · ');
   document.getElementById('vChips').innerHTML = o.boards.length>1 ? boardOrder(o).map(x=>`<button class="chip ${x.id===b.id?'sel':''}" onclick="VIEW.b='${x.id}';viewerRender()">${(BOARD_TYPES[x.tipo]||BOARD_TYPES.otro).em} ${esc(x.nombre)}</button>`).join('') : '';
