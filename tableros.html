@@ -220,6 +220,11 @@ details.card summary::after{content:' ▾';color:var(--muted)}
       </div>
       <label class="f" id="lblLinea">Línea de alimentación</label><select id="b-lineaSec" onchange="setLineSec(+this.value)"></select>
       <label class="f">Se alimenta desde</label><select id="b-fuente" onchange="changeSource(this.value)"></select>
+      <div id="viaBox"><label class="f">Sale por (equipo del tablero de arriba)</label><select id="b-via" onchange="changeVia(this.value)"></select></div>
+      <label class="f">Entrada del tablero</label><div class="seg" id="segEntrada">
+        <button data-v="general" onclick="changeEntrada('general')">Llave general</button>
+        <button data-v="bornera" onclick="changeEntrada('bornera')">Bornera</button>
+        <button data-v="peine" onclick="changeEntrada('peine')">Peine</button></div>
       <div class="hint" id="fedHint"></div>
       <label class="f">Notas para el plano</label><textarea id="b-notas" oninput="setB('notas',this.value)" placeholder="Ej: Jabalina 1,5 m con cámara de inspección"></textarea>
       <div class="btns" style="margin-top:10px">
@@ -706,6 +711,7 @@ function modsOf(b,c){
   if(c.tipo==='rt') return 2;
   if(c.tipo==='temp') return 1;
   if(c.tipo==='ih') return 2;
+  if(c.tipo==='born') return 2;
   if(c.tipo==='conm') return (c.polos||2)>2 ? 4 : 3;
   return 2;
 }
@@ -976,6 +982,13 @@ function readLine(c){
   return '';
 }
 
+function drawBornera(x,y,w){
+  // repartidor modular de entrada: bornes marrón (L) y celeste (N)
+  let s=`<g><rect x="${x+.5}" y="${y}" width="${w-1}" height="${DH}" rx="4" fill="#dcdcd6" stroke="#8f8f8a"/><rect x="${x+2.5}" y="${y+29}" width="${w-5}" height="${DH-58}" rx="3" fill="#ececE8" stroke="#c9c9c3"/>`;
+  [['#7a4a22','L',y+40],['#4aa3df','N',y+66]].forEach(([col,lab,yy])=>{ s+=`<rect x="${x+6}" y="${yy}" width="${w-12}" height="18" rx="3" fill="${col}" stroke="#333"/>`; for(let k=0;k<4;k++) s+=`<circle cx="${x+13+k*((w-26)/3)}" cy="${yy+9}" r="3.2" fill="url(#pvScrew)" stroke="#555"/>`; s+=T(x+w/2,yy-2,lab,'font-size="6" font-weight="800" fill="#333"'); });
+  s+=T(x+w/2,y+100,'BORNERA','font-size="6.5" font-weight="800" fill="#222"')+'</g>';
+  return s;
+}
 // equipos de puerta (22 mm)
 function drawDoorDevice(c,cx,cy,m){
   let s=`<g data-id="${c.id}" style="cursor:pointer">`;
@@ -995,7 +1008,7 @@ function drawDoorDevice(c,cx,cy,m){
 }
 function layoutRows(b){
   const I = info(b);
-  const items = [...I.order.map(o=>o.c), ...I.others.filter(c=>DEV[c.tipo].cat==='rail')].filter(onRail);
+  const items = [...(b.entrada==='bornera'?[{id:'_born', tipo:'born'}]:[]), ...I.order.map(o=>o.c), ...I.others.filter(c=>DEV[c.tipo].cat==='rail')].filter(c=>c.tipo==='born'||onRail(c));
   const rows=[[]]; let used=0;
   items.forEach(c=>{
     const w = modsOf(b,c);
@@ -1029,13 +1042,21 @@ function panelSVG(b){
     s += `<rect x="20" y="${ry+DH/2-9}" width="${W-40}" height="18" fill="url(#pvRail)" stroke="#7d8388"/>`;
     for(let k=26;k<W-30;k+=22) s+=`<rect x="${k}" y="${ry+DH/2-3}" width="12" height="6" rx="3" fill="#6f757a"/>`;
     let used=0;
-    r.forEach(it=>{ const x=PADX+it.m0*MW; s+=drawDevice(b,it.c,x,ry,it.w*MW,map[it.c.id]); used=it.m0+it.w; });
+    r.forEach(it=>{ const x=PADX+it.m0*MW; s+= it.c.tipo==='born' ? drawBornera(x,ry,it.w*MW) : drawDevice(b,it.c,x,ry,it.w*MW,map[it.c.id]); used=it.m0+it.w; });
     for(let k=used;k<ROW;k++){ const x=PADX+k*MW; s+=`<rect x="${x+1}" y="${ry+28}" width="${MW-2}" height="${DH-56}" fill="#e7e6e1" stroke="#c7c6bf"/><line x1="${x+MW/2}" y1="${ry+40}" x2="${x+MW/2}" y2="${ry+DH-40}" stroke="#d3d2cc"/>`; }
   });
   let d = `M12 12H${W-12}V${H-12}H12Z`;
   rows.forEach((r,ri)=>{ const ry=TOP+ri*RH+14; d+=`M${PADX-2} ${ry+28}H${PADX+ROW*MW+2}V${ry+DH-28}H${PADX-2}Z`; });
   s += `<path d="${d}" fill="${est?'#c9ced2':'url(#pvCover)'}" fill-rule="evenodd" stroke="#b9b8b1" pointer-events="none"/>`;
   rows.forEach((r,ri)=>{ const ry=TOP+ri*RH+14; s+=`<rect x="${PADX-2}" y="${ry+28}" width="${ROW*MW+4}" height="${DH-56}" fill="none" stroke="#8f8e87" stroke-width="1.5" pointer-events="none"/>`; });
+  if(b.entrada==='peine'){
+    // peine de cobre que une la entrada de los equipos que toman directo de la entrada
+    rows.forEach((r,ri)=>{ const ry=TOP+ri*RH+14; const rs=r.filter(it=>it.c.de==null && isPower(it.c) && !ROOT_ONLY.includes(it.c.tipo)); if(rs.length<1) return;
+      const x1=PADX+rs[0].m0*MW+4, x2=PADX+(rs[rs.length-1].m0+rs[rs.length-1].w)*MW-4;
+      s+=`<rect x="${x1}" y="${ry+20}" width="${x2-x1}" height="7" rx="2" fill="#c87533" stroke="#7a4219" pointer-events="none"/>`;
+      for(let k=0;k<rs.length;k++){ const it=rs[k]; for(let q=0;q<it.w;q++){ const px=PADX+(it.m0+q)*MW+MW/2; s+=`<rect x="${px-2}" y="${ry+20}" width="4" height="9" fill="#d98a4a" pointer-events="none"/>`; } }
+      s+=`<text x="${x1+4}" y="${ry+26}" font-size="6" font-weight="700" fill="#fff" pointer-events="none">PEINE</text>`; });
+  }
   [[22,22],[W-22,22],[22,H-22],[W-22,H-22]].forEach(([x,y])=>s+=`<circle cx="${x}" cy="${y}" r="4.5" fill="url(#pvScrew)" stroke="#888"/><path d="M${x-3} ${y}h6M${x} ${y-3}v6" stroke="#666"/>`);
   s += `<text x="${W/2}" y="34" text-anchor="middle" font-size="15" font-weight="700" fill="#2b3a31" letter-spacing="1">${esc((b.nombre||'Tablero').toUpperCase())}</text>`;
   s += `<text x="${W/2}" y="48" text-anchor="middle" font-size="9" fill="#4f584d" letter-spacing="2">PATAGONIA VOLT · ${b.tension==='tri'?'3×380/220 V':'220 V'}${est?' · IP65':''}</text>`;
@@ -1055,6 +1076,7 @@ function panelSVG(b){
     s += `<rect x="${PADX-2}" y="${ly}" width="${ROW*MW+4}" height="22" rx="2" fill="#fff" stroke="#bdbcb4"/>`;
     r.forEach(it=>{
       const x=PADX+it.m0*MW, w=it.w*MW, m=map[it.c.id], c=it.c;
+      if(c.tipo==='born'){ s+=T(x+w/2,ly+15,'ENTRADA','font-size="8" font-weight="700" fill="#222"'); return; }
       const lab = hasCirc(b,c) ? (c.circ.tipo==='LS'?'➡':c.circ.icono||'') : (c.general?'GRAL':DEV[c.tipo].em);
       s += `<g data-id="${c.id}"><rect x="${x}" y="${ly}" width="${w}" height="22" fill="transparent"/><line x1="${x}" y1="${ly+2}" x2="${x}" y2="${ly+20}" stroke="#ddd"/>`;
       s += T(x+w/2,ly+15,`${w>MW?m.n+' ':''}${lab}`,'font-size="10" font-weight="700" fill="#222"');
@@ -1308,6 +1330,7 @@ function planoSVG(o, b, inst){
   }
   const lineSec = f ? f.comp.circ.sec : b.lineaSec;
   s += `<line x1="${rootX}" y1="44" x2="${rootX}" y2="${Y0}" stroke="#111" stroke-width="2.2"/>` + ticks(rootX,62,nCond+1);
+  if(b.entrada==='bornera'||b.entrada==='peine') s += `<rect x="${rootX+8}" y="${Y0-11}" width="44" height="8" fill="${b.entrada==='peine'?'#c87533':'#7a4a22'}" stroke="#111"/><text x="${rootX+56}" y="${Y0-4}" font-size="9" font-weight="700">${b.entrada==='peine'?'PEINE':'BORNERA'}</text>`;
   s += `<text x="${rootX+10}" y="70" font-size="9.5">${f?'Línea seccional':'Línea principal'} ${nCond}×${fmtSec(lineSec)} mm² + PE ${fmtSec(Math.max(2.5, lineSec>=16?lineSec/2:lineSec))} mm²</text>`;
   s += `<text x="${rootX+10}" y="82" font-size="9" fill="#555">Cu/PVC IRAM NM 247-3 · L marrón/negro/rojo · N celeste · PE verde-amarillo</text>`;
   s += `<line x1="${rootX}" y1="96" x2="${rootX-40}" y2="96" stroke="#1d7a44" stroke-width="1.6" stroke-dasharray="4 2"/>` + symGround(rootX-40,96);
@@ -1583,7 +1606,12 @@ function validate(o,b){
   const out=[]; const I=info(b); const add=(lv,t)=>out.push({lv,t});
   const f=feederOf(o,b);
   const gens=b.comps.filter(c=>c.general);
-  if(!gens.length) add(f?'warn':'err', f ? 'No tiene <b>llave general</b>: hoy la cabecera es la salida del tablero de arriba. Conviene una general para poder cortar todo este tablero desde acá.' : 'Falta la <b>llave general</b> (termomagnética de cabecera).');
+  const mainRoots = children(b,null).filter(c=>!ROOT_ONLY.includes(c.tipo));
+  const oneHead = mainRoots.length===1 && mainRoots[0].tipo==='tm';
+  if(!gens.length && !oneHead){
+    if(b.entrada==='bornera'||b.entrada==='peine'){ if(!f) add('warn',`Entra por ${b.entrada} sin protección de cabecera y no viene de otro tablero: falta la protección general.`); }
+    else add(f?'warn':'err', f ? 'No tiene <b>llave general</b>: hoy la cabecera es la salida del tablero de arriba. Si entra por bornera o peine, elegilo en Datos del tablero → Entrada.' : 'Falta la <b>llave general</b> (termomagnética de cabecera).');
+  }
   const circs=b.comps.filter(c=>hasCirc(b,c));
   if(!circs.length) add('warn','Todavía no cargaste circuitos.');
   circs.forEach(c=>{
@@ -1701,6 +1729,10 @@ function renderDatos(){
   fillSelect(document.getElementById('b-lineaSec'), SECS.filter(s=>s>=1.5), v=>fmtSec(v)+' mm²', f?f.comp.circ.sec:b.lineaSec);
   document.getElementById('lblLinea').textContent = f ? `Cable que llega desde ${f.board.nombre}` : 'Línea principal (desde el medidor)';
   const down = downstreamBoards(o,b);
+  document.getElementById('viaBox').classList.toggle('hide', !f);
+  if(f){ const cands=outputCandidates(f.board,b); document.getElementById('b-via').innerHTML = cands.map(c=>`<option value="${c.id}" ${c.id===f.comp.id?'selected':''}>${esc(outputLabel(f.board,c))}</option>`).join('') + `<option value="new-tm">＋ Agregar térmica nueva de salida</option><option value="new-td">＋ Agregar térmica + disyuntor de salida</option>`; }
+  const ent = b.entrada || (b.comps.some(c=>c.general)?'general':'general');
+  document.querySelectorAll('#segEntrada button').forEach(x=>x.classList.toggle('sel', x.dataset.v===ent));
   document.getElementById('b-fuente').innerHTML = `<option value="">⚡ Red / medidor (directo)</option>` + boardOrder(o).filter(x=>x.id!==b.id && !down.includes(x.id)).map(x=>`<option value="${x.id}" ${f&&f.board.id===x.id?'selected':''}>${(BOARD_TYPES[x.tipo]||BOARD_TYPES.otro).em} ${esc(boardCode(o,x)+' · '+x.nombre)}</option>`).join('');
   document.getElementById('fedHint').innerHTML = f ? `Sale de <b>${esc(f.board.nombre)}</b> por ${esc(info(f.board).map[f.comp.id].tag)} (${f.comp.polos}×${secAmp(f.board,f.comp)} A). Si cambiás el cable acá, se cambia también en esa salida.` : '';
   document.querySelectorAll('#segTension button').forEach(x=>x.classList.toggle('sel', x.dataset.v===b.tension));
@@ -1810,34 +1842,71 @@ let nb = null;
 function downstreamBoards(o,b){ const r=[]; const walk=x=>o.boards.forEach(y=>{ const f=feederOf(o,y); if(f && f.board.id===x.id && !r.includes(y.id)){ r.push(y.id); walk(y); } }); walk(b); return r; }
 // tableros que hoy salen directo de src por su entrada principal
 const fedFrom = (o,src) => o.boards.filter(y=>{ const f=feederOf(o,y); return f && f.board.id===src.id; });
-// salida libre de un tablero (térmica “Otro tablero” sin vincular), o se crea una
-function freeOutput(up, amp, sec, tension, label){
-  const free = up.comps.find(c=>hasCirc(up,c) && c.circ.tipo==='LS' && !c.circ.alimenta);
-  if(free) return free;
-  const upG = up.comps.find(c=>c.general);
-  if(upG && hasCirc(up,upG)){
-    // la llave general ya es la salida (pilar): se agrega una térmica nueva colgando del general
-    const sal = mk('tm',{de:upG.id, polos:tension==='tri'?4:2, amp, curva:'C', ka:4.5, circ:circ(P('tab'),{nombre:label, sec})});
-    up.comps.push(sal); return sal;
-  }
-  const parent = upG ? (children(up,upG.id).find(c=>c.tipo==='ptm') || upG) : null;
-  const sal = mk('tm',{de:parent?parent.id:null, polos:tension==='tri'?4:2, amp, curva:'C', ka:4.5, circ:circ(P('tab'),{nombre:label, sec})});
-  up.comps.push(sal); return sal;
+// ---- salidas entre tableros: el usuario elige qué equipo de arriba alimenta al tablero de abajo
+// candidatos: cualquier equipo que sea el último de su rama (térmica, disyuntor, contactor, conmutador…)
+function outputCandidates(up, b){
+  return dfs(up).map(x=>x.c).filter(c=>CIRC_DEVS.includes(c.tipo) && isLeaf(up,c) && !(c.circ && c.circ.tipo==='LS' && c.circ.alimenta && c.circ.alimenta!==(b&&b.id)));
 }
-// cambia de dónde se alimenta el tablero b (srcId vacío = directo de la red)
-function setSource(o, b, srcId){
+function outputLabel(up,c){
+  const I=info(up), m=I.map[c.id];
+  const now = c.circ && c.circ.tipo && c.circ.tipo!=='LS' ? ` — hoy: ${c.circ.nombre}` : (c.circ && c.circ.tipo==='LS' && !c.circ.alimenta ? ' — salida libre' : '');
+  return `#${m.n} ${m.tag} · ${DEV[c.tipo].t} ${devSpec(up,c).split(' · ')[0]}${now}`;
+}
+// elige automáticamente: una salida libre, o el último equipo sin circuito; si no hay, null
+function autoOutput(up,b){
+  const cands = outputCandidates(up,b);
+  return cands.find(c=>c.circ && c.circ.tipo==='LS' && c.circ.alimenta===b.id)
+      || cands.find(c=>c.circ && c.circ.tipo==='LS' && !c.circ.alimenta)
+      || cands.find(c=>!(c.circ && c.circ.tipo) && !c.general)
+      || null;
+}
+function newOutput(up, kind, amp, label){
+  const upG = up.comps.find(c=>c.general && !hasCirc(up,c));
+  const parent = upG ? (children(up,upG.id).find(c=>c.tipo==='ptm') || upG) : null;
+  const tm = mk('tm',{de:parent?parent.id:null, polos:up.tension==='tri'?4:2, amp, curva:'C', ka:4.5, auto:true});
+  up.comps.push(tm);
+  if(kind==='new-td'){ const d=mk('dif',{de:tm.id, polos:tm.polos, amp:[25,40,63,80,100].find(x=>x>=amp)||100, sens:30, clase:'A', auto:true}); up.comps.push(d); return d; }
+  return tm;
+}
+// desconecta la salida vieja; si la había creado la app sola y quedó sin uso, la borra
+function unlinkOutput(o, f){
+  if(!f) return;
+  delete f.comp.circ.alimenta; delete f.comp.circ.entra;
+  const up=f.board; let c=f.comp, g=0;
+  while(c && c.auto && isLeaf(up,c) && g++<3){
+    up.comps = up.comps.filter(x=>x.id!==c.id);
+    c = c.de ? up.comps.find(x=>x.id===c.de) : null;
+    if(c && (c.circ && c.circ.tipo)) break;
+  }
+}
+// via: id de un equipo de arriba · 'new-tm' · 'new-td' · vacío = automático
+function setSource(o, b, srcId, via){
   const old = feederOf(o,b);
-  if(old && old.board.id===srcId) return;
-  if(old){ delete old.comp.circ.alimenta; }
-  if(srcId){
-    const up = o.boards.find(x=>x.id===srcId);
-    const g = b.comps.find(c=>c.general);
-    const amp = g ? g.amp : 25;
-    const sec = (old && old.comp.circ.sec) || SECS.find(x=>x>=2.5 && IZ[x]>=amp) || 6;
-    const out = freeOutput(up, amp, sec, up.tension, 'Salida a '+(b.nombre||'tablero').toLowerCase());
-    out.circ.alimenta = b.id; delete out.circ.entra;
-    out.circ.nombre = 'Salida a '+(b.nombre||'tablero').toLowerCase();
-    b.tension = up.tension;
+  if(old && old.board.id===srcId && (!via || via===old.comp.id)) return old.comp;
+  const sec0 = old ? old.comp.circ.sec : null, largo0 = old ? old.comp.circ.largo : '';
+  unlinkOutput(o, old);
+  if(!srcId) return null;
+  const up = o.boards.find(x=>x.id===srcId);
+  const g = b.comps.find(c=>c.general);
+  const amp = g ? g.amp : 25;
+  let out = (via && !via.startsWith('new-')) ? up.comps.find(c=>c.id===via) : (!via ? autoOutput(up,b) : null);
+  if(!out) out = newOutput(up, via==='new-td'?'new-td':'new-tm', amp);
+  const sec = sec0 || (out.circ && out.circ.tipo==='LS' && out.circ.sec) || SECS.find(x=>x>=2.5 && IZ[x]>=(secAmp(up,out)||amp)) || 6;
+  out.circ = circ(P('tab'),{nombre:'Salida a '+(b.nombre||'tablero').toLowerCase(), sec, alimenta:b.id, largo:largo0||''});
+  b.tension = up.tension;
+  return out;
+}
+// entrada del tablero: llave general, bornera o peine (sin general)
+function setEntrada(b, v){
+  b.entrada = v;
+  const g = b.comps.find(c=>c.general);
+  if(v!=='general'){
+    if(g && !(g.circ && g.circ.tipo==='LS')){ children(b,g.id).forEach(c=>c.de=null); b.comps.forEach(c=>{ if(c.de2===g.id) c.de2=null; }); b.comps=b.comps.filter(c=>c.id!==g.id); }
+  } else if(!g){
+    const roots = children(b,null).filter(c=>!ROOT_ONLY.includes(c.tipo));
+    const f = feederOf(O(),b);
+    const ng = mk('tm',{polos:b.tension==='tri'?4:2, amp:f?Math.min(secAmp(f.board,f.comp)||25,63):25, curva:'C', ka:4.5, general:true});
+    roots.forEach(c=>c.de=ng.id); b.comps.unshift(ng);
   }
 }
 function setNbTipo(k){
@@ -1847,7 +1916,7 @@ function setNbTipo(k){
   renderNewBoard();
 }
 function openNewBoard(){
-  const o=O(); nb={tipo:'seccional', from: (o.boards.find(b=>b.tipo==='principal')||boardOrder(o)[0]||{}).id||'', inter:''};
+  const o=O(); nb={tipo:'seccional', from: (o.boards.find(b=>b.tipo==='principal')||boardOrder(o)[0]||{}).id||'', inter:'', via:'', entrada:'general'};
   renderNewBoard(); document.getElementById('devModal').classList.add('open');
 }
 function renderNewBoard(){
@@ -1856,12 +1925,21 @@ function renderNewBoard(){
   const fed = src ? fedFrom(o,src) : o.boards.filter(x=>!feederOf(o,x));
   if(nb.inter && !fed.some(x=>x.id===nb.inter)) nb.inter='';
   let h=`<h3>Agregar tablero a ${esc(o.cliente||'la obra')}</h3><h4>¿Qué tablero es?</h4><div class="btypes">${Object.entries(BOARD_TYPES).map(([k,v])=>`<button class="${nb.tipo===k?'sel':''}" onclick="setNbTipo('${k}')"><b>${v.em} ${v.t}</b>${v.desc}</button>`).join('')}</div>`;
-  h+=`<label class="f">¿De dónde se alimenta?</label><select onchange="nb.from=this.value;nb.inter='';renderNewBoard()"><option value="">Directo del medidor / red</option>${boardOrder(o).map(b=>`<option value="${b.id}" ${nb.from===b.id?'selected':''}>${esc(boardCode(o,b)+' · '+b.nombre)}</option>`).join('')}</select>`;
+  h+=`<label class="f">¿De dónde se alimenta?</label><select onchange="nb.from=this.value;nb.inter='';nb.via='';renderNewBoard()"><option value="">Directo del medidor / red</option>${boardOrder(o).map(b=>`<option value="${b.id}" ${nb.from===b.id?'selected':''}>${esc(boardCode(o,b)+' · '+b.nombre)}</option>`).join('')}</select>`;
   if(fed.length && nb.tipo!=='inversor'){
     h+=`<label class="f">¿Va en el medio de otro? (intercalar)</label><select onchange="nb.inter=this.value;renderNewBoard()"><option value="">No, es una salida más</option>${fed.map(x=>`<option value="${x.id}" ${nb.inter===x.id?'selected':''}>Sí, antes de ${esc(x.nombre)}</option>`).join('')}</select>`;
     if(nb.inter){ const d=o.boards.find(x=>x.id===nb.inter); h+=`<div class="val ok" style="margin-top:6px">Queda: ${esc(src?src.nombre:'Red')} → <b>${esc((BOARD_TYPES[nb.tipo]||{}).t||'nuevo')}</b> → ${esc(d.nombre)}</div>`; }
   }
-  h+=`<div class="hint">Si sale de otro tablero, se usa su salida libre o se agrega una térmica “➡️ Salida”, con su cable. Después la podés ajustar.${nb.tipo==='inversor'?'<br><b>Inversor:</b> además se crea en ese tablero una <b>Entrada desde el inversor</b> con su disyuntor, para colgar ahí los circuitos de respaldo.':''}</div>`;
+  if(src && !nb.inter && nb.tipo!=='inversor'){
+    const cands = outputCandidates(src, null), a = autoOutput(src,{id:'__nuevo__'});
+    h+=`<label class="f">¿Por qué equipo sale de ${esc(src.nombre)}?</label><select onchange="nb.via=this.value">
+      <option value="" ${!nb.via?'selected':''}>Automático${a?' ('+esc(outputLabel(src,a))+')':' (agrega una térmica nueva)'}</option>
+      ${cands.map(c=>`<option value="${c.id}" ${nb.via===c.id?'selected':''}>${esc(outputLabel(src,c))}</option>`).join('')}
+      <option value="new-tm" ${nb.via==='new-tm'?'selected':''}>＋ Agregar térmica nueva de salida</option>
+      <option value="new-td" ${nb.via==='new-td'?'selected':''}>＋ Agregar térmica + disyuntor de salida</option></select>`;
+  }
+  h+=`<label class="f">¿Cómo entra la alimentación al tablero nuevo?</label><div class="seg">${[['general','Llave general'],['bornera','Bornera'],['peine','Peine']].map(([k,t])=>`<button class="${nb.entrada===k?'sel':''}" onclick="nb.entrada='${k}';renderNewBoard()">${t}</button>`).join('')}</div>`;
+  h+=`<div class="hint">Elegí el equipo exacto de donde sale (por ejemplo el disyuntor). Con bornera o peine el tablero queda sin llave general y los disyuntores toman directo de la entrada.${nb.tipo==='inversor'?'<br><b>Inversor:</b> además se crea en ese tablero una <b>Entrada desde el inversor</b> con su disyuntor, para colgar ahí los circuitos de respaldo.':''}</div>`;
   h+=`<div class="btns" style="margin-top:14px"><button class="btn-s" onclick="closeDev()">Cancelar</button><button class="btn-p" onclick="createBoard()">✔ Crear tablero</button></div>`;
   document.getElementById('devForm').innerHTML=h;
 }
@@ -1875,8 +1953,9 @@ function createBoard(){
     if(f){ f.comp.circ.alimenta = b.id; f.comp.circ.nombre='Salida a '+b.nombre.toLowerCase(); b.tension=f.board.tension; }
     setSource(o, down, b.id);
   } else if(nb.from){
-    setSource(o, b, nb.from);
+    setSource(o, b, nb.from, nb.via||'');
   }
+  if(nb.entrada && nb.entrada!=='general') setEntrada(b, nb.entrada);
   if(nb.tipo==='inversor' && nb.from){ const up=o.boards.find(x=>x.id===nb.from); linkInverter(up, b); }
   S.cur.b=b.id; save(); closeDev(); switchTab('armar'); document.getElementById('datosCard').open=true;
   toast(down?'Tablero intercalado':nb.from?'Tablero creado y conectado':'Tablero creado');
@@ -1890,9 +1969,15 @@ function boardOrder(o){
 }
 function changeSource(v){
   const o=O(), b=B();
-  setSource(o,b,v); save(); renderAll();
-  toast(v ? 'Ahora se alimenta desde '+o.boards.find(x=>x.id===v).nombre : 'Ahora se alimenta directo de la red');
+  const out = setSource(o,b,v,''); save(); renderAll();
+  toast(v ? 'Ahora sale de '+o.boards.find(x=>x.id===v).nombre+(out?' por '+info(o.boards.find(x=>x.id===v)).map[out.id].tag:'') : 'Ahora se alimenta directo de la red');
 }
+function changeVia(v){
+  const o=O(), b=B(), f=feederOf(o,b); if(!f) return;
+  const out = setSource(o,b,f.board.id,v); save(); renderAll();
+  toast('Sale por '+info(f.board).map[out.id].tag+' de '+f.board.nombre);
+}
+function changeEntrada(v){ setEntrada(B(), v); save(); renderAll(); toast(v==='general'?'Entrada con llave general':'Entrada por '+v+' (sin llave general)'); }
 
 // =====================================================================
 //  FORMULARIO DE EQUIPO
